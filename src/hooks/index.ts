@@ -4,3 +4,5 @@ export * from './use-auth';
 export * from './use-debounce';
 export * from './use-tweet-composer';
 export * from './use-tweet-history';
+export * from './use-twitter-auth';
+

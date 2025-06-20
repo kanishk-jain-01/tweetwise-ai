@@ -4,6 +4,7 @@
 import { neon } from '@neondatabase/serverless';
 import { config } from 'dotenv';
 import { MIGRATION_001_METADATA } from './migrations/001-add-twitter-fields';
+import { MIGRATION_002_METADATA } from './migrations/002-add-twitter-tokens-table';
 
 // Load environment variables
 config({ path: '.env.local' });
@@ -12,7 +13,7 @@ config({ path: '.env.local' });
 const sql = neon(process.env.DATABASE_URL!);
 
 // Available migrations in order
-const MIGRATIONS = [MIGRATION_001_METADATA];
+const MIGRATIONS = [MIGRATION_001_METADATA, MIGRATION_002_METADATA];
 
 // Migration tracking table
 const CREATE_MIGRATIONS_TABLE = `
