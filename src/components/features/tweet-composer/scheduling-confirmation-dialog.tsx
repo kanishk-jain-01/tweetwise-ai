@@ -2,8 +2,22 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Calendar, CheckCircle, Clock, ExternalLink, Twitter, Zap } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Calendar,
+  CheckCircle,
+  Clock,
+  ExternalLink,
+  Twitter,
+  Zap,
+} from 'lucide-react';
 
 interface SchedulingConfirmationDialogProps {
   isOpen: boolean;
@@ -29,7 +43,6 @@ export const SchedulingConfirmationDialog = ({
   tweetUrl,
   twitterUser,
 }: SchedulingConfirmationDialogProps) => {
-  
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       onClose();
@@ -64,7 +77,8 @@ export const SchedulingConfirmationDialog = ({
     } else {
       return {
         title: 'Tweet Scheduled Successfully!',
-        description: 'Your tweet has been scheduled and will be posted automatically.',
+        description:
+          'Your tweet has been scheduled and will be posted automatically.',
         icon: <Calendar className="w-6 h-6 text-blue-500" />,
         statusBadge: (
           <Badge className="bg-blue-100 text-blue-800 border-blue-200">
@@ -102,9 +116,7 @@ export const SchedulingConfirmationDialog = ({
           <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-green-100 rounded-full">
             {content.icon}
           </div>
-          <DialogTitle className="text-center">
-            {content.title}
-          </DialogTitle>
+          <DialogTitle className="text-center">{content.title}</DialogTitle>
           <DialogDescription className="text-center">
             {content.description}
           </DialogDescription>
@@ -112,9 +124,7 @@ export const SchedulingConfirmationDialog = ({
 
         <div className="space-y-4">
           {/* Status Badge */}
-          <div className="flex justify-center">
-            {content.statusBadge}
-          </div>
+          <div className="flex justify-center">{content.statusBadge}</div>
 
           {/* Twitter User Info */}
           {twitterUser && (
@@ -136,15 +146,15 @@ export const SchedulingConfirmationDialog = ({
             <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="flex items-center space-x-2 mb-2">
                 <Clock className="w-4 h-4 text-blue-600" />
-                <span className="text-sm font-medium text-blue-900">Scheduled for:</span>
+                <span className="text-sm font-medium text-blue-900">
+                  Scheduled for:
+                </span>
               </div>
               <div className="text-sm text-blue-800">
                 <div className="font-medium">
                   {formatScheduledTime(scheduledFor).date}
                 </div>
-                <div>
-                  at {formatScheduledTime(scheduledFor).time}
-                </div>
+                <div>at {formatScheduledTime(scheduledFor).time}</div>
               </div>
             </div>
           )}
@@ -154,7 +164,9 @@ export const SchedulingConfirmationDialog = ({
             <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center space-x-2 mb-2">
                 <CheckCircle className="w-4 h-4 text-green-600" />
-                <span className="text-sm font-medium text-green-900">Posted at:</span>
+                <span className="text-sm font-medium text-green-900">
+                  Posted at:
+                </span>
               </div>
               <div className="text-sm text-green-800">
                 {new Date().toLocaleString('en-US', {
@@ -173,10 +185,9 @@ export const SchedulingConfirmationDialog = ({
           {/* Success Tips */}
           <div className="p-3 bg-gray-50 rounded-lg">
             <p className="text-xs text-gray-600">
-              {type === 'posted' 
+              {type === 'posted'
                 ? '✨ Your tweet is now live! It may take a few moments to appear in your Twitter feed.'
-                : '⏰ Your scheduled tweet will be posted automatically. You can manage your scheduled tweets in the History panel.'
-              }
+                : '⏰ Your scheduled tweet will be posted automatically. You can manage your scheduled tweets in the History panel.'}
             </p>
           </div>
         </div>
@@ -215,4 +226,4 @@ export const SchedulingConfirmationDialog = ({
       </DialogContent>
     </Dialog>
   );
-}; 
+};

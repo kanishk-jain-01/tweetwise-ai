@@ -1,6 +1,14 @@
 import { sql } from './index';
 import type { Tweet } from './schema';
 
+// Twitter user info interface
+interface TwitterUserInfo {
+  twitterUserId: string;
+  twitterUsername: string;
+  twitterName: string;
+  updatedAt: Date;
+}
+
 // Twitter-specific Query Functions
 export class TwitterQueries {
   // Schedule a tweet for future posting
@@ -311,6 +319,360 @@ export class TwitterQueries {
       return tweets as Tweet[];
     } catch (error) {
       console.error('Error getting posting queue:', error);
+      throw error;
+    }
+  }
+
+  // Instance methods for API route compatibility
+  async updateUserTwitterInfo(
+    userId: string,
+    info: {
+      twitterUserId: string;
+      twitterUsername: string;
+      twitterName: string;
+    }
+  ): Promise<void> {
+    return TwitterQueries.updateUserTwitterInfo(userId, info);
+  }
+
+  async clearUserTwitterInfo(userId: string): Promise<void> {
+    return TwitterQueries.clearUserTwitterInfo(userId);
+  }
+
+  async convertScheduledTweetsToDrafts(userId: string): Promise<number> {
+    return TwitterQueries.convertScheduledTweetsToDrafts(userId);
+  }
+
+  async getUserTwitterInfo(userId: string): Promise<TwitterUserInfo | null> {
+    return TwitterQueries.getUserTwitterInfo(userId);
+  }
+
+  async getScheduledTweetsCount(userId: string): Promise<number> {
+    return TwitterQueries.getScheduledTweetsCount(userId);
+  }
+
+  async updateTweetStatus(
+    tweetId: string,
+    userId: string,
+    status: string,
+    data: any
+  ): Promise<Tweet> {
+    return TwitterQueries.updateTweetStatus(tweetId, userId, status, data);
+  }
+
+  async createTweet(tweetData: any): Promise<Tweet> {
+    return TwitterQueries.createTweet(tweetData);
+  }
+
+  async getSentTweets(
+    userId: string,
+    limit: number,
+    offset: number
+  ): Promise<Tweet[]> {
+    return TwitterQueries.getSentTweets(userId, limit, offset);
+  }
+
+  async getScheduledTweets(
+    userId: string,
+    limit: number,
+    offset: number,
+    includeExpired?: boolean
+  ): Promise<Tweet[]> {
+    return TwitterQueries.getScheduledTweets(
+      userId,
+      limit,
+      offset,
+      includeExpired
+    );
+  }
+
+  async deleteScheduledTweet(
+    tweetId: string,
+    userId: string
+  ): Promise<boolean> {
+    try {
+      const result = await sql`
+        WITH deleted AS (
+          DELETE FROM tweets 
+          WHERE id = ${tweetId} AND user_id = ${userId} AND status = 'scheduled'
+          RETURNING id
+        )
+        SELECT COUNT(*) as count FROM deleted
+      `;
+      return parseInt(result[0]?.count || '0') > 0;
+    } catch (error) {
+      console.error('Error deleting scheduled tweet:', error);
+      throw error;
+    }
+  }
+
+  // Static methods (existing and new)
+
+  // Update user's Twitter info in users table
+  static async updateUserTwitterInfo(
+    userId: string,
+    info: {
+      twitterUserId: string;
+      twitterUsername: string;
+      twitterName: string;
+    }
+  ): Promise<void> {
+    try {
+      await sql`
+        UPDATE users 
+        SET 
+          twitter_user_id = ${info.twitterUserId},
+          twitter_username = ${info.twitterUsername},
+          twitter_name = ${info.twitterName},
+          updated_at = NOW()
+        WHERE id = ${userId}
+      `;
+    } catch (error) {
+      console.error('Error updating user Twitter info:', error);
+      throw error;
+    }
+  }
+
+  // Clear user's Twitter info
+  static async clearUserTwitterInfo(userId: string): Promise<void> {
+    try {
+      await sql`
+        UPDATE users 
+        SET 
+          twitter_user_id = NULL,
+          twitter_username = NULL,
+          twitter_name = NULL,
+          updated_at = NOW()
+        WHERE id = ${userId}
+      `;
+    } catch (error) {
+      console.error('Error clearing user Twitter info:', error);
+      throw error;
+    }
+  }
+
+  // Convert all scheduled tweets to drafts for a user
+  static async convertScheduledTweetsToDrafts(userId: string): Promise<number> {
+    try {
+      const result = await sql`
+        WITH updated AS (
+          UPDATE tweets 
+          SET 
+            status = 'draft',
+            scheduled_for = NULL,
+            updated_at = NOW()
+          WHERE user_id = ${userId} AND status = 'scheduled'
+          RETURNING id
+        )
+        SELECT COUNT(*) as count FROM updated
+      `;
+      return parseInt(result[0]?.count || '0');
+    } catch (error) {
+      console.error('Error converting scheduled tweets to drafts:', error);
+      throw error;
+    }
+  }
+
+  // Get user's Twitter info
+  static async getUserTwitterInfo(
+    userId: string
+  ): Promise<TwitterUserInfo | null> {
+    try {
+      const result = await sql`
+        SELECT twitter_user_id, twitter_username, twitter_name, updated_at
+        FROM users 
+        WHERE id = ${userId} AND twitter_user_id IS NOT NULL
+      `;
+
+      if (result.length === 0) {
+        return null;
+      }
+
+      const user = result[0];
+      if (!user) {
+        return null;
+      }
+
+      return {
+        twitterUserId: user.twitter_user_id,
+        twitterUsername: user.twitter_username,
+        twitterName: user.twitter_name,
+        updatedAt: user.updated_at,
+      };
+    } catch (error) {
+      console.error('Error getting user Twitter info:', error);
+      return null;
+    }
+  }
+
+  // Get count of scheduled tweets for a user
+  static async getScheduledTweetsCount(userId: string): Promise<number> {
+    try {
+      const result = await sql`
+        SELECT COUNT(*) as count
+        FROM tweets 
+        WHERE user_id = ${userId} AND status = 'scheduled'
+      `;
+      return parseInt(result[0]?.count || '0');
+    } catch (error) {
+      console.error('Error getting scheduled tweets count:', error);
+      return 0;
+    }
+  }
+
+  // Update tweet status with additional data
+  static async updateTweetStatus(
+    tweetId: string,
+    userId: string,
+    status: string,
+    data: any
+  ): Promise<Tweet> {
+    try {
+      // Build dynamic query based on provided data
+      const updates: string[] = ['status = $3', 'updated_at = NOW()'];
+      const values: any[] = [tweetId, userId, status];
+
+      if (data.scheduledFor) {
+        updates.push('scheduled_for = $' + (values.length + 1));
+        values.push(
+          data.scheduledFor instanceof Date
+            ? data.scheduledFor.toISOString()
+            : data.scheduledFor
+        );
+      }
+
+      if (data.tweetId) {
+        updates.push('tweet_id = $' + (values.length + 1));
+        values.push(data.tweetId);
+      }
+
+      if (data.sentAt) {
+        updates.push('sent_at = $' + (values.length + 1));
+        values.push(
+          data.sentAt instanceof Date ? data.sentAt.toISOString() : data.sentAt
+        );
+      }
+
+      if (data.errorMessage !== undefined) {
+        updates.push('error_message = $' + (values.length + 1));
+        values.push(data.errorMessage);
+      }
+
+      const result = await sql`
+        UPDATE tweets 
+        SET ${sql.unsafe(updates.join(', '))}
+        WHERE id = ${tweetId} AND user_id = ${userId}
+        RETURNING id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
+      `;
+
+      if (result.length === 0) {
+        throw new Error('Tweet not found or access denied');
+      }
+
+      return result[0] as Tweet;
+    } catch (error) {
+      console.error('Error updating tweet status:', error);
+      throw error;
+    }
+  }
+
+  // Create a new tweet
+  static async createTweet(tweetData: {
+    userId: string;
+    content: string;
+    status: string;
+    scheduledFor?: Date;
+    tweetId?: string;
+    sentAt?: Date;
+  }): Promise<Tweet> {
+    try {
+      const result = await sql`
+        INSERT INTO tweets (
+          user_id, 
+          content, 
+          status, 
+          scheduled_for, 
+          tweet_id, 
+          sent_at,
+          created_at, 
+          updated_at
+        ) VALUES (
+          ${tweetData.userId},
+          ${tweetData.content},
+          ${tweetData.status},
+          ${tweetData.scheduledFor ? tweetData.scheduledFor.toISOString() : null},
+          ${tweetData.tweetId || null},
+          ${tweetData.sentAt ? tweetData.sentAt.toISOString() : null},
+          NOW(),
+          NOW()
+        )
+        RETURNING id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
+      `;
+
+      if (result.length === 0) {
+        throw new Error('Failed to create tweet');
+      }
+
+      return result[0] as Tweet;
+    } catch (error) {
+      console.error('Error creating tweet:', error);
+      throw error;
+    }
+  }
+
+  // Get sent tweets for a user
+  static async getSentTweets(
+    userId: string,
+    limit: number,
+    offset: number
+  ): Promise<Tweet[]> {
+    try {
+      const tweets = await sql`
+        SELECT id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
+        FROM tweets 
+        WHERE user_id = ${userId} AND status = 'sent'
+        ORDER BY sent_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+
+      return tweets as Tweet[];
+    } catch (error) {
+      console.error('Error getting sent tweets:', error);
+      throw error;
+    }
+  }
+
+  // Get scheduled tweets for a user
+  static async getScheduledTweets(
+    userId: string,
+    limit: number,
+    offset: number,
+    includeExpired?: boolean
+  ): Promise<Tweet[]> {
+    try {
+      let query;
+      if (includeExpired) {
+        query = sql`
+          SELECT id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
+          FROM tweets 
+          WHERE user_id = ${userId} AND status = 'scheduled'
+          ORDER BY scheduled_for ASC
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+      } else {
+        query = sql`
+          SELECT id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
+          FROM tweets 
+          WHERE user_id = ${userId} AND status = 'scheduled' AND scheduled_for > NOW()
+          ORDER BY scheduled_for ASC
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+      }
+
+      const tweets = await query;
+      return tweets as Tweet[];
+    } catch (error) {
+      console.error('Error getting scheduled tweets:', error);
       throw error;
     }
   }

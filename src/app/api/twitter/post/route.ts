@@ -8,7 +8,8 @@ import { z } from 'zod';
 
 // Request validation schema
 const postTweetSchema = z.object({
-  content: z.string()
+  content: z
+    .string()
     .min(1, 'Tweet content cannot be empty')
     .max(280, 'Tweet content cannot exceed 280 characters'),
   tweetId: z.string().uuid().optional(), // Optional draft tweet ID to update
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
       twitterResponse = await twitterClient.postTweet(content);
     } catch (error) {
       console.error('Failed to post tweet to Twitter:', error);
-      
+
       // Handle specific Twitter API errors
       if (error instanceof Error) {
         if (error.message.includes('duplicate')) {
@@ -91,7 +92,7 @@ export async function POST(req: NextRequest) {
             { status: 409 }
           );
         }
-        
+
         if (error.message.includes('rate limit')) {
           return NextResponse.json(
             {
@@ -108,7 +109,8 @@ export async function POST(req: NextRequest) {
       if (tweetId) {
         const twitterQueries = new TwitterQueries();
         await twitterQueries.updateTweetStatus(tweetId, userId, 'draft', {
-          errorMessage: error instanceof Error ? error.message : 'Failed to post tweet',
+          errorMessage:
+            error instanceof Error ? error.message : 'Failed to post tweet',
         });
       }
 
@@ -128,11 +130,16 @@ export async function POST(req: NextRequest) {
 
     if (tweetId) {
       // Update existing draft tweet
-      dbTweet = await twitterQueries.updateTweetStatus(tweetId, userId, 'sent', {
-        tweetId: twitterResponse.id,
-        sentAt: new Date(),
-        errorMessage: null,
-      });
+      dbTweet = await twitterQueries.updateTweetStatus(
+        tweetId,
+        userId,
+        'sent',
+        {
+          tweetId: twitterResponse.id,
+          sentAt: new Date(),
+          errorMessage: null,
+        }
+      );
     } else {
       // Create new tweet record
       dbTweet = await twitterQueries.createTweet({
@@ -154,7 +161,6 @@ export async function POST(req: NextRequest) {
       },
       message: 'Tweet posted successfully to Twitter',
     });
-
   } catch (error) {
     console.error('Tweet posting API error:', error);
 
@@ -188,7 +194,11 @@ export async function GET(req: NextRequest) {
 
     // Get sent tweets from database
     const twitterQueries = new TwitterQueries();
-    const sentTweets = await twitterQueries.getSentTweets(userId, limit, offset);
+    const sentTweets = await twitterQueries.getSentTweets(
+      userId,
+      limit,
+      offset
+    );
 
     return NextResponse.json({
       success: true,
@@ -201,7 +211,6 @@ export async function GET(req: NextRequest) {
         },
       },
     });
-
   } catch (error) {
     console.error('Get sent tweets API error:', error);
 
@@ -214,4 +223,4 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

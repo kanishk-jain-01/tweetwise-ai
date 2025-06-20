@@ -2,16 +2,22 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { useTwitterAuth } from '@/hooks/use-twitter-auth';
 import {
-    AlertCircle,
-    CheckCircle,
-    Loader2,
-    RefreshCw,
-    Twitter,
-    UserCheck,
-    UserX
+  AlertCircle,
+  CheckCircle,
+  Loader2,
+  RefreshCw,
+  Twitter,
+  UserCheck,
+  UserX,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -21,10 +27,10 @@ interface TwitterConnectProps {
   compact?: boolean;
 }
 
-export const TwitterConnect = ({ 
-  className = '', 
-  showCard = true, 
-  compact = false 
+export const TwitterConnect = ({
+  className = '',
+  showCard = true,
+  compact = false,
 }: TwitterConnectProps) => {
   const {
     isConnected,
@@ -75,7 +81,11 @@ export const TwitterConnect = ({
               disabled={isDisconnecting}
               className="h-6 px-2 text-xs"
             >
-              {isDisconnecting ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserX className="w-3 h-3" />}
+              {isDisconnecting ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <UserX className="w-3 h-3" />
+              )}
             </Button>
           </>
         ) : (
@@ -121,10 +131,9 @@ export const TwitterConnect = ({
           )}
         </div>
         <CardDescription>
-          {isConnected 
+          {isConnected
             ? 'Your Twitter account is connected. You can now post and schedule tweets.'
-            : 'Connect your Twitter account to post and schedule tweets directly from TweetWiseAI.'
-          }
+            : 'Connect your Twitter account to post and schedule tweets directly from TweetWiseAI.'}
         </CardDescription>
       </CardHeader>
 
@@ -133,7 +142,9 @@ export const TwitterConnect = ({
         {isLoading && (
           <div className="flex items-center justify-center py-4">
             <Loader2 className="w-6 h-6 animate-spin mr-2" />
-            <span className="text-sm text-muted-foreground">Checking connection status...</span>
+            <span className="text-sm text-muted-foreground">
+              Checking connection status...
+            </span>
           </div>
         )}
 
@@ -147,7 +158,7 @@ export const TwitterConnect = ({
                 <p className="text-sm text-green-700">{user.handle}</p>
               </div>
             </div>
-            
+
             <div className="flex space-x-2">
               <Button
                 variant="outline"
@@ -159,7 +170,7 @@ export const TwitterConnect = ({
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Refresh Status
               </Button>
-              
+
               {!showDisconnectConfirm ? (
                 <Button
                   variant="outline"
@@ -208,10 +219,11 @@ export const TwitterConnect = ({
             <div className="text-center py-4">
               <Twitter className="w-12 h-12 text-blue-500 mx-auto mb-3" />
               <p className="text-sm text-muted-foreground mb-4">
-                Connect your Twitter account to unlock posting and scheduling features.
+                Connect your Twitter account to unlock posting and scheduling
+                features.
               </p>
             </div>
-            
+
             <Button
               onClick={handleConnect}
               disabled={isConnecting}
@@ -229,9 +241,9 @@ export const TwitterConnect = ({
                 </>
               )}
             </Button>
-            
+
             <p className="text-xs text-muted-foreground text-center">
-              You'll be redirected to Twitter to authorize TweetWiseAI.
+              You&apos;ll be redirected to Twitter to authorize TweetWiseAI.
               <br />
               We only request permissions to read your profile and post tweets.
             </p>
@@ -244,7 +256,9 @@ export const TwitterConnect = ({
             <div className="flex items-start space-x-2">
               <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-red-900">Connection Error</p>
+                <p className="text-sm font-medium text-red-900">
+                  Connection Error
+                </p>
                 <p className="text-sm text-red-700 mt-1">{error}</p>
                 <div className="flex space-x-2 mt-2">
                   <Button
@@ -278,7 +292,8 @@ export const TwitterConnect = ({
             <div className="flex items-center space-x-2">
               <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
               <p className="text-sm text-blue-900">
-                Connecting to Twitter... You may be redirected to complete authentication.
+                Connecting to Twitter... You may be redirected to complete
+                authentication.
               </p>
             </div>
           </div>
@@ -288,29 +303,27 @@ export const TwitterConnect = ({
   );
 
   if (showCard) {
-    return (
-      <Card className={className}>
-        {content}
-      </Card>
-    );
+    return <Card className={className}>{content}</Card>;
   }
 
-  return (
-    <div className={className}>
-      {content}
-    </div>
-  );
+  return <div className={className}>{content}</div>;
 };
 
 // Simple connection status indicator
-export const TwitterConnectionStatus = ({ className = '' }: { className?: string }) => {
+export const TwitterConnectionStatus = ({
+  className = '',
+}: {
+  className?: string;
+}) => {
   const { isConnected, user, isLoading } = useTwitterAuth();
 
   if (isLoading) {
     return (
       <div className={`flex items-center space-x-2 ${className}`}>
         <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">Checking Twitter...</span>
+        <span className="text-sm text-muted-foreground">
+          Checking Twitter...
+        </span>
       </div>
     );
   }
@@ -319,7 +332,9 @@ export const TwitterConnectionStatus = ({ className = '' }: { className?: string
     return (
       <div className={`flex items-center space-x-2 ${className}`}>
         <CheckCircle className="w-4 h-4 text-green-600" />
-        <span className="text-sm text-green-800">Connected as {user.handle}</span>
+        <span className="text-sm text-green-800">
+          Connected as {user.handle}
+        </span>
       </div>
     );
   }
@@ -333,10 +348,10 @@ export const TwitterConnectionStatus = ({ className = '' }: { className?: string
 };
 
 // Connection required banner
-export const TwitterConnectionBanner = ({ 
-  onConnect, 
-  className = '' 
-}: { 
+export const TwitterConnectionBanner = ({
+  onConnect,
+  className = '',
+}: {
   onConnect?: () => void;
   className?: string;
 }) => {
@@ -349,14 +364,19 @@ export const TwitterConnectionBanner = ({
   const handleConnect = onConnect || connect;
 
   return (
-    <div className={`p-4 bg-blue-50 border border-blue-200 rounded-lg ${className}`}>
+    <div
+      className={`p-4 bg-blue-50 border border-blue-200 rounded-lg ${className}`}
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <Twitter className="w-5 h-5 text-blue-600" />
           <div>
-            <p className="font-medium text-blue-900">Connect Twitter to unlock posting features</p>
+            <p className="font-medium text-blue-900">
+              Connect Twitter to unlock posting features
+            </p>
             <p className="text-sm text-blue-700">
-              Connect your Twitter account to post and schedule tweets directly from TweetWiseAI.
+              Connect your Twitter account to post and schedule tweets directly
+              from TweetWiseAI.
             </p>
           </div>
         </div>
@@ -376,4 +396,4 @@ export const TwitterConnectionBanner = ({
       </div>
     </div>
   );
-}; 
+};

@@ -24,7 +24,7 @@ export const DateTimePicker = ({
   maxDate,
   disabled = false,
   className = '',
-  placeholder = 'Select date and time',
+  placeholder: _placeholder = 'Select date and time',
 }: DateTimePickerProps) => {
   const [dateValue, setDateValue] = useState('');
   const [timeValue, setTimeValue] = useState('');
@@ -83,7 +83,7 @@ export const DateTimePicker = ({
         setIsValid(true);
         setErrorMessage('');
         onChange(combinedDateTime);
-      } catch (error) {
+      } catch {
         setIsValid(false);
         setErrorMessage('Invalid date or time format');
       }
@@ -120,54 +120,56 @@ export const DateTimePicker = ({
       { label: 'Tomorrow 9 AM', minutes: null, custom: true },
     ];
 
-    return presets.map((preset) => {
-      let targetDate: Date;
+    return presets
+      .map(preset => {
+        let targetDate: Date;
 
-      if (preset.custom && preset.label === 'Tomorrow 9 AM') {
-        targetDate = new Date(now);
-        targetDate.setDate(targetDate.getDate() + 1);
-        targetDate.setHours(9, 0, 0, 0);
-      } else if (preset.minutes) {
-        targetDate = new Date(now.getTime() + preset.minutes * 60000);
-      } else {
-        return null;
-      }
+        if (preset.custom && preset.label === 'Tomorrow 9 AM') {
+          targetDate = new Date(now);
+          targetDate.setDate(targetDate.getDate() + 1);
+          targetDate.setHours(9, 0, 0, 0);
+        } else if (preset.minutes) {
+          targetDate = new Date(now.getTime() + preset.minutes * 60000);
+        } else {
+          return null;
+        }
 
-      // Check if preset is valid (not in the past, within constraints)
-      const isValidPreset = 
-        (!minDate || targetDate >= minDate) && 
-        (!maxDate || targetDate <= maxDate);
+        // Check if preset is valid (not in the past, within constraints)
+        const isValidPreset =
+          (!minDate || targetDate >= minDate) &&
+          (!maxDate || targetDate <= maxDate);
 
-      return isValidPreset ? (
-        <Button
-          key={preset.label}
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            const dateStr = targetDate.toISOString().split('T')[0] || '';
-            const timeStr = targetDate.toTimeString().slice(0, 5) || '';
-            setDateValue(dateStr);
-            setTimeValue(timeStr);
-            validateAndUpdate(dateStr, timeStr);
-          }}
-          disabled={disabled}
-          className="text-xs"
-        >
-          {preset.label}
-        </Button>
-      ) : null;
-    }).filter(Boolean);
+        return isValidPreset ? (
+          <Button
+            key={preset.label}
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const dateStr = targetDate.toISOString().split('T')[0] || '';
+              const timeStr = targetDate.toTimeString().slice(0, 5) || '';
+              setDateValue(dateStr);
+              setTimeValue(timeStr);
+              validateAndUpdate(dateStr, timeStr);
+            }}
+            disabled={disabled}
+            className="text-xs"
+          >
+            {preset.label}
+          </Button>
+        ) : null;
+      })
+      .filter(Boolean);
   };
 
   // Get min/max attributes for inputs
   const getDateConstraints = () => {
     const today = new Date();
-    const minDateStr = minDate 
-      ? minDate.toISOString().split('T')[0] 
+    const minDateStr = minDate
+      ? minDate.toISOString().split('T')[0]
       : today.toISOString().split('T')[0];
-    
-    const maxDateStr = maxDate 
-      ? maxDate.toISOString().split('T')[0] 
+
+    const maxDateStr = maxDate
+      ? maxDate.toISOString().split('T')[0]
       : undefined;
 
     return { min: minDateStr, max: maxDateStr };
@@ -232,9 +234,7 @@ export const DateTimePicker = ({
           <Label className="text-sm font-medium text-muted-foreground">
             Quick Options
           </Label>
-          <div className="flex flex-wrap gap-2">
-            {getPresetTimes()}
-          </div>
+          <div className="flex flex-wrap gap-2">{getPresetTimes()}</div>
         </div>
       )}
 
@@ -260,4 +260,4 @@ export const DateTimePicker = ({
       )}
     </div>
   );
-}; 
+};

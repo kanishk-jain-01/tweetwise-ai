@@ -4,11 +4,25 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils/cn';
-import { Calendar, CheckCircle, Clock, Loader2, Send, Twitter, X, Zap } from 'lucide-react';
+import {
+  Calendar,
+  CheckCircle,
+  Clock,
+  Loader2,
+  Send,
+  Twitter,
+  X,
+  Zap,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface TwitterOperationLoadingProps {
-  type: 'connecting' | 'posting' | 'scheduling' | 'disconnecting' | 'refreshing';
+  type:
+    | 'connecting'
+    | 'posting'
+    | 'scheduling'
+    | 'disconnecting'
+    | 'refreshing';
   message?: string;
   progress?: number; // 0-100 for progress bar
   showCancel?: boolean;
@@ -139,9 +153,7 @@ export const TwitterOperationLoading = ({
           </div>
 
           {/* Status Badge */}
-          <div className="flex justify-center">
-            {config.badge}
-          </div>
+          <div className="flex justify-center">{config.badge}</div>
 
           {/* Title */}
           <h3 className="text-lg font-semibold text-gray-900">
@@ -150,7 +162,8 @@ export const TwitterOperationLoading = ({
 
           {/* Message with animated dots */}
           <p className="text-sm text-gray-600">
-            {displayMessage}{dots}
+            {displayMessage}
+            {dots}
           </p>
 
           {/* Progress Bar */}
@@ -190,19 +203,35 @@ export const TwitterOperationLoading = ({
           {/* Loading Tips */}
           <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg w-full">
             {type === 'connecting' && (
-              <p>💡 You'll be redirected to Twitter to authorize TweetWiseAI. This window will automatically update once completed.</p>
+              <p>
+                💡 You&apos;ll be redirected to Twitter to authorize
+                TweetWiseAI. This window will automatically update once
+                completed.
+              </p>
             )}
             {type === 'posting' && (
-              <p>⚡ Your tweet is being published to Twitter. This usually takes just a few seconds.</p>
+              <p>
+                ⚡ Your tweet is being published to Twitter. This usually takes
+                just a few seconds.
+              </p>
             )}
             {type === 'scheduling' && (
-              <p>📅 Your tweet is being saved and will be automatically posted at the scheduled time.</p>
+              <p>
+                📅 Your tweet is being saved and will be automatically posted at
+                the scheduled time.
+              </p>
             )}
             {type === 'disconnecting' && (
-              <p>🔐 Removing your Twitter connection and cleaning up scheduled tweets.</p>
+              <p>
+                🔐 Removing your Twitter connection and cleaning up scheduled
+                tweets.
+              </p>
             )}
             {type === 'refreshing' && (
-              <p>🔄 Verifying your Twitter connection status and updating user information.</p>
+              <p>
+                🔄 Verifying your Twitter connection status and updating user
+                information.
+              </p>
             )}
           </div>
         </div>
@@ -257,7 +286,9 @@ export const InlineTwitterLoading = ({
 
   return (
     <div className={cn('flex items-center space-x-2', className)}>
-      <IconComponent className={cn(sizeClasses[size], 'animate-spin text-muted-foreground')} />
+      <IconComponent
+        className={cn(sizeClasses[size], 'animate-spin text-muted-foreground')}
+      />
       {showText && (
         <span className={cn(textSizeClasses[size], 'text-muted-foreground')}>
           {config.text}
@@ -294,4 +325,4 @@ export const TwitterLoadingOverlay = ({
       />
     </div>
   );
-}; 
+};

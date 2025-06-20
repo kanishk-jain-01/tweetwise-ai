@@ -7,17 +7,20 @@ import { z } from 'zod';
 
 // Request validation schema
 const scheduleTweetSchema = z.object({
-  content: z.string()
+  content: z
+    .string()
     .min(1, 'Tweet content cannot be empty')
     .max(280, 'Tweet content cannot exceed 280 characters'),
-  scheduledFor: z.string()
+  scheduledFor: z
+    .string()
     .datetime('Invalid date format. Use ISO 8601 format.')
     .refine(
-      (date) => new Date(date) > new Date(),
+      date => new Date(date) > new Date(),
       'Scheduled time must be in the future'
     )
     .refine(
-      (date) => new Date(date) <= new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+      date =>
+        new Date(date) <= new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
       'Scheduled time cannot be more than 1 year in the future'
     ),
   tweetId: z.string().uuid().optional(), // Optional draft tweet ID to update
@@ -26,18 +29,21 @@ const scheduleTweetSchema = z.object({
 // Update scheduled tweet schema
 const updateScheduledTweetSchema = z.object({
   tweetId: z.string().uuid(),
-  content: z.string()
+  content: z
+    .string()
     .min(1, 'Tweet content cannot be empty')
     .max(280, 'Tweet content cannot exceed 280 characters')
     .optional(),
-  scheduledFor: z.string()
+  scheduledFor: z
+    .string()
     .datetime('Invalid date format. Use ISO 8601 format.')
     .refine(
-      (date) => new Date(date) > new Date(),
+      date => new Date(date) > new Date(),
       'Scheduled time must be in the future'
     )
     .refine(
-      (date) => new Date(date) <= new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+      date =>
+        new Date(date) <= new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
       'Scheduled time cannot be more than 1 year in the future'
     )
     .optional(),
@@ -104,11 +110,16 @@ export async function POST(req: NextRequest) {
 
     if (tweetId) {
       // Update existing draft tweet
-      dbTweet = await twitterQueries.updateTweetStatus(tweetId, userId, 'scheduled', {
-        content,
-        scheduledFor: scheduledDate,
-        errorMessage: null,
-      });
+      dbTweet = await twitterQueries.updateTweetStatus(
+        tweetId,
+        userId,
+        'scheduled',
+        {
+          content,
+          scheduledFor: scheduledDate,
+          errorMessage: null,
+        }
+      );
     } else {
       // Create new scheduled tweet record
       dbTweet = await twitterQueries.createTweet({
@@ -129,7 +140,6 @@ export async function POST(req: NextRequest) {
       },
       message: 'Tweet scheduled successfully',
     });
-
   } catch (error) {
     console.error('Tweet scheduling API error:', error);
 
@@ -164,7 +174,12 @@ export async function GET(req: NextRequest) {
 
     // Get scheduled tweets from database
     const twitterQueries = new TwitterQueries();
-    const scheduledTweets = await twitterQueries.getScheduledTweets(userId, limit, offset, includeExpired);
+    const scheduledTweets = await twitterQueries.getScheduledTweets(
+      userId,
+      limit,
+      offset,
+      includeExpired
+    );
 
     return NextResponse.json({
       success: true,
@@ -177,7 +192,6 @@ export async function GET(req: NextRequest) {
         },
       },
     });
-
   } catch (error) {
     console.error('Get scheduled tweets API error:', error);
 
@@ -233,16 +247,21 @@ export async function PUT(req: NextRequest) {
     // Update scheduled tweet
     const twitterQueries = new TwitterQueries();
     const updateData: any = {};
-    
+
     if (content !== undefined) {
       updateData.content = content;
     }
-    
+
     if (scheduledFor !== undefined) {
       updateData.scheduledFor = new Date(scheduledFor);
     }
 
-    const dbTweet = await twitterQueries.updateTweetStatus(tweetId, userId, 'scheduled', updateData);
+    const dbTweet = await twitterQueries.updateTweetStatus(
+      tweetId,
+      userId,
+      'scheduled',
+      updateData
+    );
 
     if (!dbTweet) {
       return NextResponse.json(
@@ -265,7 +284,6 @@ export async function PUT(req: NextRequest) {
       },
       message: 'Scheduled tweet updated successfully',
     });
-
   } catch (error) {
     console.error('Update scheduled tweet API error:', error);
 
@@ -322,7 +340,6 @@ export async function DELETE(req: NextRequest) {
       success: true,
       message: 'Scheduled tweet cancelled successfully',
     });
-
   } catch (error) {
     console.error('Cancel scheduled tweet API error:', error);
 
@@ -335,4 +352,4 @@ export async function DELETE(req: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

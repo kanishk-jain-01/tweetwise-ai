@@ -6,6 +6,9 @@ export interface User {
   password_hash: string;
   reset_token?: string | null;
   reset_token_expiry?: Date | null;
+  twitter_user_id?: string | null;
+  twitter_username?: string | null;
+  twitter_name?: string | null;
   created_at: Date;
   updated_at: Date;
 }

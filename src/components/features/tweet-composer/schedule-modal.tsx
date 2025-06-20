@@ -3,7 +3,14 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useTwitterAuth } from '@/hooks/use-twitter-auth';
 import { Calendar, Clock, Send, Twitter, Zap } from 'lucide-react';
 import { useState } from 'react';
@@ -29,7 +36,9 @@ export const ScheduleModal = ({
   isLoading = false,
 }: ScheduleModalProps) => {
   const [postingMode, setPostingMode] = useState<PostingMode>('immediate');
-  const [scheduledDate, setScheduledDate] = useState<Date | undefined>(undefined);
+  const [scheduledDate, setScheduledDate] = useState<Date | undefined>(
+    undefined
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { isConnected, user, isLoading: isTwitterLoading } = useTwitterAuth();
@@ -108,8 +117,14 @@ export const ScheduleModal = ({
             </div>
             <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span>Character count:</span>
-              <Badge 
-                variant={characterCount > 280 ? 'destructive' : characterCount > 252 ? 'secondary' : 'outline'}
+              <Badge
+                variant={
+                  characterCount > 280
+                    ? 'destructive'
+                    : characterCount > 252
+                      ? 'secondary'
+                      : 'outline'
+                }
               >
                 {characterCount}/280
               </Badge>
@@ -133,10 +148,15 @@ export const ScheduleModal = ({
                 <Twitter className="w-4 h-4 text-white" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-green-900">{user.name}</p>
+                <p className="text-sm font-medium text-green-900">
+                  {user.name}
+                </p>
                 <p className="text-xs text-green-700">{user.handle}</p>
               </div>
-              <Badge variant="secondary" className="bg-green-100 text-green-800">
+              <Badge
+                variant="secondary"
+                className="bg-green-100 text-green-800"
+              >
                 Connected
               </Badge>
             </div>
@@ -147,7 +167,7 @@ export const ScheduleModal = ({
             <div className="space-y-4">
               <div className="space-y-3">
                 <h4 className="text-sm font-medium">When to post:</h4>
-                
+
                 {/* Immediate Option */}
                 <div
                   className={`relative cursor-pointer rounded-lg border p-4 transition-colors ${
@@ -158,11 +178,13 @@ export const ScheduleModal = ({
                   onClick={() => setPostingMode('immediate')}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className={`w-4 h-4 rounded-full border-2 ${
-                      postingMode === 'immediate'
-                        ? 'border-blue-500 bg-blue-500'
-                        : 'border-gray-300'
-                    }`}>
+                    <div
+                      className={`w-4 h-4 rounded-full border-2 ${
+                        postingMode === 'immediate'
+                          ? 'border-blue-500 bg-blue-500'
+                          : 'border-gray-300'
+                      }`}
+                    >
                       {postingMode === 'immediate' && (
                         <div className="w-full h-full rounded-full bg-white scale-50"></div>
                       )}
@@ -189,11 +211,13 @@ export const ScheduleModal = ({
                   onClick={() => setPostingMode('scheduled')}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className={`w-4 h-4 rounded-full border-2 ${
-                      postingMode === 'scheduled'
-                        ? 'border-blue-500 bg-blue-500'
-                        : 'border-gray-300'
-                    }`}>
+                    <div
+                      className={`w-4 h-4 rounded-full border-2 ${
+                        postingMode === 'scheduled'
+                          ? 'border-blue-500 bg-blue-500'
+                          : 'border-gray-300'
+                      }`}
+                    >
                       {postingMode === 'scheduled' && (
                         <div className="w-full h-full rounded-full bg-white scale-50"></div>
                       )}
@@ -261,4 +285,4 @@ export const ScheduleModal = ({
       </DialogContent>
     </Dialog>
   );
-}; 
+};

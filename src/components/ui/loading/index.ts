@@ -1,6 +1,6 @@
 export * from './loading-spinner';
 export {
-    InlineTwitterLoading,
-    TwitterLoadingOverlay, TwitterOperationLoading
+  InlineTwitterLoading,
+  TwitterLoadingOverlay,
+  TwitterOperationLoading,
 } from './twitter-operation-loading';
-

@@ -1,4 +1,3 @@
-
 // Migration: Add Twitter tokens table for OAuth token storage
 // Date: 2025-01-03
 // Description: Creates twitter_tokens table for storing Twitter OAuth tokens and user information
@@ -52,4 +51,4 @@ export const MIGRATION_002_METADATA = {
   date: '2025-01-03',
   up: MIGRATION_002_ADD_TWITTER_TOKENS_TABLE,
   down: MIGRATION_002_ROLLBACK,
-}; 
+};

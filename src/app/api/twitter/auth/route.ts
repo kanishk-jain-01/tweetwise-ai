@@ -32,10 +32,10 @@ export async function POST(req: NextRequest) {
     const validation = authRequestSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Invalid request data',
-          details: validation.error.flatten()
+          details: validation.error.flatten(),
         },
         { status: 400 }
       );
@@ -47,26 +47,30 @@ export async function POST(req: NextRequest) {
     // Check if user already has a valid Twitter connection
     const tokenManager = new TwitterTokenManager();
     const existingConnection = await tokenManager.getValidTokens(userId);
-    
+
     if (existingConnection) {
-      return NextResponse.json({
-        success: false,
-        error: 'Twitter account already connected',
-        code: 'ALREADY_CONNECTED'
-      }, { status: 409 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Twitter account already connected',
+          code: 'ALREADY_CONNECTED',
+        },
+        { status: 409 }
+      );
     }
 
     // Create Twitter client for OAuth initiation
     const twitterClient = new TwitterClient();
-    
+
     // Generate OAuth authorization URL
-    const oauthData = await twitterClient.generateAuthLink(state || `user_${userId}_${Date.now()}`);
-    
+    const oauthData = await twitterClient.generateAuthLink(
+      state || `user_${userId}_${Date.now()}`
+    );
+
     // Store the OAuth state and code verifier temporarily
     await tokenManager.storeOAuthState(userId, {
       state: oauthData.state,
       codeVerifier: oauthData.codeVerifier,
-      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
     });
 
     return NextResponse.json({
@@ -74,10 +78,9 @@ export async function POST(req: NextRequest) {
       authUrl: oauthData.authUrl,
       state: oauthData.state,
     });
-
   } catch (error) {
     console.error('Twitter auth initiation error:', error);
-    
+
     return NextResponse.json(
       {
         success: false,
@@ -90,7 +93,7 @@ export async function POST(req: NextRequest) {
 }
 
 // GET method to check current auth status
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     // Check if user is authenticated
     const session = await getServerSession(authOptions);
@@ -103,19 +106,18 @@ export async function GET(req: NextRequest) {
 
     const userId = session.user.id;
     const tokenManager = new TwitterTokenManager();
-    
+
     // Check if user has valid Twitter tokens
     const tokens = await tokenManager.getValidTokens(userId);
-    
+
     return NextResponse.json({
       success: true,
       isConnected: !!tokens,
       hasValidTokens: !!tokens,
     });
-
   } catch (error) {
     console.error('Twitter auth status check error:', error);
-    
+
     return NextResponse.json(
       {
         success: false,
@@ -125,4 +127,4 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

@@ -1,4 +1,23 @@
 import { sql } from './index';
+import { MIGRATION_001_METADATA } from './migrations/001-add-twitter-fields';
+import { MIGRATION_002_METADATA } from './migrations/002-add-twitter-tokens-table';
+import { MIGRATION_003_METADATA } from './migrations/003-add-twitter-user-fields';
+
+// All available migrations in order
+const MIGRATIONS = [
+  MIGRATION_001_METADATA,
+  MIGRATION_002_METADATA,
+  MIGRATION_003_METADATA,
+];
+
+// Run specific migration
+async function runMigration(
+  migration: typeof MIGRATION_001_METADATA
+): Promise<void> {
+  console.log(`   Running migration ${migration.id}: ${migration.name}...`);
+  await sql.unsafe(migration.up);
+  console.log(`   ✅ Migration ${migration.id} completed`);
+}
 
 // Run all migrations to set up the database schema
 export async function runMigrations(): Promise<void> {
@@ -84,6 +103,11 @@ export async function runMigrations(): Promise<void> {
         FOR EACH ROW
         EXECUTE FUNCTION update_updated_at_column()
     `;
+
+    // Run all available migrations
+    for (const migration of MIGRATIONS) {
+      await runMigration(migration);
+    }
 
     console.log('✅ All migrations completed successfully');
   } catch (error) {

@@ -4,7 +4,7 @@ import { TwitterTokenManager } from '@/lib/twitter/token-manager';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
   try {
     // Check if user is authenticated
     const session = await getServerSession(authOptions);
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
     // Check if user has Twitter connection
     const tokens = await tokenManager.getValidTokens(userId);
-    
+
     if (!tokens) {
       return NextResponse.json({
         success: true,
@@ -42,7 +42,6 @@ export async function POST(req: NextRequest) {
       success: true,
       message: 'Twitter account disconnected successfully',
     });
-
   } catch (error) {
     console.error('Twitter disconnect error:', error);
 
@@ -58,7 +57,7 @@ export async function POST(req: NextRequest) {
 }
 
 // GET method to check disconnect status (for UI confirmation)
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     // Check if user is authenticated
     const session = await getServerSession(authOptions);
@@ -76,25 +75,28 @@ export async function GET(req: NextRequest) {
     // Get current connection status
     const tokens = await tokenManager.getValidTokens(userId);
     const userTwitterInfo = await twitterQueries.getUserTwitterInfo(userId);
-    
+
     // Count scheduled tweets that would be affected
-    const scheduledTweetsCount = await twitterQueries.getScheduledTweetsCount(userId);
+    const scheduledTweetsCount =
+      await twitterQueries.getScheduledTweetsCount(userId);
 
     return NextResponse.json({
       success: true,
       data: {
         isConnected: !!tokens,
-        user: userTwitterInfo ? {
-          username: userTwitterInfo.twitter_username,
-          name: userTwitterInfo.twitter_display_name,
-        } : null,
-        scheduledTweetsCount,
-        disconnectWarning: scheduledTweetsCount > 0 
-          ? `You have ${scheduledTweetsCount} scheduled tweet(s) that will be converted to drafts.`
+        user: userTwitterInfo
+          ? {
+              username: userTwitterInfo.twitterUsername,
+              name: userTwitterInfo.twitterName,
+            }
           : null,
+        scheduledTweetsCount,
+        disconnectWarning:
+          scheduledTweetsCount > 0
+            ? `You have ${scheduledTweetsCount} scheduled tweet(s) that will be converted to drafts.`
+            : null,
       },
     });
-
   } catch (error) {
     console.error('Twitter disconnect status check error:', error);
 
@@ -107,4 +109,4 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

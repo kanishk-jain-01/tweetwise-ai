@@ -33,7 +33,7 @@ export interface UseTwitterAuthReturn extends TwitterAuthState {
 // Custom hook for Twitter authentication
 export const useTwitterAuth = (): UseTwitterAuthReturn => {
   const { data: session } = useSession();
-  
+
   const [state, setState] = useState<TwitterAuthState>({
     isConnected: false,
     isLoading: true,
@@ -78,12 +78,14 @@ export const useTwitterAuth = (): UseTwitterAuthReturn => {
         isLoading: false,
         isConnected: data.isConnected,
         connectionStatus: data.isConnected ? 'connected' : 'disconnected',
-        user: data.user ? {
-          id: data.user.id,
-          username: data.user.username,
-          name: data.user.name,
-          handle: `@${data.user.username}`,
-        } : null,
+        user: data.user
+          ? {
+              id: data.user.id,
+              username: data.user.username,
+              name: data.user.name,
+              handle: `@${data.user.username}`,
+            }
+          : null,
       }));
     } catch (error) {
       console.error('Error checking Twitter connection:', error);
@@ -92,7 +94,10 @@ export const useTwitterAuth = (): UseTwitterAuthReturn => {
         isLoading: false,
         isConnected: false,
         connectionStatus: 'error',
-        error: error instanceof Error ? error.message : 'Failed to check connection status',
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Failed to check connection status',
         user: null,
       }));
     }
@@ -141,7 +146,10 @@ export const useTwitterAuth = (): UseTwitterAuthReturn => {
         ...prev,
         isConnecting: false,
         connectionStatus: 'error',
-        error: error instanceof Error ? error.message : 'Failed to connect to Twitter',
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Failed to connect to Twitter',
       }));
     }
   }, [session?.user?.id]);
@@ -182,7 +190,10 @@ export const useTwitterAuth = (): UseTwitterAuthReturn => {
       setState(prev => ({
         ...prev,
         isDisconnecting: false,
-        error: error instanceof Error ? error.message : 'Failed to disconnect Twitter account',
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Failed to disconnect Twitter account',
       }));
     }
   }, [session?.user?.id]);
@@ -215,7 +226,7 @@ export const useTwitterAuth = (): UseTwitterAuthReturn => {
         setTimeout(() => {
           checkConnectionStatus();
         }, 1000);
-        
+
         // Clean up URL
         const url = new URL(window.location.href);
         url.searchParams.delete('twitter_success');
@@ -228,7 +239,7 @@ export const useTwitterAuth = (): UseTwitterAuthReturn => {
           connectionStatus: 'error',
           error: decodeURIComponent(error),
         }));
-        
+
         // Clean up URL
         const url = new URL(window.location.href);
         url.searchParams.delete('twitter_error');
@@ -251,7 +262,7 @@ export const useTwitterAuth = (): UseTwitterAuthReturn => {
 // Utility hook for checking if user needs Twitter connection
 export const useTwitterConnectionRequired = () => {
   const { isConnected, isLoading } = useTwitterAuth();
-  
+
   return {
     needsConnection: !isConnected && !isLoading,
     isCheckingConnection: isLoading,
@@ -261,10 +272,10 @@ export const useTwitterConnectionRequired = () => {
 // Utility hook for Twitter user info
 export const useTwitterUser = () => {
   const { user, isConnected, isLoading } = useTwitterAuth();
-  
+
   return {
     twitterUser: user,
     hasTwitterUser: !!user && isConnected,
     isLoadingUser: isLoading,
   };
-}; 
+};

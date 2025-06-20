@@ -5,6 +5,7 @@ import { neon } from '@neondatabase/serverless';
 import { config } from 'dotenv';
 import { MIGRATION_001_METADATA } from './migrations/001-add-twitter-fields';
 import { MIGRATION_002_METADATA } from './migrations/002-add-twitter-tokens-table';
+import { MIGRATION_003_METADATA } from './migrations/003-add-twitter-user-fields';
 
 // Load environment variables
 config({ path: '.env.local' });
@@ -13,7 +14,11 @@ config({ path: '.env.local' });
 const sql = neon(process.env.DATABASE_URL!);
 
 // Available migrations in order
-const MIGRATIONS = [MIGRATION_001_METADATA, MIGRATION_002_METADATA];
+const MIGRATIONS = [
+  MIGRATION_001_METADATA,
+  MIGRATION_002_METADATA,
+  MIGRATION_003_METADATA,
+];
 
 // Migration tracking table
 const CREATE_MIGRATIONS_TABLE = `
@@ -78,7 +83,7 @@ async function executeMigration(
     for (const statement of statements) {
       if (statement.trim()) {
         console.log(`  Executing: ${statement.substring(0, 50)}...`);
-        const result = await sql.query(statement);
+        await sql.query(statement);
         console.log(`  ✅ Executed successfully`);
       }
     }
@@ -179,7 +184,7 @@ export async function rollbackMigration(migrationId: string): Promise<void> {
     for (const statement of statements) {
       if (statement.trim()) {
         console.log(`  Rolling back: ${statement.substring(0, 50)}...`);
-        const result = await sql.query(statement);
+        await sql.query(statement);
         console.log(`  ✅ Rolled back successfully`);
       }
     }

@@ -1,7 +1,9 @@
 // Twitter API Configuration
 const TWITTER_CLIENT_ID = process.env.TWITTER_CLIENT_ID!;
 const TWITTER_CLIENT_SECRET = process.env.TWITTER_CLIENT_SECRET!;
-const CALLBACK_URL = process.env.TWITTER_CALLBACK_URL || `${process.env.NEXTAUTH_URL}/api/twitter/callback`;
+const CALLBACK_URL =
+  process.env.TWITTER_CALLBACK_URL ||
+  `${process.env.NEXTAUTH_URL}/api/twitter/callback`;
 
 // Dynamic import function for TwitterApi
 async function getTwitterApi() {
@@ -28,7 +30,7 @@ export class TwitterClient {
     if (this.client) return this.client;
 
     const TwitterApi = await getTwitterApi();
-    
+
     if (this.accessToken && this.accessSecret) {
       // Authenticated client for posting tweets
       this.client = new TwitterApi({
@@ -44,7 +46,7 @@ export class TwitterClient {
         clientSecret: TWITTER_CLIENT_SECRET,
       });
     }
-    
+
     return this.client;
   }
 
@@ -52,13 +54,14 @@ export class TwitterClient {
   async generateAuthLink(state?: string) {
     try {
       const client = await this.initClient();
-      const { url, codeVerifier, state: oauthState } = client.generateOAuth2AuthLink(
-        CALLBACK_URL,
-        {
-          scope: ['tweet.read', 'tweet.write', 'users.read'],
-          state: state || 'default',
-        }
-      );
+      const {
+        url,
+        codeVerifier,
+        state: oauthState,
+      } = client.generateOAuth2AuthLink(CALLBACK_URL, {
+        scope: ['tweet.read', 'tweet.write', 'users.read'],
+        state: state || 'default',
+      });
 
       return {
         authUrl: url,
@@ -75,7 +78,11 @@ export class TwitterClient {
   async exchangeCodeForTokens(code: string, codeVerifier: string) {
     try {
       const client = await this.initClient();
-      const { client: loggedClient, accessToken, refreshToken } = await client.loginWithOAuth2({
+      const {
+        client: loggedClient,
+        accessToken,
+        refreshToken,
+      } = await client.loginWithOAuth2({
         code,
         codeVerifier,
         redirectUri: CALLBACK_URL,
@@ -103,7 +110,7 @@ export class TwitterClient {
   async refreshAccessToken(refreshToken: string) {
     try {
       const client = await this.initClient();
-      const { client: refreshedClient, accessToken, refreshToken: newRefreshToken } = 
+      const { accessToken, refreshToken: newRefreshToken } =
         await client.refreshOAuth2Token(refreshToken);
 
       return {
@@ -141,17 +148,19 @@ export class TwitterClient {
       };
     } catch (error) {
       console.error('Error posting tweet:', error);
-      
+
       // Handle specific Twitter API errors
       if (error instanceof Error) {
         if (error.message.includes('duplicate')) {
           throw new Error('This tweet appears to be a duplicate');
         }
         if (error.message.includes('rate limit')) {
-          throw new Error('Twitter rate limit exceeded. Please try again later.');
+          throw new Error(
+            'Twitter rate limit exceeded. Please try again later.'
+          );
         }
       }
-      
+
       throw new Error('Failed to post tweet to Twitter');
     }
   }
@@ -224,7 +233,10 @@ export class TwitterClient {
 }
 
 // Utility function to create authenticated Twitter client
-export function createAuthenticatedTwitterClient(accessToken: string, accessSecret: string) {
+export function createAuthenticatedTwitterClient(
+  accessToken: string,
+  accessSecret: string
+) {
   return new TwitterClient(accessToken, accessSecret);
 }
 
@@ -243,22 +255,38 @@ export interface TwitterError {
 // Helper function to parse Twitter API errors
 export function parseTwitterError(error: any): TwitterError {
   const message = error?.message || 'Unknown Twitter API error';
-  
+
   if (message.includes('duplicate')) {
-    return { type: 'duplicate', message: 'This tweet appears to be a duplicate', originalError: error };
+    return {
+      type: 'duplicate',
+      message: 'This tweet appears to be a duplicate',
+      originalError: error,
+    };
   }
-  
+
   if (message.includes('rate limit')) {
-    return { type: 'rate_limit', message: 'Twitter rate limit exceeded', originalError: error };
+    return {
+      type: 'rate_limit',
+      message: 'Twitter rate limit exceeded',
+      originalError: error,
+    };
   }
-  
+
   if (message.includes('auth') || message.includes('unauthorized')) {
-    return { type: 'auth_error', message: 'Twitter authentication failed', originalError: error };
+    return {
+      type: 'auth_error',
+      message: 'Twitter authentication failed',
+      originalError: error,
+    };
   }
-  
+
   if (message.includes('API')) {
-    return { type: 'api_error', message: 'Twitter API error occurred', originalError: error };
+    return {
+      type: 'api_error',
+      message: 'Twitter API error occurred',
+      originalError: error,
+    };
   }
-  
+
   return { type: 'unknown', message, originalError: error };
-} 
+}
