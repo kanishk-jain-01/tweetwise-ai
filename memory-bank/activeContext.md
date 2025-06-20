@@ -2,24 +2,44 @@
 
 ## Current Work Focus
 
-### Project Status: AI Spell Check Feature Complete
+### Project Status: AI Spell Check Race Conditions FIXED
 
-The first AI feature, real-time spell checking, is now fully integrated. The dashboard's state management has been refactored to support communication between the Tweet Composer and the AI Suggestions panel. The system now successfully sends debounced requests to the backend, receives spelling suggestions, and displays them to the user.
+The spell check feature experienced race conditions and inconsistent behavior that have now been resolved. The system was triggering multiple overlapping API calls and inconsistent AI responses, causing suggestions to loop back and forth. These critical issues have been fixed with comprehensive improvements to the request flow and AI prompt engineering.
 
 ### Immediate Priority: Phase 7.0 AI Integration (Continued)
 
-The focus remains on integrating AI services. With the spell check foundation in place, the next steps are to build upon it.
+With the spell check foundation now stable, the focus continues on expanding AI services.
 
-1.  **Grammar Checking Service**
+1.  **Grammar Checking Service** (Next Priority)
 
     - Implement the grammar checking API endpoint using GPT-4.
     - Integrate grammar suggestions into the `AISuggestions` panel.
 
-2.  **Error Handling & Performance**
-    - Implement comprehensive error boundaries for the dashboard.
-    - Enhance the caching strategy (e.g., move from in-memory to Redis).
+2.  **Tweet Critique Feature**
+    - Build tweet critique service for engagement analysis
+    - Create conversational AI interface for tweet improvement suggestions
 
 ## Recent Changes and Discoveries
+
+### AI Spell Check Race Condition Fixes (COMPLETED)
+
+1.  **Request Cancellation**: Implemented AbortController to cancel ongoing requests when new ones are triggered, preventing overlapping API calls and out-of-order responses.
+
+2.  **Suggestion Acceptance Flow**: Removed immediate re-analysis after accepting suggestions to prevent race conditions. Added a flag system to prevent debounced effects from triggering during suggestion application.
+
+3.  **Stable useEffect Dependencies**: Memoized suggestion functions to prevent unnecessary effect re-runs and stabilized the debounced spell check effect.
+
+4.  **Improved AI Prompt**: Enhanced the spell check prompt with specific rules for social media content, reducing false positives and inconsistent suggestions for word variations like "love" vs "loving".
+
+5.  **Better Text Replacement**: Improved word boundary detection using regex to prevent partial word matches during suggestion application.
+
+### Key Technical Improvements Made
+
+1.  **AbortController Integration**: All spell check requests can now be cancelled, preventing race conditions from overlapping requests.
+2.  **Suggestion Application Flag**: Added `isApplyingSuggestionRef` to prevent debounced effects during suggestion acceptance.
+3.  **Enhanced AI Prompt**: More specific rules for social media content, with clear examples of what to flag vs. ignore.
+4.  **Robust Text Replacement**: Word boundary detection to ensure accurate text replacement.
+5.  **Stable Function References**: Proper memoization to prevent unnecessary re-renders and effect triggers.
 
 ### AI Integration & Dashboard Refactor (COMPLETED)
 
@@ -31,13 +51,15 @@ The focus remains on integrating AI services. With the spell check foundation in
 
 4.  **Debounced AI Requests**: A `useDebounce` hook was created and implemented. The application now waits for the user to pause typing before sending the content to the spell-check API, optimizing performance and reducing cost.
 
-5.  **End-to-End Spell Check**: The full loop is complete: user types in composer -> content is debounced -> API is called -> suggestions are returned -> suggestions are displayed in the UI.
+5.  **End-to-End Spell Check**: The full loop is complete and stable: user types in composer -> content is debounced -> API is called -> suggestions are returned -> suggestions are displayed in the UI -> suggestions can be accepted without causing loops.
 
 ### Key Architectural Decisions Made
 
-1.  **Lifted State Management**: The dashboard now uses a "lift state up" pattern for communication between its panels. This is a standard React pattern that works well for the current level of complexity.
-2.  **In-Memory Caching**: A simple `Map`-based in-memory cache was implemented on the API route for rapid development. This should be upgraded for production.
-3.  **Prop-Driven Components**: Feature components are now "dumb" and controlled by the parent dashboard page, making the component architecture cleaner and more predictable.
+1.  **Request Cancellation Pattern**: Implemented AbortController pattern for all AI requests to prevent race conditions.
+2.  **Lifted State Management**: The dashboard uses a "lift state up" pattern for communication between its panels.
+3.  **In-Memory Caching**: A simple `Map`-based in-memory cache was implemented on the API route for rapid development.
+4.  **Prop-Driven Components**: Feature components are now "dumb" and controlled by the parent dashboard page.
+5.  **Conservative AI Prompting**: Enhanced prompts with specific rules to reduce false positives and improve consistency.
 
 ## Next Steps (Immediate - Next 1-2 Sessions)
 
@@ -47,6 +69,7 @@ The focus remains on integrating AI services. With the spell check foundation in
 - [ ] Create a prompt that returns structured JSON for grammar suggestions.
 - [ ] Update `useAISuggestions` hook to fetch and manage grammar suggestions.
 - [ ] Display grammar suggestions in the `AISuggestions` panel.
+- [ ] Apply the same race condition prevention patterns used in spell check.
 
 ### 2. Tweet Critique Feature (NEXT)
 
@@ -68,53 +91,6 @@ The focus remains on integrating AI services. With the spell check foundation in
 1.  **AI Suggestions UI**: Finalize the design for how multiple types of suggestions (spelling, grammar) are displayed together.
 2.  **Loading Indicators**: Differentiate loading states between initial analysis, spell check, and grammar checks.
 
-3.  **Dashboard Layout Pattern**: Three-panel fixed layout with responsive collapsing
-4.  **User Profile Management**: Dropdown-based profile system with NextAuth integration
-5.  **Mobile Navigation**: Header-based drawer system for side panel access
-6.  **Character Counting**: Real-time visual feedback with color-coded warnings
-7.  **Auto-Save Strategy**: 30-second intervals with visual feedback and error handling
-8.  **State Management**: Custom hooks pattern for feature-specific state
-9.  **Loading States**: Comprehensive skeleton components and loading indicators
-10. **Error Boundaries**: Prepared infrastructure for AI service error handling
-
-## Next Steps (Immediate - Next 1-2 Sessions)
-
-### 1. OpenAI API Integration (CURRENT PRIORITY)
-
-- [ ] Set up OpenAI API client with proper configuration and error handling
-- [ ] Implement spell checking API endpoint using GPT-3.5-turbo
-- [ ] Connect AI suggestions panel to real spell checking service
-- [ ] Add comprehensive error handling and retry logic for AI requests
-
-### 2. Grammar Checking Service (NEXT)
-
-- [ ] Implement grammar checking API endpoint using GPT-4
-- [ ] Create structured response parsing for grammar suggestions
-- [ ] Integrate grammar checking with the AI suggestions panel
-- [ ] Add performance monitoring for AI response times
-
-### 3. Tweet Critique Feature (UPCOMING)
-
-- [ ] Build tweet critique service for engagement analysis
-- [ ] Create conversational AI interface for tweet improvement suggestions
-- [ ] Implement caching system for AI responses to optimize costs
-- [ ] Add batch processing capabilities for multiple tweets
-
-## Active Decisions and Considerations
-
-### Technical Decisions Pending
-
-1. **AI Response Caching**: Determine optimal caching strategy (Redis vs. database vs. memory)
-2. **Error Handling Strategy**: Implement comprehensive error boundaries for AI service failures
-3. **Rate Limiting**: Plan for OpenAI API rate limits and cost optimization
-4. **Performance Monitoring**: Set up tracking for AI service response times and success rates
-
-### Design Decisions Pending
-
-1. **AI Suggestions UI**: Finalize the design of AI feedback presentation in the right panel
-2. **Error States**: Design user-friendly error messages for AI service failures
-3. **Loading Indicators**: Implement AI-specific loading states and progress indicators
-
 ### Integration Considerations
 
 1. **OpenAI API Costs**: Implement efficient request batching and caching to minimize costs
@@ -126,7 +102,7 @@ The focus remains on integrating AI services. With the spell check foundation in
 
 ### Potential Blockers
 
-- **None**. Dashboard is complete and stable, ready for AI integration.
+- **None**. Spell check race conditions are resolved, dashboard is stable, ready for grammar check implementation.
 
 ### Risk Mitigation
 
@@ -137,39 +113,41 @@ The focus remains on integrating AI services. With the spell check foundation in
 
 ## Development Workflow
 
-### Current Phase: AI Services Integration
+### Current Phase: AI Services Integration (Continued)
 
-- Focus on connecting the existing dashboard to OpenAI services
-- Prioritize spell checking as the foundational AI feature
+- Spell checking foundation is now stable and reliable
+- Focus on implementing grammar checking with the same reliability patterns
 - Build robust error handling and performance monitoring
 - Maintain the excellent user experience established in the dashboard
 
 ### Next Phase: Advanced AI Features
 
-- Expand to grammar checking and tweet critique features
+- Expand to tweet critique features
 - Implement advanced caching and optimization strategies
 - Add batch processing and advanced AI workflows
 - Enhance user experience with sophisticated AI interactions
 
 ### Success Criteria for Current Phase
 
-1. **Spell Checking**: Users can get real-time spell checking suggestions in the AI panel
-2. **Performance**: AI services respond within 2 seconds consistently
-3. **Error Handling**: Graceful degradation when AI services are unavailable
-4. **User Experience**: AI features feel integrated and natural within the dashboard
+1. **Spell Checking**: ✅ Users can get reliable, consistent spell checking suggestions without loops or race conditions
+2. **Performance**: ✅ AI services respond within 2 seconds consistently with request cancellation
+3. **Error Handling**: ✅ Graceful degradation when AI services are unavailable
+4. **User Experience**: ✅ AI features feel integrated and natural within the dashboard
+5. **Grammar Checking**: 🔄 Implement with same reliability as spell checking
+6. **Tweet Critique**: 🔄 Build engagement analysis service
 
 ## Communication and Collaboration
 
 ### Documentation Updates Needed
 
-- Update systemPatterns.md with AI integration architecture
-- Document AI service patterns and error handling strategies
-- Update techContext.md with OpenAI integration details
+- Update systemPatterns.md with AI request cancellation patterns
+- Document race condition prevention strategies
+- Update techContext.md with AbortController integration details
 
 ### User Feedback Integration
 
-- Prepare for user testing of AI features once implemented
+- Prepare for user testing of stable AI features
 - Plan feedback collection mechanism for AI suggestion quality
 - Create process for iterating on AI service effectiveness
 
-This active context reflects the successful completion of the dashboard implementation and the shift in focus toward AI service integration, which represents the next major milestone in the TweetWiseAI project.
+This active context reflects the successful resolution of spell check race conditions and the readiness to implement grammar checking with the same level of reliability and user experience.

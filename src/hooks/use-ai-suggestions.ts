@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface Suggestion {
@@ -45,20 +45,40 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
   const [critique, setCritique] = useState<Critique | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Add ref to track and cancel ongoing requests
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const fetchSpellingSuggestions = useCallback(async (text: string) => {
     if (!text.trim()) {
       setSpellingSuggestions([]);
       return;
     }
+
+    // Cancel any ongoing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new AbortController for this request
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     setIsLoading(true);
     setError(null);
+    
     try {
       const response = await fetch('/api/ai/spell-check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
+        signal: abortController.signal,
       });
+
+      // Check if request was aborted
+      if (abortController.signal.aborted) {
+        return;
+      }
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -68,6 +88,12 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
       }
 
       const data: SpellCheckApiResponse = await response.json();
+      
+      // Double-check abort status before updating state
+      if (abortController.signal.aborted) {
+        return;
+      }
+
       const suggestionsWithIds: Suggestion[] = data.suggestions.map(s => ({
         ...s,
         id: uuidv4(),
@@ -75,12 +101,20 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
       }));
       setSpellingSuggestions(suggestionsWithIds);
     } catch (err) {
+      // Ignore AbortError - it's expected when cancelling requests
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
+      
       const errorMessage =
         err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
       console.error('Error fetching spelling suggestions:', err);
     } finally {
-      setIsLoading(false);
+      // Only set loading to false if this request wasn't aborted
+      if (!abortController.signal.aborted) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
@@ -122,10 +156,16 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
   }, []);
 
   const clearSuggestions = useCallback(() => {
+    // Cancel any ongoing requests when clearing
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
     setSpellingSuggestions([]);
     setGrammarSuggestions([]);
     setCritique(null);
     setError(null);
+    setIsLoading(false);
   }, []);
 
   return {

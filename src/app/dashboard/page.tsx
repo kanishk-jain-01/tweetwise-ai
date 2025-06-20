@@ -16,22 +16,38 @@ export default function DashboardPage() {
 
   // Use ref to track current content to avoid stale closures
   const currentContentRef = useRef(composer.content);
+  
+  // Track if we're in the middle of applying a suggestion to prevent re-analysis
+  const isApplyingSuggestionRef = useRef(false);
 
   // Update ref whenever content changes
   useEffect(() => {
     currentContentRef.current = composer.content;
   }, [composer.content]);
 
-  // Destructure the functions to ensure stable references for the useEffect dependency array
-  const { fetchSpellingSuggestions, clearSuggestions } = suggestions;
+  // Memoize the suggestion functions to prevent unnecessary effect runs
+  const fetchSpellingSuggestions = useCallback(
+    (text: string) => suggestions.fetchSpellingSuggestions(text),
+    [suggestions.fetchSpellingSuggestions]
+  );
 
+  const clearSuggestions = useCallback(
+    () => suggestions.clearSuggestions(),
+    [suggestions.clearSuggestions]
+  );
+
+  // Debounced effect for spell checking - now with stable dependencies
   useEffect(() => {
+    // Don't trigger spell check if we're in the middle of applying a suggestion
+    if (isApplyingSuggestionRef.current) {
+      return;
+    }
+
     if (debouncedContent.trim()) {
       fetchSpellingSuggestions(debouncedContent);
     } else {
       clearSuggestions();
     }
-    // Add the destructured functions to the dependency array
   }, [debouncedContent, fetchSpellingSuggestions, clearSuggestions]);
 
   // Text replacement function for applying suggestions
@@ -45,10 +61,24 @@ export default function DashboardPage() {
         startIndex + original.length
       );
       if (actualText !== original) {
-        // Fallback: Search for the word in the text
+        // Fallback: Search for the first occurrence of the word in the text
+        // Use word boundaries to avoid partial matches
+        const regex = new RegExp(`\\b${original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
+        const match = text.match(regex);
+        if (match && match.index !== undefined) {
+          // Use the found index instead
+          const wordIndex = match.index;
+          const result =
+            text.substring(0, wordIndex) +
+            replacement +
+            text.substring(wordIndex + original.length);
+
+          return result;
+        }
+
+        // If regex fails, try simple indexOf as last resort
         const wordIndex = text.indexOf(original);
         if (wordIndex !== -1) {
-          // Use the found index instead
           const result =
             text.substring(0, wordIndex) +
             replacement +
@@ -72,9 +102,12 @@ export default function DashboardPage() {
     []
   );
 
-  // Handle suggestion acceptance - use ref to get current content
+  // Handle suggestion acceptance - FIXED to prevent race conditions
   const handleAcceptSuggestion = useCallback(
     (suggestion: Suggestion) => {
+      // Set flag to prevent debounced effect from triggering during suggestion application
+      isApplyingSuggestionRef.current = true;
+
       // Get current content from ref to avoid stale closure
       const currentContent = currentContentRef.current;
 
@@ -85,6 +118,7 @@ export default function DashboardPage() {
       if (newContent === currentContent) {
         // Text didn't change (likely due to mismatch), just remove the suggestion
         suggestions.rejectSuggestion(suggestion);
+        isApplyingSuggestionRef.current = false;
         return;
       }
 
@@ -94,19 +128,21 @@ export default function DashboardPage() {
       // Also update our ref immediately to ensure consistency
       currentContentRef.current = newContent;
 
-      // Clear current suggestions
-      clearSuggestions();
+      // Remove the accepted suggestion from the list immediately
+      suggestions.rejectSuggestion(suggestion);
 
-      // Trigger immediate re-analysis on the new content
-      if (newContent.trim()) {
-        fetchSpellingSuggestions(newContent);
-      }
+      // Clear the flag after a short delay to allow content to settle
+      // This prevents the debounced effect from immediately re-analyzing
+      setTimeout(() => {
+        isApplyingSuggestionRef.current = false;
+      }, 100);
+
+      // Note: We removed the immediate re-analysis call here to prevent race conditions
+      // The debounced effect will handle re-analysis after the timeout
     },
     [
       applyTextReplacement,
       composer.setContent,
-      clearSuggestions,
-      fetchSpellingSuggestions,
       suggestions.rejectSuggestion,
     ]
   );
@@ -116,7 +152,7 @@ export default function DashboardPage() {
     (suggestion: Suggestion) => {
       suggestions.rejectSuggestion(suggestion);
     },
-    [suggestions]
+    [suggestions.rejectSuggestion]
   );
 
   return (
