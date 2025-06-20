@@ -265,4 +265,63 @@ interface APIError {
 - **Caching Strategy**: Reduce repeated API calls
 - **Resource Monitoring**: Track usage patterns for optimization
 
+## Form Validation Pattern
+
+### shadcn/ui Form Components
+
+- **Pattern**: Use `shadcn/ui` form components for consistent styling and behavior.
+- **Structure**:
+  ```tsx
+  import { Form, Input, Button } from 'shadcn/ui';
+  import { useForm } from 'react-hook-form';
+  import { zodResolver } from '@hookform/resolvers/zod';
+  import { z } from 'zod';
+
+  const schema = z.object({
+    email: z.string().email(),
+    password: z.string().min(8),
+  });
+
+  const MyForm = () => {
+    const { register, handleSubmit, formState: { errors } } = useForm({
+      resolver: zodResolver(schema),
+    });
+
+    const onSubmit = data => console.log(data);
+
+    return (
+      <Form onSubmit={handleSubmit(onSubmit)}>
+        <Input {...register('email')} placeholder="Email" />
+        {errors.email && <span>{errors.email.message}</span>}
+
+        <Input {...register('password')} type="password" placeholder="Password" />
+        {errors.password && <span>{errors.password.message}</span>}
+
+        <Button type="submit">Submit</Button>
+      </Form>
+    );
+  };
+  ```
+
+### Notifications with sonner
+
+- **Pattern**: Use `sonner` for toast notifications to provide feedback.
+- **Implementation**:
+  ```tsx
+  import { Toaster, toast } from 'sonner';
+
+  const notifySuccess = () => toast.success('Form submitted successfully!');
+  const notifyError = () => toast.error('There was an error submitting the form.');
+
+  const MyComponent = () => (
+    <>
+      <Toaster />
+      <button onClick={notifySuccess}>Show Success</button>
+      <button onClick={notifyError}>Show Error</button>
+    </>
+  );
+  ```
+
+- **Reasoning**: Provides a consistent and accessible way to notify users of form submission results.
+
 This system architecture provides a solid foundation for the TweetWiseAI platform while maintaining flexibility for future enhancements and scaling requirements.

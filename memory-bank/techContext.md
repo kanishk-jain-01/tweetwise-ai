@@ -17,10 +17,14 @@
 - **React 19.0.0** with TypeScript
   - Latest React features and concurrent rendering
   - Strict TypeScript configuration for type safety
-- **Tailwind CSS v4+** for styling
+- **Tailwind CSS v3.4** for styling
   - Utility-first CSS framework
   - Custom design system implementation
   - PostCSS integration for optimization
+- **shadcn/ui** for UI components
+  - Modern, accessible component library
+  - Integrated with Tailwind CSS for styling
+  - Includes Button, Card, Input, Textarea, Sheet, Dialog, Dropdown-menu
 - **Geist fonts** (Sans and Mono) for typography
   - Modern, clean font family
   - Optimized web font loading
@@ -34,6 +38,12 @@
   - TypeScript-first schema validation
   - Runtime type checking
 - **@hookform/resolvers 5.1.1** for Zod integration
+
+#### Notifications
+
+- **sonner** for toast notifications
+  - Non-intrusive, accessible notifications
+  - Replaces deprecated `Toast` component from `shadcn/ui`
 
 #### Utility Libraries
 
@@ -178,8 +188,8 @@ src/
 ### Configuration Files
 
 - `next.config.ts` - Next.js configuration
-- `tailwind.config.js` - Tailwind CSS configuration
-- `postcss.config.mjs` - PostCSS configuration
+- `tailwind.config.ts` - Tailwind CSS configuration
+- `postcss.config.js` - PostCSS configuration
 - `tsconfig.json` - TypeScript configuration
 - `eslint.config.mjs` - ESLint configuration
 - `jest.config.js` - Jest testing configuration
