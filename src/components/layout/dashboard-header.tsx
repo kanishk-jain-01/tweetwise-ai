@@ -1,5 +1,6 @@
 'use client';
 
+import { TwitterConnectionStatus } from '@/components/features/tweet-composer/twitter-connect';
 import { MobileNavButtons } from './mobile-nav-buttons';
 import { UserProfileDropdown } from './user-profile-dropdown';
 
@@ -36,8 +37,17 @@ export const DashboardHeader = ({
         <h1 className="text-lg font-semibold">TweetWiseAI</h1>
       </div>
 
+      {/* Center - Twitter Connection Status */}
+      <div className="hidden md:flex flex-1 justify-center">
+        <TwitterConnectionStatus />
+      </div>
+
       {/* Mobile Nav + User Menu */}
       <div className="flex items-center space-x-4">
+        {/* Mobile Twitter Status */}
+        <div className="md:hidden">
+          <TwitterConnectionStatus className="scale-90" />
+        </div>
         <MobileNavButtons
           onSelectTweet={onSelectTweet}
           spellingSuggestions={spellingSuggestions}
