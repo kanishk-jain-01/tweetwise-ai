@@ -70,7 +70,7 @@ Text to analyze:
         suggestions = result.corrections;
       }
     } catch (e) {
-      console.error("Failed to parse OpenAI response:", e);
+      console.error('Failed to parse OpenAI response:', e);
       // Don't throw here, just return no suggestions
     }
 

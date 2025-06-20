@@ -68,7 +68,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
       }
 
       const data: SpellCheckApiResponse = await response.json();
-      const suggestionsWithIds: Suggestion[] = data.suggestions.map((s) => ({
+      const suggestionsWithIds: Suggestion[] = data.suggestions.map(s => ({
         ...s,
         id: uuidv4(),
         type: 'spelling',

@@ -13,10 +13,10 @@ export default function DashboardPage() {
   const composer = useTweetComposer();
   const suggestions = useAISuggestions();
   const debouncedContent = useDebounce(composer.content, 500);
-  
+
   // Use ref to track current content to avoid stale closures
   const currentContentRef = useRef(composer.content);
-  
+
   // Update ref whenever content changes
   useEffect(() => {
     currentContentRef.current = composer.content;
@@ -35,69 +35,89 @@ export default function DashboardPage() {
   }, [debouncedContent, fetchSpellingSuggestions, clearSuggestions]);
 
   // Text replacement function for applying suggestions
-  const applyTextReplacement = useCallback((text: string, suggestion: Suggestion): string => {
-    const { startIndex, original, suggestion: replacement } = suggestion;
-    
-    // Validate that the text at startIndex matches the original
-    const actualText = text.substring(startIndex, startIndex + original.length);
-    if (actualText !== original) {
-      // Fallback: Search for the word in the text
-      const wordIndex = text.indexOf(original);
-      if (wordIndex !== -1) {
-        // Use the found index instead
-        const result = text.substring(0, wordIndex) + 
-               replacement + 
-               text.substring(wordIndex + original.length);
-        
-        return result;
+  const applyTextReplacement = useCallback(
+    (text: string, suggestion: Suggestion): string => {
+      const { startIndex, original, suggestion: replacement } = suggestion;
+
+      // Validate that the text at startIndex matches the original
+      const actualText = text.substring(
+        startIndex,
+        startIndex + original.length
+      );
+      if (actualText !== original) {
+        // Fallback: Search for the word in the text
+        const wordIndex = text.indexOf(original);
+        if (wordIndex !== -1) {
+          // Use the found index instead
+          const result =
+            text.substring(0, wordIndex) +
+            replacement +
+            text.substring(wordIndex + original.length);
+
+          return result;
+        }
+
+        // Word not found anywhere in text, return original
+        return text;
       }
-      
-      // Word not found anywhere in text, return original
-      return text;
-    }
-    
-    // Apply the replacement (exact index match)
-    const result = text.substring(0, startIndex) + 
-           replacement + 
-           text.substring(startIndex + original.length);
-    
-    return result;
-  }, []);
+
+      // Apply the replacement (exact index match)
+      const result =
+        text.substring(0, startIndex) +
+        replacement +
+        text.substring(startIndex + original.length);
+
+      return result;
+    },
+    []
+  );
 
   // Handle suggestion acceptance - use ref to get current content
-  const handleAcceptSuggestion = useCallback((suggestion: Suggestion) => {
-    // Get current content from ref to avoid stale closure
-    const currentContent = currentContentRef.current;
-    
-    // Apply the text replacement using current content
-    const newContent = applyTextReplacement(currentContent, suggestion);
-    
-    // Only proceed if the text actually changed
-    if (newContent === currentContent) {
-      // Text didn't change (likely due to mismatch), just remove the suggestion
-      suggestions.rejectSuggestion(suggestion);
-      return;
-    }
-    
-    // Update content immediately
-    composer.setContent(newContent);
-    
-    // Also update our ref immediately to ensure consistency
-    currentContentRef.current = newContent;
-    
-    // Clear current suggestions 
-    clearSuggestions();
-    
-    // Trigger immediate re-analysis on the new content
-    if (newContent.trim()) {
-      fetchSpellingSuggestions(newContent);
-    }
-  }, [applyTextReplacement, composer.setContent, clearSuggestions, fetchSpellingSuggestions, suggestions.rejectSuggestion]);
+  const handleAcceptSuggestion = useCallback(
+    (suggestion: Suggestion) => {
+      // Get current content from ref to avoid stale closure
+      const currentContent = currentContentRef.current;
+
+      // Apply the text replacement using current content
+      const newContent = applyTextReplacement(currentContent, suggestion);
+
+      // Only proceed if the text actually changed
+      if (newContent === currentContent) {
+        // Text didn't change (likely due to mismatch), just remove the suggestion
+        suggestions.rejectSuggestion(suggestion);
+        return;
+      }
+
+      // Update content immediately
+      composer.setContent(newContent);
+
+      // Also update our ref immediately to ensure consistency
+      currentContentRef.current = newContent;
+
+      // Clear current suggestions
+      clearSuggestions();
+
+      // Trigger immediate re-analysis on the new content
+      if (newContent.trim()) {
+        fetchSpellingSuggestions(newContent);
+      }
+    },
+    [
+      applyTextReplacement,
+      composer.setContent,
+      clearSuggestions,
+      fetchSpellingSuggestions,
+      suggestions.rejectSuggestion,
+    ]
+  );
 
   // Handle suggestion rejection
-  const handleRejectSuggestion = useCallback((suggestion: Suggestion) => {
-    suggestions.rejectSuggestion(suggestion);
-  }, [suggestions]);
+  const handleRejectSuggestion = useCallback(
+    (suggestion: Suggestion) => {
+      suggestions.rejectSuggestion(suggestion);
+    },
+    [suggestions]
+  );
 
   return (
     <div className="h-screen flex flex-col">
