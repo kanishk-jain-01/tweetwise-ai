@@ -35,11 +35,14 @@ export const metadata: Metadata = {
     'content creation',
     'engagement',
   ],
-  authors: [{ name: 'TweetWiseAI Team', url: 'https://tweetwise-ai.vercel.app' }],
+  authors: [
+    { name: 'TweetWiseAI Team', url: 'https://tweetwise-ai.vercel.app' },
+  ],
   creator: 'TweetWiseAI Team',
   openGraph: {
     title: 'TweetWiseAI - AI-Powered Tweet Enhancement',
-    description: 'Write perfect tweets with AI-powered grammar checks, critiques, and more.',
+    description:
+      'Write perfect tweets with AI-powered grammar checks, critiques, and more.',
     url: 'https://tweetwise-ai.vercel.app',
     siteName: 'TweetWiseAI',
     images: [
@@ -56,7 +59,8 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'TweetWiseAI - AI-Powered Tweet Enhancement',
-    description: 'Write perfect tweets with AI-powered grammar checks, critiques, and more.',
+    description:
+      'Write perfect tweets with AI-powered grammar checks, critiques, and more.',
     images: ['/og-image.png'],
   },
   robots: {
@@ -94,9 +98,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers session={session}>
-          <ConditionalLayout>
-            {children}
-          </ConditionalLayout>
+          <ConditionalLayout>{children}</ConditionalLayout>
         </Providers>
         <Toaster />
       </body>

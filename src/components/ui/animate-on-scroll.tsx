@@ -9,7 +9,11 @@ interface AnimateOnScrollProps {
   delay?: number;
 }
 
-export default function AnimateOnScroll({ children, className, delay = 0 }: AnimateOnScrollProps) {
+export default function AnimateOnScroll({
+  children,
+  className,
+  delay = 0,
+}: AnimateOnScrollProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.1 });
 
@@ -30,4 +34,4 @@ export default function AnimateOnScroll({ children, className, delay = 0 }: Anim
       {children}
     </motion.div>
   );
-} 
+}

@@ -37,19 +37,21 @@ export const useTweetHistory = (): UseTweetHistoryReturn => {
     }
   }, []);
 
-  const searchTweets = useCallback((query: string) => {
+  const searchTweets = useCallback((_query: string) => {
     // For now, filtering is handled in the component
     // In the future, this could make API calls for server-side search
-    console.log('Searching tweets for:', query);
+    // console.log('Searching tweets for:', query);
   }, []);
 
   const loadTweet = useCallback((tweet: Tweet) => {
-    console.log('Loading tweet:', tweet.id, tweet.content);
-    
+    // console.log('Loading tweet:', tweet.id, tweet.content);
+
     // Dispatch custom event to notify tweet composer
-    window.dispatchEvent(new CustomEvent('loadTweet', { 
-      detail: { tweet } 
-    }));
+    window.dispatchEvent(
+      new CustomEvent('loadTweet', {
+        detail: { tweet },
+      })
+    );
   }, []);
 
   const refreshTweets = useCallback(async () => {
@@ -64,12 +66,12 @@ export const useTweetHistory = (): UseTweetHistoryReturn => {
   // Listen for tweet saved events to refresh the list
   useEffect(() => {
     const handleTweetSaved = () => {
-      console.log('Tweet saved, refreshing history...');
+      // console.log('Tweet saved, refreshing history...');
       refreshTweets();
     };
 
     window.addEventListener('tweetSaved', handleTweetSaved);
-    
+
     return () => {
       window.removeEventListener('tweetSaved', handleTweetSaved);
     };
@@ -83,4 +85,4 @@ export const useTweetHistory = (): UseTweetHistoryReturn => {
     loadTweet,
     refreshTweets,
   };
-}; 
+};

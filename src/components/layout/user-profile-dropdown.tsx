@@ -24,7 +24,8 @@ export const UserProfileDropdown = () => {
 
   const handleAccountSettings = () => {
     // TODO: Navigate to account settings page
-    console.log('Navigate to account settings');
+    // TODO: Navigate to account settings
+    // console.log('Navigate to account settings');
   };
 
   const getUserInitials = (email: string) => {
@@ -71,14 +72,14 @@ export const UserProfileDropdown = () => {
             </p>
           </div>
         </DropdownMenuLabel>
-        
+
         <DropdownMenuSeparator />
-        
+
         <DropdownMenuItem onClick={handleAccountSettings}>
           <Settings className="mr-2 h-4 w-4" />
           <span>Account Settings</span>
         </DropdownMenuItem>
-        
+
         <DropdownMenuItem onClick={handleSignOut}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Sign Out</span>
@@ -86,4 +87,4 @@ export const UserProfileDropdown = () => {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}; 
+};

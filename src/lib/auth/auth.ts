@@ -3,7 +3,6 @@ import bcrypt from 'bcryptjs';
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
-
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -17,10 +16,10 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-                try {
+        try {
           // Find user by email using query function
           const user = await UserQueries.findByEmail(credentials.email);
-          
+
           if (!user) {
             return null;
           }

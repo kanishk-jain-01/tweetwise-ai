@@ -5,7 +5,7 @@ import { getServerSession } from 'next-auth/next';
 import { NextRequest, NextResponse } from 'next/server';
 
 // GET /api/tweets - Fetch user's tweets
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     // First get user ID from email
     const user = await UserQueries.findByEmail(session.user.email);
-    
+
     if (!user) {
       return NextResponse.json(
         { success: false, error: 'User not found' },
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
 
     // Get user ID from email
     const user = await UserQueries.findByEmail(session.user.email);
-    
+
     if (!user) {
       return NextResponse.json(
         { success: false, error: 'User not found' },
@@ -83,13 +83,16 @@ export async function POST(request: NextRequest) {
     let tweet;
     if (id) {
       // Update existing tweet
-      tweet = await TweetQueries.update(id, { content: content.trim(), status });
+      tweet = await TweetQueries.update(id, {
+        content: content.trim(),
+        status,
+      });
     } else {
       // Create new tweet
       tweet = await TweetQueries.create({
         user_id: user.id,
         content: content.trim(),
-        status
+        status,
       });
     }
 
@@ -130,7 +133,7 @@ export async function DELETE(request: NextRequest) {
 
     // Verify ownership before deletion
     const user = await UserQueries.findByEmail(session.user.email);
-    
+
     if (!user) {
       return NextResponse.json(
         { success: false, error: 'User not found' },
@@ -159,4 +162,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

@@ -9,7 +9,9 @@ export default function Header() {
       <div className="container flex h-14 items-center">
         <div className="mr-4 hidden md:flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
-            <span className="hidden font-bold sm:inline-block">TweetWiseAI</span>
+            <span className="hidden font-bold sm:inline-block">
+              TweetWiseAI
+            </span>
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
             <Link href="/#features">Features</Link>
@@ -32,13 +34,22 @@ export default function Header() {
                   <Link href="/" className="flex items-center space-x-2">
                     <span className="font-bold">TweetWiseAI</span>
                   </Link>
-                  <Link href="/#features" className="flex w-full items-center py-2 text-lg font-semibold">
+                  <Link
+                    href="/#features"
+                    className="flex w-full items-center py-2 text-lg font-semibold"
+                  >
                     Features
                   </Link>
-                  <Link href="/#testimonials" className="flex w-full items-center py-2 text-lg font-semibold">
+                  <Link
+                    href="/#testimonials"
+                    className="flex w-full items-center py-2 text-lg font-semibold"
+                  >
                     Testimonials
                   </Link>
-                  <Link href="/pricing" className="flex w-full items-center py-2 text-lg font-semibold">
+                  <Link
+                    href="/pricing"
+                    className="flex w-full items-center py-2 text-lg font-semibold"
+                  >
                     Pricing
                   </Link>
                 </div>
@@ -58,4 +69,4 @@ export default function Header() {
       </div>
     </header>
   );
-} 
+}

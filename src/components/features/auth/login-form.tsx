@@ -59,7 +59,7 @@ export const LoginForm = () => {
         router.push('/dashboard');
         router.refresh();
       }
-    } catch (err) {
+    } catch {
       toast.error('An Error Occurred', {
         description: 'An unexpected error occurred. Please try again.',
       });
@@ -124,8 +124,11 @@ export const LoginForm = () => {
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
             <div className="text-center text-sm text-muted-foreground">
-              Don't have an account?{' '}
-              <Link href="/auth/register" className="text-primary hover:underline">
+              Don&apos;t have an account?{' '}
+              <Link
+                href="/auth/register"
+                className="text-primary hover:underline"
+              >
                 Sign up
               </Link>
             </div>

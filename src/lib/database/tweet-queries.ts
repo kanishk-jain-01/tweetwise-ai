@@ -15,11 +15,11 @@ export class TweetQueries {
         VALUES (${tweetData.user_id}, ${tweetData.content}, ${tweetData.status}, NOW(), NOW())
         RETURNING id, user_id, content, status, created_at, updated_at
       `;
-      
+
       if (tweets.length === 0) {
         throw new Error('Failed to create tweet');
       }
-      
+
       return tweets[0] as Tweet;
     } catch (error) {
       console.error('Error creating tweet:', error);
@@ -36,8 +36,8 @@ export class TweetQueries {
         WHERE id = ${id}
         LIMIT 1
       `;
-      
-      return tweets.length > 0 ? tweets[0] as Tweet : null;
+
+      return tweets.length > 0 ? (tweets[0] as Tweet) : null;
     } catch (error) {
       console.error('Error finding tweet by ID:', error);
       throw error;
@@ -45,7 +45,11 @@ export class TweetQueries {
   }
 
   // Find all tweets by user ID
-  static async findByUserId(userId: string, limit: number = 50, offset: number = 0): Promise<Tweet[]> {
+  static async findByUserId(
+    userId: string,
+    limit: number = 50,
+    offset: number = 0
+  ): Promise<Tweet[]> {
     try {
       const tweets = await sql`
         SELECT id, user_id, content, status, created_at, updated_at
@@ -54,7 +58,7 @@ export class TweetQueries {
         ORDER BY updated_at DESC
         LIMIT ${limit} OFFSET ${offset}
       `;
-      
+
       return tweets as Tweet[];
     } catch (error) {
       console.error('Error finding tweets by user ID:', error);
@@ -63,7 +67,10 @@ export class TweetQueries {
   }
 
   // Find drafts by user ID
-  static async findDraftsByUserId(userId: string, limit: number = 50): Promise<Tweet[]> {
+  static async findDraftsByUserId(
+    userId: string,
+    limit: number = 50
+  ): Promise<Tweet[]> {
     try {
       const tweets = await sql`
         SELECT id, user_id, content, status, created_at, updated_at
@@ -72,7 +79,7 @@ export class TweetQueries {
         ORDER BY updated_at DESC
         LIMIT ${limit}
       `;
-      
+
       return tweets as Tweet[];
     } catch (error) {
       console.error('Error finding drafts by user ID:', error);
@@ -81,7 +88,11 @@ export class TweetQueries {
   }
 
   // Find completed tweets by user ID
-  static async findCompletedByUserId(userId: string, limit: number = 50, offset: number = 0): Promise<Tweet[]> {
+  static async findCompletedByUserId(
+    userId: string,
+    limit: number = 50,
+    offset: number = 0
+  ): Promise<Tweet[]> {
     try {
       const tweets = await sql`
         SELECT id, user_id, content, status, created_at, updated_at
@@ -90,7 +101,7 @@ export class TweetQueries {
         ORDER BY created_at DESC
         LIMIT ${limit} OFFSET ${offset}
       `;
-      
+
       return tweets as Tweet[];
     } catch (error) {
       console.error('Error finding completed tweets by user ID:', error);
@@ -99,7 +110,10 @@ export class TweetQueries {
   }
 
   // Update tweet content
-  static async updateContent(id: string, content: string): Promise<Tweet | null> {
+  static async updateContent(
+    id: string,
+    content: string
+  ): Promise<Tweet | null> {
     try {
       const tweets = await sql`
         UPDATE tweets 
@@ -107,8 +121,8 @@ export class TweetQueries {
         WHERE id = ${id}
         RETURNING id, user_id, content, status, created_at, updated_at
       `;
-      
-      return tweets.length > 0 ? tweets[0] as Tweet : null;
+
+      return tweets.length > 0 ? (tweets[0] as Tweet) : null;
     } catch (error) {
       console.error('Error updating tweet content:', error);
       throw error;
@@ -116,7 +130,10 @@ export class TweetQueries {
   }
 
   // Update tweet status
-  static async updateStatus(id: string, status: 'draft' | 'completed'): Promise<Tweet | null> {
+  static async updateStatus(
+    id: string,
+    status: 'draft' | 'completed'
+  ): Promise<Tweet | null> {
     try {
       const tweets = await sql`
         UPDATE tweets 
@@ -124,8 +141,8 @@ export class TweetQueries {
         WHERE id = ${id}
         RETURNING id, user_id, content, status, created_at, updated_at
       `;
-      
-      return tweets.length > 0 ? tweets[0] as Tweet : null;
+
+      return tweets.length > 0 ? (tweets[0] as Tweet) : null;
     } catch (error) {
       console.error('Error updating tweet status:', error);
       throw error;
@@ -142,7 +159,7 @@ export class TweetQueries {
   ): Promise<Tweet | null> {
     try {
       const { content, status } = updates;
-      
+
       if (!content && !status) {
         throw new Error('At least one field must be updated');
       }
@@ -154,13 +171,13 @@ export class TweetQueries {
           WHERE id = ${id}
           RETURNING id, user_id, content, status, created_at, updated_at
         `;
-        return tweets.length > 0 ? tweets[0] as Tweet : null;
+        return tweets.length > 0 ? (tweets[0] as Tweet) : null;
       } else if (content) {
         return await this.updateContent(id, content);
       } else if (status) {
         return await this.updateStatus(id, status);
       }
-      
+
       return null;
     } catch (error) {
       console.error('Error updating tweet:', error);
@@ -175,7 +192,7 @@ export class TweetQueries {
         DELETE FROM tweets 
         WHERE id = ${id}
       `;
-      
+
       return true;
     } catch (error) {
       console.error('Error deleting tweet:', error);
@@ -198,7 +215,7 @@ export class TweetQueries {
         FROM tweets 
         WHERE user_id = ${userId}
       `;
-      
+
       const result = stats[0];
       return {
         total: parseInt(result.total || '0'),
@@ -226,7 +243,7 @@ export class TweetQueries {
         ORDER BY updated_at DESC
         LIMIT ${limit}
       `;
-      
+
       return tweets as Tweet[];
     } catch (error) {
       console.error('Error searching tweets by content:', error);
@@ -254,7 +271,7 @@ export class TweetQueries {
           WHERE user_id = ${userId}
         `;
       }
-      
+
       return parseInt(result[0].count || '0');
     } catch (error) {
       console.error('Error counting tweets:', error);
@@ -263,7 +280,10 @@ export class TweetQueries {
   }
 
   // Verify user owns tweet (for authorization)
-  static async verifyOwnership(tweetId: string, userId: string): Promise<boolean> {
+  static async verifyOwnership(
+    tweetId: string,
+    userId: string
+  ): Promise<boolean> {
     try {
       const result = await sql`
         SELECT EXISTS(
@@ -271,11 +291,11 @@ export class TweetQueries {
           WHERE id = ${tweetId} AND user_id = ${userId}
         )
       `;
-      
+
       return result[0].exists || false;
     } catch (error) {
       console.error('Error verifying tweet ownership:', error);
       return false;
     }
   }
-} 
+}

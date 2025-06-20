@@ -69,4 +69,4 @@ export async function tableExists(tableName: string): Promise<boolean> {
   }
 }
 
-export default sql; 
+export default sql;

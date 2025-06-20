@@ -15,8 +15,8 @@ export class UserQueries {
         WHERE email = ${email}
         LIMIT 1
       `;
-      
-      return users.length > 0 ? users[0] as User : null;
+
+      return users.length > 0 ? (users[0] as User) : null;
     } catch (error) {
       console.error('Error finding user by email:', error);
       throw error;
@@ -32,8 +32,8 @@ export class UserQueries {
         WHERE id = ${id}
         LIMIT 1
       `;
-      
-      return users.length > 0 ? users[0] as User : null;
+
+      return users.length > 0 ? (users[0] as User) : null;
     } catch (error) {
       console.error('Error finding user by ID:', error);
       throw error;
@@ -51,11 +51,11 @@ export class UserQueries {
         VALUES (${userData.email}, ${userData.password_hash}, NOW(), NOW())
         RETURNING id, email, password_hash, reset_token, reset_token_expiry, created_at, updated_at
       `;
-      
+
       if (users.length === 0) {
         throw new Error('Failed to create user');
       }
-      
+
       return users[0] as User;
     } catch (error) {
       console.error('Error creating user:', error);
@@ -64,7 +64,10 @@ export class UserQueries {
   }
 
   // Update user password
-  static async updatePassword(id: string, password_hash: string): Promise<void> {
+  static async updatePassword(
+    id: string,
+    password_hash: string
+  ): Promise<void> {
     try {
       await sql`
         UPDATE users 
@@ -79,8 +82,8 @@ export class UserQueries {
 
   // Set password reset token
   static async setResetToken(
-    email: string, 
-    resetToken: string, 
+    email: string,
+    resetToken: string,
     expiryDate: Date
   ): Promise<void> {
     try {
@@ -107,8 +110,8 @@ export class UserQueries {
         AND reset_token_expiry > NOW()
         LIMIT 1
       `;
-      
-      return users.length > 0 ? users[0] as User : null;
+
+      return users.length > 0 ? (users[0] as User) : null;
     } catch (error) {
       console.error('Error finding user by reset token:', error);
       throw error;
@@ -164,7 +167,7 @@ export class UserQueries {
       const result = await sql`
         SELECT EXISTS(SELECT 1 FROM users WHERE email = ${email})
       `;
-      
+
       return result[0]?.exists || false;
     } catch (error) {
       console.error('Error checking email existence:', error);
@@ -187,7 +190,7 @@ export class UserQueries {
         FROM tweets 
         WHERE user_id = ${userId}
       `;
-      
+
       const result = stats[0];
       return {
         totalTweets: parseInt(result?.total_tweets || '0'),
@@ -201,7 +204,12 @@ export class UserQueries {
   }
 
   // Get user profile (without sensitive data)
-  static async getProfile(id: string): Promise<Omit<User, 'password_hash' | 'reset_token' | 'reset_token_expiry'> | null> {
+  static async getProfile(
+    id: string
+  ): Promise<Omit<
+    User,
+    'password_hash' | 'reset_token' | 'reset_token_expiry'
+  > | null> {
     try {
       const users = await sql`
         SELECT id, email, created_at, updated_at
@@ -209,8 +217,13 @@ export class UserQueries {
         WHERE id = ${id}
         LIMIT 1
       `;
-      
-      return users.length > 0 ? (users[0] as Omit<User, 'password_hash' | 'reset_token' | 'reset_token_expiry'>) : null;
+
+      return users.length > 0
+        ? (users[0] as Omit<
+            User,
+            'password_hash' | 'reset_token' | 'reset_token_expiry'
+          >)
+        : null;
     } catch (error) {
       console.error('Error getting user profile:', error);
       throw error;
@@ -218,7 +231,12 @@ export class UserQueries {
   }
 
   // List all users (admin function - returns safe data only)
-  static async listUsers(limit: number = 50, offset: number = 0): Promise<Array<Omit<User, 'password_hash' | 'reset_token' | 'reset_token_expiry'>>> {
+  static async listUsers(
+    limit: number = 50,
+    offset: number = 0
+  ): Promise<
+    Array<Omit<User, 'password_hash' | 'reset_token' | 'reset_token_expiry'>>
+  > {
     try {
       const users = await sql`
         SELECT id, email, created_at, updated_at
@@ -226,8 +244,10 @@ export class UserQueries {
         ORDER BY created_at DESC
         LIMIT ${limit} OFFSET ${offset}
       `;
-      
-      return users as Array<Omit<User, 'password_hash' | 'reset_token' | 'reset_token_expiry'>>;
+
+      return users as Array<
+        Omit<User, 'password_hash' | 'reset_token' | 'reset_token_expiry'>
+      >;
     } catch (error) {
       console.error('Error listing users:', error);
       throw error;
@@ -240,11 +260,11 @@ export class UserQueries {
       const result = await sql`
         SELECT COUNT(*) as total FROM users
       `;
-      
+
       return parseInt(result[0]?.total || '0');
     } catch (error) {
       console.error('Error counting users:', error);
       throw error;
     }
   }
-} 
+}

@@ -3,7 +3,6 @@ import bcrypt from 'bcryptjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-
 // Validation schema
 const resetPasswordSchema = z.object({
   token: z.string().min(1, 'Reset token is required'),

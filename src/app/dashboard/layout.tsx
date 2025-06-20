@@ -9,9 +9,5 @@ export default async function DashboardLayout({
 }) {
   const session = await getServerSession(authOptions);
 
-  return (
-    <Providers session={session}>
-      {children}
-    </Providers>
-  );
-} 
+  return <Providers session={session}>{children}</Providers>;
+}

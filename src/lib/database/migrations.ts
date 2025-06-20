@@ -18,7 +18,7 @@ export async function runMigrations(): Promise<void> {
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       )
     `;
-    
+
     // Create tweets table
     console.log('   Creating tweets table...');
     await sql`
@@ -31,7 +31,7 @@ export async function runMigrations(): Promise<void> {
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       )
     `;
-    
+
     // Create ai_responses table
     console.log('   Creating ai_responses table...');
     await sql`
@@ -44,7 +44,7 @@ export async function runMigrations(): Promise<void> {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       )
     `;
-    
+
     // Create indexes
     console.log('   Creating indexes...');
     await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`;
@@ -54,7 +54,7 @@ export async function runMigrations(): Promise<void> {
     await sql`CREATE INDEX IF NOT EXISTS idx_ai_responses_hash ON ai_responses(request_hash)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_ai_responses_tweet_id ON ai_responses(tweet_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_ai_responses_type ON ai_responses(type)`;
-    
+
     // Create updated_at trigger function
     console.log('   Creating trigger function...');
     await sql`
@@ -66,7 +66,7 @@ export async function runMigrations(): Promise<void> {
       END;
       $$ language 'plpgsql'
     `;
-    
+
     // Create triggers
     console.log('   Creating triggers...');
     await sql`DROP TRIGGER IF EXISTS update_users_updated_at ON users`;
@@ -76,7 +76,7 @@ export async function runMigrations(): Promise<void> {
         FOR EACH ROW
         EXECUTE FUNCTION update_updated_at_column()
     `;
-    
+
     await sql`DROP TRIGGER IF EXISTS update_tweets_updated_at ON tweets`;
     await sql`
       CREATE TRIGGER update_tweets_updated_at
@@ -159,17 +159,27 @@ export async function verifySchema(): Promise<boolean> {
     console.log('🔍 Verifying database schema...');
 
     const tablesExist = await checkTablesExist();
-    
-    if (!tablesExist.users || !tablesExist.tweets || !tablesExist.ai_responses) {
+
+    if (
+      !tablesExist.users ||
+      !tablesExist.tweets ||
+      !tablesExist.ai_responses
+    ) {
       console.log('❌ Some tables are missing');
       return false;
     }
 
     // Check if users table has required columns
     const usersInfo = await getTableInfo('users');
-    const requiredUserColumns = ['id', 'email', 'password_hash', 'created_at', 'updated_at'];
+    const requiredUserColumns = [
+      'id',
+      'email',
+      'password_hash',
+      'created_at',
+      'updated_at',
+    ];
     const userColumns = usersInfo.columns.map(col => col.column_name);
-    
+
     for (const requiredCol of requiredUserColumns) {
       if (!userColumns.includes(requiredCol)) {
         console.log(`❌ Users table missing required column: ${requiredCol}`);
@@ -191,15 +201,17 @@ export async function initializeDatabase(): Promise<void> {
     console.log('🚀 Initializing database...');
 
     const isValid = await verifySchema();
-    
+
     if (!isValid) {
       console.log('📦 Schema invalid or missing, running migrations...');
       await runMigrations();
-      
+
       // Verify again after migrations
       const isValidAfter = await verifySchema();
       if (!isValidAfter) {
-        throw new Error('Schema verification failed even after running migrations');
+        throw new Error(
+          'Schema verification failed even after running migrations'
+        );
       }
     } else {
       console.log('✅ Database schema is already up to date');
@@ -210,4 +222,4 @@ export async function initializeDatabase(): Promise<void> {
     console.error('Database initialization failed:', error);
     throw error;
   }
-} 
+}

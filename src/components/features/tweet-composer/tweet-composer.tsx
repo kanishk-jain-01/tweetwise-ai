@@ -24,16 +24,19 @@ export const TweetComposer = () => {
   } = useTweetComposer();
 
   const [charCount, setCharCount] = useState(0);
-  const [charStatus, setCharStatus] = useState<'normal' | 'warning' | 'over'>('normal');
+  const [charStatus, setCharStatus] = useState<'normal' | 'warning' | 'over'>(
+    'normal'
+  );
 
   // Update character count and status
   useEffect(() => {
     const count = content.length;
     setCharCount(count);
-    
+
     if (count > TWITTER_CHAR_LIMIT) {
       setCharStatus('over');
-    } else if (count > TWITTER_CHAR_LIMIT * 0.9) { // Warning at 90%
+    } else if (count > TWITTER_CHAR_LIMIT * 0.9) {
+      // Warning at 90%
       setCharStatus('warning');
     } else {
       setCharStatus('normal');
@@ -60,7 +63,8 @@ export const TweetComposer = () => {
 
     const debounceTimer = setTimeout(() => {
       // TODO: Trigger AI spell/grammar check
-      console.log('AI check triggered for:', content.slice(0, 50) + '...');
+      // TODO: Trigger AI spell/grammar check
+      // console.log('AI check triggered for:', content.slice(0, 50) + '...');
     }, DEBOUNCE_DELAY);
 
     return () => clearTimeout(debounceTimer);
@@ -70,13 +74,16 @@ export const TweetComposer = () => {
     try {
       await saveDraft();
       toast.success('Draft saved successfully');
-    } catch (error) {
+    } catch {
       toast.error('Failed to save draft');
     }
   }, [saveDraft]);
 
   const handleClear = useCallback(() => {
-    if (content.trim() && !confirm('Are you sure you want to clear this tweet?')) {
+    if (
+      content.trim() &&
+      !confirm('Are you sure you want to clear this tweet?')
+    ) {
       return;
     }
     clearContent();
@@ -112,12 +119,12 @@ export const TweetComposer = () => {
         <CardContent className="p-6 flex-1 flex flex-col">
           <Textarea
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={e => setContent(e.target.value)}
             placeholder="What's happening?"
             className="flex-1 resize-none border-none focus-visible:ring-0 text-lg leading-relaxed min-h-[200px]"
             disabled={isLoading}
           />
-          
+
           {/* Character Counter */}
           <div className="flex items-center justify-between mt-4 pt-4 border-t">
             <div className="flex items-center space-x-2">
@@ -130,17 +137,20 @@ export const TweetComposer = () => {
                 <span className="text-xs text-muted-foreground">Saving...</span>
               )}
             </div>
-            
+
             <div className="flex items-center space-x-3">
-              <div 
+              <div
                 className={`px-2 py-1 rounded-full text-sm font-medium ${getCharCountBg()} ${getCharCountColor()}`}
               >
                 {charCount}/{TWITTER_CHAR_LIMIT}
               </div>
-              
+
               {/* Progress Ring */}
               <div className="relative w-8 h-8">
-                <svg className="w-8 h-8 transform -rotate-90" viewBox="0 0 32 32">
+                <svg
+                  className="w-8 h-8 transform -rotate-90"
+                  viewBox="0 0 32 32"
+                >
                   <circle
                     cx="16"
                     cy="16"
@@ -160,11 +170,11 @@ export const TweetComposer = () => {
                     strokeDasharray={`${2 * Math.PI * 14}`}
                     strokeDashoffset={`${2 * Math.PI * 14 * (1 - Math.min(charCount / TWITTER_CHAR_LIMIT, 1))}`}
                     className={
-                      charStatus === 'over' 
-                        ? 'text-destructive' 
-                        : charStatus === 'warning' 
-                        ? 'text-yellow-600' 
-                        : 'text-primary'
+                      charStatus === 'over'
+                        ? 'text-destructive'
+                        : charStatus === 'warning'
+                          ? 'text-yellow-600'
+                          : 'text-primary'
                     }
                     strokeLinecap="round"
                   />
@@ -187,7 +197,7 @@ export const TweetComposer = () => {
             <Save className="w-4 h-4 mr-2" />
             Save Draft
           </Button>
-          
+
           <Button
             variant="outline"
             size="sm"
@@ -217,4 +227,4 @@ export const TweetComposer = () => {
       )}
     </div>
   );
-}; 
+};

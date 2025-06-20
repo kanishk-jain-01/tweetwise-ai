@@ -31,16 +31,20 @@ interface UseAISuggestionsReturn {
 }
 
 export const useAISuggestions = (): UseAISuggestionsReturn => {
-  const [spellingSuggestions, setSpellingSuggestions] = useState<Suggestion[]>([]);
-  const [grammarSuggestions, setGrammarSuggestions] = useState<Suggestion[]>([]);
+  const [spellingSuggestions, setSpellingSuggestions] = useState<Suggestion[]>(
+    []
+  );
+  const [grammarSuggestions, setGrammarSuggestions] = useState<Suggestion[]>(
+    []
+  );
   const [critique, setCritique] = useState<Critique | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const acceptSuggestion = useCallback((suggestion: Suggestion) => {
     // TODO: Apply the suggestion to the tweet content
-    console.log('Accepting suggestion:', suggestion);
-    
+    // console.log('Accepting suggestion:', suggestion);
+
     // Remove the suggestion from the list
     if (suggestion.type === 'spelling') {
       setSpellingSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
@@ -49,14 +53,16 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
     }
 
     // Dispatch event to notify tweet composer
-    window.dispatchEvent(new CustomEvent('applySuggestion', {
-      detail: { suggestion }
-    }));
+    window.dispatchEvent(
+      new CustomEvent('applySuggestion', {
+        detail: { suggestion },
+      })
+    );
   }, []);
 
   const rejectSuggestion = useCallback((suggestion: Suggestion) => {
-    console.log('Rejecting suggestion:', suggestion);
-    
+    // console.log('Rejecting suggestion:', suggestion);
+
     // Remove the suggestion from the list
     if (suggestion.type === 'spelling') {
       setSpellingSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
@@ -102,40 +108,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
     setError(null);
   }, []);
 
-  // Mock function to simulate AI suggestions (for development)
-  const simulateAISuggestions = useCallback((content: string) => {
-    if (!content.trim()) {
-      clearSuggestions();
-      return;
-    }
 
-    // Mock spelling suggestions
-    const mockSpelling: Suggestion[] = [
-      {
-        id: '1',
-        type: 'spelling',
-        original: 'teh',
-        replacement: 'the',
-        position: { start: 0, end: 3 }
-      }
-    ];
-
-    // Mock grammar suggestions
-    const mockGrammar: Suggestion[] = [
-      {
-        id: '2',
-        type: 'grammar',
-        original: 'I are going',
-        replacement: 'I am going',
-        explanation: 'Subject-verb agreement: Use "am" with "I"',
-        position: { start: 0, end: 10 }
-      }
-    ];
-
-    // Only show if content contains the mock errors
-    setSpellingSuggestions(content.includes('teh') ? mockSpelling : []);
-    setGrammarSuggestions(content.includes('I are') ? mockGrammar : []);
-  }, [clearSuggestions]);
 
   return {
     spellingSuggestions,
@@ -148,4 +121,4 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
     requestCritique,
     clearSuggestions,
   };
-}; 
+};

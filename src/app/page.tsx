@@ -17,8 +17,9 @@ export default function Home() {
                     Craft Perfect Tweets with AI
                   </h1>
                   <p className="max-w-[600px] text-muted-foreground md:text-xl">
-                    TweetWiseAI helps you write engaging, error-free tweets. Get real-time feedback, grammar checks,
-                    and curation assistance to elevate your Twitter game.
+                    TweetWiseAI helps you write engaging, error-free tweets. Get
+                    real-time feedback, grammar checks, and curation assistance
+                    to elevate your Twitter game.
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
@@ -39,9 +40,10 @@ export default function Home() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm">
-                      Just used TweetWiseAI to draft my latest thread. The grammar check is a lifesaver, and the
-                      critique feature gave me some great ideas to improve engagement. Highly recommended! #AI #Twitter
-                      #WritingTool
+                      Just used TweetWiseAI to draft my latest thread. The
+                      grammar check is a lifesaver, and the critique feature
+                      gave me some great ideas to improve engagement. Highly
+                      recommended! #AI #Twitter #WritingTool
                     </p>
                   </CardContent>
                 </Card>
@@ -52,7 +54,10 @@ export default function Home() {
       </AnimateOnScroll>
 
       <AnimateOnScroll>
-        <section id="features" className="w-full py-12 md:py-24 lg:py-32 bg-muted">
+        <section
+          id="features"
+          className="w-full py-12 md:py-24 lg:py-32 bg-muted"
+        >
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
@@ -63,8 +68,9 @@ export default function Home() {
                   Elevate Your Tweets
                 </h2>
                 <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  Our AI-powered tools provide you with everything you need to write compelling and error-free tweets
-                  that capture attention and drive engagement.
+                  Our AI-powered tools provide you with everything you need to
+                  write compelling and error-free tweets that capture attention
+                  and drive engagement.
                 </p>
               </div>
             </div>
@@ -72,22 +78,25 @@ export default function Home() {
               <div className="grid gap-1">
                 <h3 className="text-lg font-bold">Grammar & Spell Check</h3>
                 <p className="text-sm text-muted-foreground">
-                  Write with confidence. Our real-time checker catches errors and suggests corrections instantly,
-                  ensuring your tweets are professional and clear.
+                  Write with confidence. Our real-time checker catches errors
+                  and suggests corrections instantly, ensuring your tweets are
+                  professional and clear.
                 </p>
               </div>
               <div className="grid gap-1">
                 <h3 className="text-lg font-bold">Tweet Critique</h3>
                 <p className="text-sm text-muted-foreground">
-                  Go beyond grammar. Get AI-powered feedback on your tweet's tone, clarity, and potential engagement to
-                  maximize its impact.
+                  Go beyond grammar. Get AI-powered feedback on your tweet&apos;s
+                  tone, clarity, and potential engagement to maximize its
+                  impact.
                 </p>
               </div>
               <div className="grid gap-1">
                 <h3 className="text-lg font-bold">Content Curation</h3>
                 <p className="text-sm text-muted-foreground">
-                  Never run out of ideas. Our curation assistant helps you find relevant topics and generate engaging
-                  content based on your interests.
+                  Never run out of ideas. Our curation assistant helps you find
+                  relevant topics and generate engaging content based on your
+                  interests.
                 </p>
               </div>
             </div>
@@ -115,15 +124,20 @@ export default function Home() {
                       <AvatarFallback>JD</AvatarFallback>
                     </Avatar>
                     <div>
-                      <CardTitle className="text-sm font-medium">Jane Doe</CardTitle>
-                      <p className="text-xs text-muted-foreground">Content Creator</p>
+                      <CardTitle className="text-sm font-medium">
+                        Jane Doe
+                      </CardTitle>
+                      <p className="text-xs text-muted-foreground">
+                        Content Creator
+                      </p>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-4 text-sm">
                   <p>
-                    "TweetWiseAI has been a game-changer for my content workflow. The critique feature is like having a
-                    personal writing coach."
+                    &ldquo;TweetWiseAI has been a game-changer for my content
+                    workflow. The critique feature is like having a personal
+                    writing coach.&rdquo;
                   </p>
                 </CardContent>
               </Card>
@@ -135,15 +149,19 @@ export default function Home() {
                       <AvatarFallback>SM</AvatarFallback>
                     </Avatar>
                     <div>
-                      <CardTitle className="text-sm font-medium">Sarah Miller</CardTitle>
-                      <p className="text-xs text-muted-foreground">Marketing Manager</p>
+                      <CardTitle className="text-sm font-medium">
+                        Sarah Miller
+                      </CardTitle>
+                      <p className="text-xs text-muted-foreground">
+                        Marketing Manager
+                      </p>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-4 text-sm">
                   <p>
-                    "I've saved so much time and improved the quality of my tweets immensely. The grammar checker is
-                    top-notch!"
+                    &ldquo;I&apos;ve saved so much time and improved the quality of my
+                    tweets immensely. The grammar checker is top-notch!&rdquo;
                   </p>
                 </CardContent>
               </Card>
@@ -155,13 +173,20 @@ export default function Home() {
                       <AvatarFallback>MJ</AvatarFallback>
                     </Avatar>
                     <div>
-                      <CardTitle className="text-sm font-medium">Mark Johnson</CardTitle>
-                      <p className="text-xs text-muted-foreground">Indie Hacker</p>
+                      <CardTitle className="text-sm font-medium">
+                        Mark Johnson
+                      </CardTitle>
+                      <p className="text-xs text-muted-foreground">
+                        Indie Hacker
+                      </p>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-4 text-sm">
-                  <p>"The best tool for anyone serious about their Twitter presence. The AI suggestions are incredibly insightful."</p>
+                  <p>
+                    &ldquo;The best tool for anyone serious about their Twitter
+                    presence. The AI suggestions are incredibly insightful.&rdquo;
+                  </p>
                 </CardContent>
               </Card>
             </div>

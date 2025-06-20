@@ -45,7 +45,7 @@ Next.js 15.3.4 App Router Architecture
   ```typescript
   // Dashboard pages: No header/footer (app-like experience)
   // Landing pages: Full header + content + footer
-  const isDashboard = pathname?.startsWith('/dashboard')
+  const isDashboard = pathname?.startsWith('/dashboard');
   ```
 - **Benefits**: Clean app experience without landing page navigation
 
@@ -218,23 +218,23 @@ interface APIError {
 ```typescript
 // Custom hooks pattern for feature-specific state
 const useTweetComposer = () => {
-  const [content, setContent] = useState('')
-  const [charCount, setCharCount] = useState(0)
-  const [saveStatus, setSaveStatus] = useState('saved')
-  
+  const [content, setContent] = useState('');
+  const [charCount, setCharCount] = useState(0);
+  const [saveStatus, setSaveStatus] = useState('saved');
+
   // Auto-save logic
   useEffect(() => {
     const timer = setTimeout(() => {
       if (content.trim()) {
-        saveDraft(content)
+        saveDraft(content);
       }
-    }, 30000)
-    
-    return () => clearTimeout(timer)
-  }, [content])
-  
-  return { content, setContent, charCount, saveStatus }
-}
+    }, 30000);
+
+    return () => clearTimeout(timer);
+  }, [content]);
+
+  return { content, setContent, charCount, saveStatus };
+};
 ```
 
 ## UI/UX Design Patterns
@@ -244,13 +244,13 @@ const useTweetComposer = () => {
 ```typescript
 // Color-coded character count with visual progress
 const getCharacterCountColor = (count: number) => {
-  if (count <= 252) return 'text-green-600'      // Normal
-  if (count <= 280) return 'text-yellow-600'     // Warning
-  return 'text-red-600'                          // Over-limit
-}
+  if (count <= 252) return 'text-green-600'; // Normal
+  if (count <= 280) return 'text-yellow-600'; // Warning
+  return 'text-red-600'; // Over-limit
+};
 
 // Progress ring visualization
-const progressPercentage = Math.min((count / 280) * 100, 100)
+const progressPercentage = Math.min((count / 280) * 100, 100);
 ```
 
 ### 2. Loading State Patterns (IMPLEMENTED)
@@ -368,6 +368,7 @@ const DashboardErrorBoundary = ({ children }) => {
 
 - **Pattern**: Use `shadcn/ui` form components for consistent styling and behavior.
 - **Structure**:
+
   ```tsx
   import { Form, Input, Button } from 'shadcn/ui';
   import { useForm } from 'react-hook-form';
@@ -380,7 +381,11 @@ const DashboardErrorBoundary = ({ children }) => {
   });
 
   const MyForm = () => {
-    const { register, handleSubmit, formState: { errors } } = useForm({
+    const {
+      register,
+      handleSubmit,
+      formState: { errors },
+    } = useForm({
       resolver: zodResolver(schema),
     });
 
@@ -391,7 +396,11 @@ const DashboardErrorBoundary = ({ children }) => {
         <Input {...register('email')} placeholder="Email" />
         {errors.email && <span>{errors.email.message}</span>}
 
-        <Input {...register('password')} type="password" placeholder="Password" />
+        <Input
+          {...register('password')}
+          type="password"
+          placeholder="Password"
+        />
         {errors.password && <span>{errors.password.message}</span>}
 
         <Button type="submit">Submit</Button>
@@ -404,11 +413,13 @@ const DashboardErrorBoundary = ({ children }) => {
 
 - **Pattern**: Use `sonner` for toast notifications to provide feedback.
 - **Implementation**:
+
   ```tsx
   import { Toaster, toast } from 'sonner';
 
   const notifySuccess = () => toast.success('Form submitted successfully!');
-  const notifyError = () => toast.error('There was an error submitting the form.');
+  const notifyError = () =>
+    toast.error('There was an error submitting the form.');
 
   const MyComponent = () => (
     <>

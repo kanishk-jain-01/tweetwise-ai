@@ -3,8 +3,6 @@ import bcrypt from 'bcryptjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-
-
 // Validation schema for registration
 const registerSchema = z.object({
   email: z.string().email('Invalid email address'),

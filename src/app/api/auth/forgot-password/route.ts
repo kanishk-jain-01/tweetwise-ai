@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
 
-
 // Validation schema
 const forgotPasswordSchema = z.object({
   email: z.string().email('Invalid email address'),

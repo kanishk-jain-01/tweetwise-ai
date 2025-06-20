@@ -72,7 +72,7 @@ export const RegisterForm = () => {
         description: 'Your account has been created. Please sign in.',
       });
       router.push('/auth/login');
-    } catch (err) {
+    } catch {
       toast.error('An Error Occurred', {
         description: 'An unexpected error occurred. Please try again.',
       });

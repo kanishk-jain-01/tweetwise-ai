@@ -10,7 +10,7 @@ interface ConditionalLayoutProps {
 
 export const ConditionalLayout = ({ children }: ConditionalLayoutProps) => {
   const pathname = usePathname();
-  
+
   // Check if we're on a dashboard page
   const isDashboardPage = pathname?.startsWith('/dashboard');
 
@@ -27,4 +27,4 @@ export const ConditionalLayout = ({ children }: ConditionalLayoutProps) => {
       <Footer />
     </>
   );
-}; 
+};

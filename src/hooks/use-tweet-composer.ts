@@ -15,10 +15,10 @@ interface UseTweetComposerReturn {
 
 export const useTweetComposer = (): UseTweetComposerReturn => {
   const [content, setContent] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  
+
   // Use ref to track if we need to save (avoid saving empty content)
   const hasUnsavedChanges = useRef(false);
 
@@ -50,7 +50,7 @@ export const useTweetComposer = (): UseTweetComposerReturn => {
 
       setLastSaved(new Date());
       hasUnsavedChanges.current = false;
-      
+
       // Dispatch event to refresh tweet history
       window.dispatchEvent(new CustomEvent('tweetSaved'));
     } catch (error) {
@@ -83,7 +83,7 @@ export const useTweetComposer = (): UseTweetComposerReturn => {
     };
 
     window.addEventListener('loadTweet', handleLoadTweet as EventListener);
-    
+
     return () => {
       window.removeEventListener('loadTweet', handleLoadTweet as EventListener);
     };
@@ -99,4 +99,4 @@ export const useTweetComposer = (): UseTweetComposerReturn => {
     lastSaved,
     loadDraft,
   };
-}; 
+};
