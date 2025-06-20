@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 interface UseTweetHistoryReturn {
   tweets: Tweet[];
   isLoading: boolean;
+  isRefreshing: boolean;
   error: string | null;
   searchTweets: (query: string) => void;
   loadTweet: (tweet: Tweet) => void;
@@ -15,13 +16,18 @@ interface UseTweetHistoryReturn {
 export const useTweetHistory = (): UseTweetHistoryReturn => {
   const [tweets, setTweets] = useState<Tweet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTweets = useCallback(async () => {
-    try {
+  const fetchTweets = useCallback(async (isRefresh: boolean = false) => {
+    if (!isRefresh) {
       setIsLoading(true);
-      setError(null);
+    } else {
+      setIsRefreshing(true);
+    }
+    setError(null);
 
+    try {
       const response = await fetch('/api/tweets');
       if (!response.ok) {
         throw new Error('Failed to fetch tweets');
@@ -33,7 +39,11 @@ export const useTweetHistory = (): UseTweetHistoryReturn => {
       setError(err instanceof Error ? err.message : 'An error occurred');
       console.error('Error fetching tweets:', err);
     } finally {
-      setIsLoading(false);
+      if (!isRefresh) {
+        setIsLoading(false);
+      } else {
+        setIsRefreshing(false);
+      }
     }
   }, []);
 
@@ -55,7 +65,7 @@ export const useTweetHistory = (): UseTweetHistoryReturn => {
   }, []);
 
   const refreshTweets = useCallback(async () => {
-    await fetchTweets();
+    await fetchTweets(true);
   }, [fetchTweets]);
 
   // Initial load
@@ -80,6 +90,7 @@ export const useTweetHistory = (): UseTweetHistoryReturn => {
   return {
     tweets,
     isLoading,
+    isRefreshing,
     error,
     searchTweets,
     loadTweet,

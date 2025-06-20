@@ -3,29 +3,48 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { useTweetComposer } from '@/hooks/use-tweet-composer';
-import { RotateCcw, Save, Send } from 'lucide-react';
+import { AutoSaveStatus, useTweetComposer } from '@/hooks/use-tweet-composer';
+import { FilePlus, Send } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 const TWITTER_CHAR_LIMIT = 280;
-const AUTO_SAVE_INTERVAL = 30000; // 30 seconds
 const DEBOUNCE_DELAY = 500; // 500ms for AI triggers
+
+const AutoSaveStatusIndicator = ({
+  status,
+}: {
+  status: AutoSaveStatus;
+}) => {
+  switch (status) {
+    case 'saving':
+      return (
+        <span className="text-xs text-muted-foreground animate-pulse">
+          Saving...
+        </span>
+      );
+    case 'saved':
+      return <span className="text-xs text-green-600">Saved</span>;
+    case 'error':
+      return <span className="text-xs text-destructive">Error saving</span>;
+    default:
+      return <div className="h-[18px]" />; // Placeholder to prevent layout shift
+  }
+};
 
 export const TweetComposer = () => {
   const {
     content,
     setContent,
     isLoading,
-    isSaving,
-    saveDraft,
     clearContent,
-    lastSaved,
+    autoSaveStatus,
+    currentTweetId,
   } = useTweetComposer();
 
   const [charCount, setCharCount] = useState(0);
   const [charStatus, setCharStatus] = useState<'normal' | 'warning' | 'over'>(
-    'normal'
+    'normal',
   );
 
   // Update character count and status
@@ -43,26 +62,11 @@ export const TweetComposer = () => {
     }
   }, [content]);
 
-  // Auto-save functionality
-  useEffect(() => {
-    if (!content.trim()) return;
-
-    const autoSaveInterval = setInterval(() => {
-      // Only auto-save if there are unsaved changes and we're not currently loading
-      if (!isLoading && !isSaving) {
-        saveDraft();
-      }
-    }, AUTO_SAVE_INTERVAL);
-
-    return () => clearInterval(autoSaveInterval);
-  }, [content, saveDraft, isLoading, isSaving]);
-
   // Debounced AI trigger (placeholder for now)
   useEffect(() => {
     if (!content.trim()) return;
 
     const debounceTimer = setTimeout(() => {
-      // TODO: Trigger AI spell/grammar check
       // TODO: Trigger AI spell/grammar check
       // console.log('AI check triggered for:', content.slice(0, 50) + '...');
     }, DEBOUNCE_DELAY);
@@ -70,24 +74,15 @@ export const TweetComposer = () => {
     return () => clearTimeout(debounceTimer);
   }, [content]);
 
-  const handleSave = useCallback(async () => {
-    try {
-      await saveDraft();
-      toast.success('Draft saved successfully');
-    } catch {
-      toast.error('Failed to save draft');
-    }
-  }, [saveDraft]);
-
-  const handleClear = useCallback(() => {
+  const handleNewDraft = useCallback(() => {
     if (
       content.trim() &&
-      !confirm('Are you sure you want to clear this tweet?')
+      !confirm('You have unsaved changes. Start a new draft anyway?')
     ) {
       return;
     }
     clearContent();
-    toast.success('Tweet cleared');
+    toast.success('New draft started');
   }, [content, clearContent]);
 
   const getCharCountColor = () => {
@@ -125,17 +120,10 @@ export const TweetComposer = () => {
             disabled={isLoading}
           />
 
-          {/* Character Counter */}
+          {/* Character Counter & Save Status */}
           <div className="flex items-center justify-between mt-4 pt-4 border-t">
-            <div className="flex items-center space-x-2">
-              {lastSaved && (
-                <span className="text-xs text-muted-foreground">
-                  Last saved: {lastSaved.toLocaleTimeString()}
-                </span>
-              )}
-              {isSaving && (
-                <span className="text-xs text-muted-foreground">Saving...</span>
-              )}
+            <div className="flex items-center space-x-2 min-w-[80px]">
+              <AutoSaveStatusIndicator status={autoSaveStatus} />
             </div>
 
             <div className="flex items-center space-x-3">
@@ -168,12 +156,17 @@ export const TweetComposer = () => {
                     strokeWidth="2"
                     fill="none"
                     strokeDasharray={`${2 * Math.PI * 14}`}
-                    strokeDashoffset={`${2 * Math.PI * 14 * (1 - Math.min(charCount / TWITTER_CHAR_LIMIT, 1))}`}
+                    strokeDashoffset={`${
+                      2 *
+                      Math.PI *
+                      14 *
+                      (1 - Math.min(charCount / TWITTER_CHAR_LIMIT, 1))
+                    }`}
                     className={
                       charStatus === 'over'
                         ? 'text-destructive'
                         : charStatus === 'warning'
-                          ? 'text-yellow-600'
+                        ? 'text-yellow-600'
                           : 'text-primary'
                     }
                     strokeLinecap="round"
@@ -191,21 +184,11 @@ export const TweetComposer = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={handleSave}
-            disabled={isLoading || isSaving || !content.trim()}
+            onClick={handleNewDraft}
+            disabled={isLoading || (!content.trim() && !currentTweetId)}
           >
-            <Save className="w-4 h-4 mr-2" />
-            Save Draft
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleClear}
-            disabled={isLoading || !content.trim()}
-          >
-            <RotateCcw className="w-4 h-4 mr-2" />
-            Clear
+            <FilePlus className="w-4 h-4 mr-2" />
+            New Draft
           </Button>
         </div>
 

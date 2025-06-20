@@ -13,10 +13,12 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTweetHistory } from '@/hooks/use-tweet-history';
 import { Tweet } from '@/lib/database/schema';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
     CheckCircle,
     Clock,
     FileText,
+    Loader2,
     MoreHorizontal,
     Search,
     Trash2,
@@ -25,7 +27,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 export const TweetHistory = () => {
-  const { tweets, isLoading, loadTweet, refreshTweets } = useTweetHistory();
+  const { tweets, isLoading, isRefreshing, loadTweet, refreshTweets } = useTweetHistory();
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'drafts' | 'completed'>('all');
 
@@ -104,7 +106,11 @@ export const TweetHistory = () => {
   return (
     <div className="h-full flex flex-col">
       {/* Search and Filter */}
-      <div className="flex-shrink-0 p-4 space-y-3">
+      <div className="flex-shrink-0 p-4 space-y-3 border-b">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">History</h2>
+          {isRefreshing && <Loader2 className="w-5 h-5 animate-spin" />}
+        </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input
@@ -147,21 +153,32 @@ export const TweetHistory = () => {
             {isLoading ? (
               // Loading skeleton
               Array.from({ length: 5 }).map((_, i) => (
-                <Card key={i} className="animate-pulse">
-                  <CardContent className="p-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="h-4 bg-muted rounded w-20"></div>
-                        <div className="h-4 bg-muted rounded w-16"></div>
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                >
+                  <Card className="animate-pulse">
+                    <CardContent className="p-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="h-4 bg-muted rounded w-20"></div>
+                          <div className="h-4 bg-muted rounded w-16"></div>
+                        </div>
+                        <div className="h-4 bg-muted rounded w-full"></div>
+                        <div className="h-4 bg-muted rounded w-3/4"></div>
                       </div>
-                      <div className="h-4 bg-muted rounded w-full"></div>
-                      <div className="h-4 bg-muted rounded w-3/4"></div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               ))
             ) : filteredTweets.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center py-8 text-muted-foreground"
+              >
                 <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p className="text-sm">
                   {searchQuery
@@ -173,64 +190,77 @@ export const TweetHistory = () => {
                     ? 'Try a different search term'
                     : 'Start composing your first tweet!'}
                 </p>
-              </div>
+              </motion.div>
             ) : (
-              filteredTweets.map(tweet => (
-                <Card
-                  key={tweet.id}
-                  className="cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => handleTweetClick(tweet)}
-                >
-                  <CardContent className="p-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          {getStatusIcon(tweet.status)}
-                          {getStatusBadge(tweet.status)}
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-xs text-muted-foreground">
-                            {formatDate(new Date(tweet.updated_at))}
-                          </span>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0"
-                                onClick={e => e.stopPropagation()}
-                              >
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={e => handleDeleteTweet(tweet, e)}
-                                className="text-destructive focus:text-destructive"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Delete{' '}
-                                {tweet.status === 'draft' ? 'Draft' : 'Tweet'}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
+              <AnimatePresence>
+                {filteredTweets.map(tweet => (
+                  <motion.div
+                    key={tweet.id}
+                    layout
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -50, transition: { duration: 0.2 } }}
+                  >
+                    <Card
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => handleTweetClick(tweet)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              {getStatusIcon(tweet.status)}
+                              {getStatusBadge(tweet.status)}
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-xs text-muted-foreground">
+                                {formatDate(new Date(tweet.updated_at))}
+                              </span>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0"
+                                    onClick={e => e.stopPropagation()}
+                                  >
+                                    <MoreHorizontal className="w-4 h-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={e => handleDeleteTweet(tweet, e)}
+                                    className="text-destructive focus:text-destructive"
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete{' '}
+                                    {tweet.status === 'draft'
+                                      ? 'Draft'
+                                      : 'Tweet'}
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
 
-                      <p className="text-sm line-clamp-3 text-foreground">
-                        {tweet.content}
-                      </p>
+                          <p className="text-sm line-clamp-3 text-foreground">
+                            {tweet.content}
+                          </p>
 
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{tweet.content.length}/280 chars</span>
-                        <span>
-                          {new Date(tweet.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>{tweet.content.length}/280 chars</span>
+                            <span>
+                              {new Date(
+                                tweet.created_at,
+                              ).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             )}
           </div>
         </ScrollArea>

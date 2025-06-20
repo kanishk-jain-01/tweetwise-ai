@@ -2,83 +2,116 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+export type AutoSaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+
 interface UseTweetComposerReturn {
   content: string;
   setContent: (content: string) => void;
   isLoading: boolean;
-  isSaving: boolean;
-  saveDraft: () => Promise<void>;
   clearContent: () => void;
-  lastSaved: Date | null;
-  loadDraft: (content: string) => void;
+  loadDraft: (tweet: { id: string; content: string }) => void;
+  autoSaveStatus: AutoSaveStatus;
+  currentTweetId: string | null;
 }
 
-export const useTweetComposer = (): UseTweetComposerReturn => {
+export const useTweetComposer = (
+  debounceMs: number = 1500,
+): UseTweetComposerReturn => {
   const [content, setContent] = useState('');
+  const [currentTweetId, setCurrentTweetId] = useState<string | null>(null);
   const [isLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>('idle');
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // Use ref to track if we need to save (avoid saving empty content)
-  const hasUnsavedChanges = useRef(false);
+  const saveDraft = useCallback(
+    async (draftContent: string) => {
+      if (!draftContent.trim()) return;
 
-  const handleSetContent = useCallback((newContent: string) => {
-    setContent(newContent);
-    hasUnsavedChanges.current = true;
-  }, []);
-
-  const saveDraft = useCallback(async () => {
-    if (!content.trim() || isSaving) return;
-
-    setIsSaving(true);
-    try {
-      // TODO: Replace with actual API call
-      const response = await fetch('/api/tweets', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          content: content.trim(),
+      try {
+        const body = {
+          content: draftContent.trim(),
           status: 'draft',
-        }),
-      });
+          id: currentTweetId,
+        };
 
-      if (!response.ok) {
-        throw new Error('Failed to save draft');
+        const response = await fetch('/api/tweets', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(body),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save draft');
+        }
+
+        const result = await response.json();
+        if (result.success && result.tweet && result.tweet.id) {
+          if (!currentTweetId) {
+            setCurrentTweetId(result.tweet.id);
+          }
+          setAutoSaveStatus('saved');
+          window.dispatchEvent(new CustomEvent('tweetSaved'));
+        } else {
+          throw new Error('Invalid response from server');
+        }
+      } catch (error) {
+        console.error('Error saving draft:', error);
+        setAutoSaveStatus('error');
       }
+    },
+    [currentTweetId],
+  );
 
-      setLastSaved(new Date());
-      hasUnsavedChanges.current = false;
-
-      // Dispatch event to refresh tweet history
-      window.dispatchEvent(new CustomEvent('tweetSaved'));
-    } catch (error) {
-      console.error('Error saving draft:', error);
-      throw error;
-    } finally {
-      setIsSaving(false);
+  useEffect(() => {
+    if (!content) {
+      setAutoSaveStatus('idle');
+      return;
     }
-  }, [content, isSaving]);
+
+    if (content.trim() === '') {
+      setAutoSaveStatus('idle');
+      return;
+    }
+
+    setAutoSaveStatus('saving');
+
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    debounceTimer.current = setTimeout(() => {
+      saveDraft(content);
+    }, debounceMs);
+
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, [content, debounceMs, saveDraft]);
 
   const clearContent = useCallback(() => {
     setContent('');
-    hasUnsavedChanges.current = false;
-    setLastSaved(null);
+    setCurrentTweetId(null);
+    setAutoSaveStatus('idle');
   }, []);
 
-  const loadDraft = useCallback((draftContent: string) => {
-    setContent(draftContent);
-    hasUnsavedChanges.current = false;
-    setLastSaved(null); // Reset last saved when loading existing draft
-  }, []);
+  const loadDraft = useCallback(
+    (tweet: { id: string; content: string }) => {
+      setContent(tweet.content);
+      setCurrentTweetId(tweet.id);
+      setAutoSaveStatus('saved');
+    },
+    [],
+  );
 
-  // Event listener for loading tweets from history
   useEffect(() => {
     const handleLoadTweet = (event: CustomEvent) => {
       const { tweet } = event.detail;
-      if (tweet && tweet.content) {
-        loadDraft(tweet.content);
+      if (tweet && tweet.id && tweet.content) {
+        loadDraft(tweet);
       }
     };
 
@@ -91,12 +124,11 @@ export const useTweetComposer = (): UseTweetComposerReturn => {
 
   return {
     content,
-    setContent: handleSetContent,
+    setContent,
     isLoading,
-    isSaving,
-    saveDraft,
     clearContent,
-    lastSaved,
     loadDraft,
+    autoSaveStatus,
+    currentTweetId,
   };
 };
