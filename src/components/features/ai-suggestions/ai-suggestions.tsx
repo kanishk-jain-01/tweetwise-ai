@@ -114,6 +114,7 @@ export const AISuggestions = ({
                           size="sm"
                           variant="outline"
                           onClick={() => onAccept(suggestion)}
+                          disabled={isLoading}
                           className="h-7 text-xs"
                         >
                           <ThumbsUp className="w-3 h-3 mr-1" />
@@ -123,6 +124,7 @@ export const AISuggestions = ({
                           size="sm"
                           variant="ghost"
                           onClick={() => onReject(suggestion)}
+                          disabled={isLoading}
                           className="h-7 text-xs"
                         >
                           <ThumbsDown className="w-3 h-3 mr-1" />
@@ -171,6 +173,7 @@ export const AISuggestions = ({
                           size="sm"
                           variant="outline"
                           onClick={() => onAccept(suggestion)}
+                          disabled={isLoading}
                           className="h-7 text-xs"
                         >
                           <ThumbsUp className="w-3 h-3 mr-1" />
@@ -180,6 +183,7 @@ export const AISuggestions = ({
                           size="sm"
                           variant="ghost"
                           onClick={() => onReject(suggestion)}
+                          disabled={isLoading}
                           className="h-7 text-xs"
                         >
                           <ThumbsDown className="w-3 h-3 mr-1" />

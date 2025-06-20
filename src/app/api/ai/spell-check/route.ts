@@ -57,7 +57,7 @@ Text to analyze:
       n: 1,
     });
 
-    const responseContent = response.choices[0].message?.content;
+    const responseContent = response.choices[0]?.message?.content;
 
     if (!responseContent) {
       throw new Error('Empty response from OpenAI');

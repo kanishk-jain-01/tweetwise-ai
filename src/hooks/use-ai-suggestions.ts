@@ -30,7 +30,6 @@ interface UseAISuggestionsReturn {
   isLoading: boolean;
   error: string | null;
   fetchSpellingSuggestions: (text: string) => Promise<void>;
-  acceptSuggestion: (suggestion: Suggestion) => void;
   rejectSuggestion: (suggestion: Suggestion) => void;
   requestCritique: (text: string) => Promise<void>;
   clearSuggestions: () => void;
@@ -85,17 +84,6 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
     }
   }, []);
 
-  const acceptSuggestion = useCallback((suggestion: Suggestion) => {
-    window.dispatchEvent(
-      new CustomEvent('applySuggestion', {
-        detail: { suggestion },
-      })
-    );
-
-    setSpellingSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
-    setGrammarSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
-  }, []);
-
   const rejectSuggestion = useCallback((suggestion: Suggestion) => {
     if (suggestion.type === 'spelling') {
       setSpellingSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
@@ -147,7 +135,6 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
     isLoading,
     error,
     fetchSpellingSuggestions,
-    acceptSuggestion,
     rejectSuggestion,
     requestCritique,
     clearSuggestions,
