@@ -76,7 +76,9 @@ async function executeMigration(
 
     for (const statement of statements) {
       if (statement.trim()) {
-        await sql.unsafe(statement);
+        console.log(`  Executing: ${statement.substring(0, 50)}...`);
+        const result = await sql.query(statement);
+        console.log(`  ✅ Executed successfully`);
       }
     }
 
@@ -95,7 +97,7 @@ export async function runMigrations(): Promise<void> {
 
   try {
     // Ensure migrations table exists
-    await sql`${sql.unsafe(CREATE_MIGRATIONS_TABLE)}`;
+    await sql.query(CREATE_MIGRATIONS_TABLE);
 
     let appliedCount = 0;
 
@@ -131,7 +133,7 @@ export async function getMigrationStatus(): Promise<
 > {
   try {
     // Ensure migrations table exists
-    await sql`${sql.unsafe(CREATE_MIGRATIONS_TABLE)}`;
+    await sql.query(CREATE_MIGRATIONS_TABLE);
 
     const appliedMigrations = await sql`
       SELECT id, applied_at FROM schema_migrations ORDER BY id
@@ -175,7 +177,9 @@ export async function rollbackMigration(migrationId: string): Promise<void> {
 
     for (const statement of statements) {
       if (statement.trim()) {
-        await sql.unsafe(statement);
+        console.log(`  Rolling back: ${statement.substring(0, 50)}...`);
+        const result = await sql.query(statement);
+        console.log(`  ✅ Rolled back successfully`);
       }
     }
 
