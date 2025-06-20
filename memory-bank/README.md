@@ -7,30 +7,35 @@ This memory bank serves as the comprehensive documentation system for TweetWiseA
 ### Core Files (Required Reading)
 
 1. **`projectbrief.md`** - Foundation document
+
    - Project overview and core problem
    - Solution approach and success metrics
    - Technology stack and implementation phases
    - Constraints and current status
 
 2. **`productContext.md`** - Product understanding
+
    - Why this project exists
    - Problems we solve and user personas
    - How the product should work
    - Success indicators and competitive advantages
 
 3. **`systemPatterns.md`** - Technical architecture
+
    - System architecture and design patterns
    - Data flow patterns and API design
    - Performance optimization strategies
    - Security and testing patterns
 
 4. **`techContext.md`** - Technology details
+
    - Complete technology stack breakdown
    - Development environment setup
    - Configuration and deployment details
    - Dependencies and tools
 
 5. **`activeContext.md`** - Current work focus
+
    - Current project status and priorities
    - Recent changes and discoveries
    - Immediate next steps
@@ -45,6 +50,7 @@ This memory bank serves as the comprehensive documentation system for TweetWiseA
 ## Usage Instructions
 
 ### For New Sessions
+
 1. **Always read ALL memory bank files** before starting any work
 2. Start with `projectbrief.md` for overall context
 3. Review `activeContext.md` for current priorities
@@ -52,6 +58,7 @@ This memory bank serves as the comprehensive documentation system for TweetWiseA
 5. Reference technical files as needed
 
 ### For Updates
+
 - Update `activeContext.md` after each work session
 - Update `progress.md` when milestones are reached
 - Update technical files when architecture changes
@@ -78,4 +85,4 @@ This memory bank serves as the comprehensive documentation system for TweetWiseA
 2. **Phase 2 (Enhanced)**: Grammar checking, critique, advanced UI
 3. **Phase 3 (Polish)**: Curation assistant, optimization, testing
 
-This memory bank ensures development continuity and provides complete context for all future work on TweetWiseAI. 
+This memory bank ensures development continuity and provides complete context for all future work on TweetWiseAI.

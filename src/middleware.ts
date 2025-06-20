@@ -7,7 +7,7 @@ export default withAuth(
     const token = req.nextauth.token;
 
     // If user is authenticated and trying to access auth pages, redirect to dashboard
-    if (token && (pathname.startsWith('/auth'))) {
+    if (token && pathname.startsWith('/auth')) {
       return NextResponse.redirect(new URL('/dashboard', req.url));
     }
 
@@ -29,9 +29,7 @@ export default withAuth(
         ];
 
         // API routes that don't require authentication
-        const publicApiRoutes = [
-          '/api/auth',
-        ];
+        const publicApiRoutes = ['/api/auth'];
 
         // Check if the route is public
         if (publicRoutes.includes(pathname)) {
@@ -44,7 +42,11 @@ export default withAuth(
         }
 
         // For protected routes, require authentication
-        if (pathname.startsWith('/dashboard') || pathname.startsWith('/api/tweets') || pathname.startsWith('/api/ai')) {
+        if (
+          pathname.startsWith('/dashboard') ||
+          pathname.startsWith('/api/tweets') ||
+          pathname.startsWith('/api/ai')
+        ) {
           return !!token;
         }
 
@@ -69,4 +71,4 @@ export const config = {
      */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
-}; 
+};

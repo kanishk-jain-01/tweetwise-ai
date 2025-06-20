@@ -12,7 +12,11 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children, session }: AuthProviderProps) {
   return (
-    <SessionProvider session={session} refetchInterval={5 * 60} refetchOnWindowFocus={true}>
+    <SessionProvider
+      session={session}
+      refetchInterval={5 * 60}
+      refetchOnWindowFocus={true}
+    >
       {children}
     </SessionProvider>
   );
@@ -25,7 +29,9 @@ interface UserContextType {
     emailNotifications: boolean;
     aiSuggestions: boolean;
   };
-  updatePreferences: (preferences: Partial<UserContextType['preferences']>) => void;
+  updatePreferences: (
+    preferences: Partial<UserContextType['preferences']>
+  ) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -42,7 +48,9 @@ export function UserProvider({ children }: UserProviderProps) {
     aiSuggestions: true,
   };
 
-  const updatePreferences = (newPreferences: Partial<UserContextType['preferences']>) => {
+  const updatePreferences = (
+    newPreferences: Partial<UserContextType['preferences']>
+  ) => {
     // In a real app, this would update the database
     console.log('Updating preferences:', newPreferences);
     // For now, just log the update
@@ -53,11 +61,7 @@ export function UserProvider({ children }: UserProviderProps) {
     updatePreferences,
   };
 
-  return (
-    <UserContext.Provider value={value}>
-      {children}
-    </UserContext.Provider>
-  );
+  return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 }
 
 export function useUser() {
@@ -77,9 +81,7 @@ interface ProvidersProps {
 export function Providers({ children, session }: ProvidersProps) {
   return (
     <AuthProvider session={session}>
-      <UserProvider>
-        {children}
-      </UserProvider>
+      <UserProvider>{children}</UserProvider>
     </AuthProvider>
   );
-} 
+}

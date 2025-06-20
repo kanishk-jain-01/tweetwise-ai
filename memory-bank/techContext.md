@@ -5,6 +5,7 @@
 ### Frontend Technologies
 
 #### Core Framework
+
 - **Next.js 15.3.4** with App Router
   - Server components by default for better performance
   - Built-in optimization and bundling
@@ -12,6 +13,7 @@
   - Turbopack for faster development builds
 
 #### UI and Styling
+
 - **React 19.0.0** with TypeScript
   - Latest React features and concurrent rendering
   - Strict TypeScript configuration for type safety
@@ -24,6 +26,7 @@
   - Optimized web font loading
 
 #### Form and Validation
+
 - **React Hook Form 7.58.1** for form management
   - Efficient form handling with minimal re-renders
   - Built-in validation support
@@ -33,6 +36,7 @@
 - **@hookform/resolvers 5.1.1** for Zod integration
 
 #### Utility Libraries
+
 - **clsx 2.1.1** for conditional class names
 - **tailwind-merge 3.3.1** for Tailwind class merging
 - Custom utility functions in `src/lib/utils/`
@@ -40,6 +44,7 @@
 ### Backend Technologies
 
 #### Database
+
 - **Neon PostgreSQL** (Serverless)
   - `@neondatabase/serverless 1.0.1`
   - Serverless PostgreSQL with automatic scaling
@@ -47,17 +52,20 @@
   - Branching for development/staging environments
 
 #### Authentication
+
 - **NextAuth.js 4.24.11**
   - Secure authentication with multiple providers
   - Session management with JWT or database sessions
   - Built-in security features (CSRF protection, etc.)
 
 #### Password Security
+
 - **bcryptjs 3.0.2**
   - Secure password hashing
   - Salt-based hashing for security
 
 #### AI Integration
+
 - **OpenAI API 5.5.1**
   - GPT-3.5-turbo for spell checking (cost-effective)
   - GPT-4 for grammar checking and critique (high accuracy)
@@ -66,12 +74,14 @@
 ### Development Tools
 
 #### Code Quality
+
 - **ESLint 9** with Next.js config
   - Code linting and style enforcement
   - Prettier integration for formatting
   - Custom rules for project consistency
 
 #### Testing Framework
+
 - **Jest 30.0.2** with jsdom environment
   - Unit and integration testing
   - Coverage reporting
@@ -83,6 +93,7 @@
   - Additional Jest matchers for DOM testing
 
 #### TypeScript Configuration
+
 - **TypeScript 5** with strict configuration
   - Full type safety across the application
   - Custom type definitions in `src/types/`
@@ -91,6 +102,7 @@
 ## Development Environment Setup
 
 ### Prerequisites
+
 - Node.js 18+ (LTS recommended)
 - npm or yarn package manager
 - Git for version control
@@ -98,6 +110,7 @@
 ### Environment Configuration
 
 #### Required Environment Variables
+
 ```env
 # Database
 DATABASE_URL=postgresql://username:password@host:port/database
@@ -114,19 +127,20 @@ REDIS_URL=redis://localhost:6379
 ```
 
 #### Development Scripts
+
 ```json
 {
-  "dev": "next dev --turbopack",        // Development with Turbopack
-  "build": "next build",                // Production build
-  "start": "next start",                // Production server
-  "lint": "next lint",                  // ESLint checking
-  "lint:fix": "next lint --fix",        // Auto-fix linting issues
-  "format": "prettier --write .",       // Format all files
+  "dev": "next dev --turbopack", // Development with Turbopack
+  "build": "next build", // Production build
+  "start": "next start", // Production server
+  "lint": "next lint", // ESLint checking
+  "lint:fix": "next lint --fix", // Auto-fix linting issues
+  "format": "prettier --write .", // Format all files
   "format:check": "prettier --check .", // Check formatting
-  "type-check": "tsc --noEmit",        // TypeScript checking
-  "test": "jest --passWithNoTests",     // Run tests
-  "test:watch": "jest --watch",         // Watch mode testing
-  "test:coverage": "jest --coverage",   // Coverage report
+  "type-check": "tsc --noEmit", // TypeScript checking
+  "test": "jest --passWithNoTests", // Run tests
+  "test:watch": "jest --watch", // Watch mode testing
+  "test:coverage": "jest --coverage", // Coverage report
   "check-all": "npm run type-check && npm run lint && npm run format:check && npm run test"
 }
 ```
@@ -134,6 +148,7 @@ REDIS_URL=redis://localhost:6379
 ## Project Structure
 
 ### File Organization
+
 ```
 src/
 ├── app/                    # Next.js App Router
@@ -161,6 +176,7 @@ src/
 ```
 
 ### Configuration Files
+
 - `next.config.ts` - Next.js configuration
 - `tailwind.config.js` - Tailwind CSS configuration
 - `postcss.config.mjs` - PostCSS configuration
@@ -172,6 +188,7 @@ src/
 ## Database Configuration
 
 ### Neon PostgreSQL Setup
+
 ```typescript
 // Database connection configuration
 import { neon } from '@neondatabase/serverless';
@@ -186,6 +203,7 @@ const db = {
 ```
 
 ### Schema Management
+
 - Database migrations using SQL files
 - Version-controlled schema changes
 - Separate development and production databases
@@ -193,6 +211,7 @@ const db = {
 ## AI Service Integration
 
 ### OpenAI Configuration
+
 ```typescript
 import OpenAI from 'openai';
 
@@ -205,11 +224,12 @@ const AI_MODELS = {
   SPELL_CHECK: 'gpt-3.5-turbo',
   GRAMMAR_CHECK: 'gpt-4',
   CRITIQUE: 'gpt-4',
-  CURATION: 'gpt-4'
+  CURATION: 'gpt-4',
 };
 ```
 
 ### Rate Limiting and Caching
+
 - Request debouncing for user input
 - Response caching for repeated queries
 - Error handling and retry logic
@@ -217,16 +237,19 @@ const AI_MODELS = {
 ## Security Configuration
 
 ### Authentication Security
+
 - Secure session management with NextAuth.js
 - Password hashing with bcrypt
 - CSRF protection enabled by default
 
 ### API Security
+
 - Input validation with Zod schemas
 - Rate limiting for AI endpoints
 - Environment variable protection
 
 ### Data Security
+
 - Encrypted database connections
 - Secure API key management
 - HTTPS enforcement in production
@@ -234,12 +257,14 @@ const AI_MODELS = {
 ## Performance Optimization
 
 ### Build Optimization
+
 - Turbopack for faster development builds
 - Automatic code splitting
 - Image optimization with Next.js Image component
 - Font optimization with next/font
 
 ### Runtime Optimization
+
 - Server components for reduced client-side JavaScript
 - Lazy loading for AI features
 - Memoization for expensive operations
@@ -248,12 +273,14 @@ const AI_MODELS = {
 ## Deployment Configuration
 
 ### Vercel Deployment
+
 - Automatic deployments from Git
 - Edge Functions for global performance
 - Environment variable management
 - Preview deployments for testing
 
 ### Environment Management
+
 - Separate staging and production environments
 - Environment-specific configurations
 - Secure secret management
@@ -261,12 +288,14 @@ const AI_MODELS = {
 ## Monitoring and Debugging
 
 ### Development Tools
+
 - Next.js built-in error reporting
 - TypeScript strict mode for type safety
 - ESLint for code quality
 - Prettier for consistent formatting
 
 ### Production Monitoring
+
 - Error boundary components
 - API response time tracking
 - Database query performance monitoring
@@ -275,7 +304,9 @@ const AI_MODELS = {
 ## Dependencies Management
 
 ### Production Dependencies
+
 All production dependencies are locked to specific versions for stability:
+
 - React ecosystem: Latest stable versions
 - Database: Neon serverless client
 - Authentication: NextAuth.js
@@ -283,14 +314,16 @@ All production dependencies are locked to specific versions for stability:
 - Validation: Zod with React Hook Form
 
 ### Development Dependencies
+
 - Testing: Jest with React Testing Library
 - Code Quality: ESLint, Prettier, TypeScript
 - Build Tools: Tailwind CSS, PostCSS
 
 ### Dependency Updates
+
 - Regular security updates
 - Careful version management
 - Testing before updates
 - Lock file maintenance
 
-This technical context provides the foundation for all development work on TweetWiseAI, ensuring consistency and best practices across the entire application. 
+This technical context provides the foundation for all development work on TweetWiseAI, ensuring consistency and best practices across the entire application.

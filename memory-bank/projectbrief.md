@@ -11,6 +11,7 @@ Many Twitter users struggle with creating engaging, error-free, and impactful tw
 ## Solution Approach
 
 A dedicated platform leveraging Large Language Models (LLMs) to provide:
+
 - Real-time grammar and spell checking
 - Tweet analysis and critique
 - Content curation assistance
@@ -36,18 +37,21 @@ A dedicated platform leveraging Large Language Models (LLMs) to provide:
 ## Implementation Phases
 
 ### Phase 1 (MVP - 4-6 weeks)
+
 - User authentication and basic dashboard
 - Tweet composition with character count
 - Basic spell checking with GPT-3.5-turbo
 - Draft saving and basic history
 
 ### Phase 2 (Enhanced Features - 3-4 weeks)
+
 - Grammar checking with GPT-4
 - Three-panel dashboard layout
 - Tweet critique feature
 - Advanced draft management
 
 ### Phase 3 (Polish & Optimization - 2-3 weeks)
+
 - Tweet curation assistant
 - Performance optimizations
 - UI/UX refinements
@@ -56,6 +60,7 @@ A dedicated platform leveraging Large Language Models (LLMs) to provide:
 ## Constraints and Boundaries
 
 ### In Scope
+
 - Web application only
 - English language support
 - Individual user accounts
@@ -63,6 +68,7 @@ A dedicated platform leveraging Large Language Models (LLMs) to provide:
 - Tweet history and draft management
 
 ### Out of Scope
+
 - Direct Twitter API integration
 - Multi-language support
 - Team collaboration features
@@ -72,9 +78,10 @@ A dedicated platform leveraging Large Language Models (LLMs) to provide:
 ## Current Status
 
 Project is in initial setup phase with:
+
 - Basic Next.js structure established
 - Component architecture outlined
 - Authentication and database integration planned
 - AI service integration planned
 
-This project brief serves as the foundation for all development decisions and feature implementations. 
+This project brief serves as the foundation for all development decisions and feature implementations.

@@ -14,10 +14,8 @@ export function withAuth<P extends object>(
   WrappedComponent: ComponentType<P>,
   options: WithAuthProps = {}
 ) {
-  const {
-    redirectTo = '/auth/login',
-    redirectIfAuthenticated = false,
-  } = options;
+  const { redirectTo = '/auth/login', redirectIfAuthenticated = false } =
+    options;
 
   return function AuthenticatedComponent(props: P) {
     const { data: session, status } = useSession();
@@ -71,7 +69,8 @@ export const withDashboardAuth = <P extends object>(
 // Convenience function for auth pages (redirect if already authenticated)
 export const withGuestOnly = <P extends object>(
   WrappedComponent: ComponentType<P>
-) => withAuth(WrappedComponent, { 
-  redirectTo: '/dashboard', 
-  redirectIfAuthenticated: true 
-}); 
+) =>
+  withAuth(WrappedComponent, {
+    redirectTo: '/dashboard',
+    redirectIfAuthenticated: true,
+  });

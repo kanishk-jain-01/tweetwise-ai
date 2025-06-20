@@ -1,10 +1,8 @@
-import { neon } from '@neondatabase/serverless';
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
 
-const sql = neon(process.env.DATABASE_URL!);
 
 // Validation schema
 const forgotPasswordSchema = z.object({
@@ -12,7 +10,7 @@ const forgotPasswordSchema = z.object({
 });
 
 // Email transporter configuration
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_SERVER_HOST,
   port: parseInt(process.env.EMAIL_SERVER_PORT || '587'),
   secure: false, // true for 465, false for other ports
@@ -25,14 +23,14 @@ const transporter = nodemailer.createTransporter({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     // Validate input
     const validationResult = forgotPasswordSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Invalid email address' 
+        {
+          success: false,
+          error: 'Invalid email address',
         },
         { status: 400 }
       );
@@ -41,30 +39,23 @@ export async function POST(request: NextRequest) {
     const { email } = validationResult.data;
 
     // Check if user exists
-    const users = await sql`
-      SELECT id, email FROM users WHERE email = ${email} LIMIT 1
-    `;
+    const user = await UserQueries.findByEmail(email);
 
     // Always return success to prevent email enumeration attacks
-    if (users.length === 0) {
+    if (!user) {
       return NextResponse.json({
         success: true,
-        message: 'If an account with that email exists, we have sent a password reset link.'
+        message:
+          'If an account with that email exists, we have sent a password reset link.',
       });
     }
-
-    const user = users[0];
 
     // Generate reset token
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
 
     // Store reset token in database
-    await sql`
-      UPDATE users 
-      SET reset_token = ${resetToken}, reset_token_expiry = ${resetTokenExpiry.toISOString()}
-      WHERE id = ${user.id}
-    `;
+    await UserQueries.setResetToken(email, resetToken, resetTokenExpiry);
 
     // Create reset URL
     const resetUrl = `${process.env.APP_URL}/auth/reset-password?token=${resetToken}`;
@@ -131,16 +122,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'If an account with that email exists, we have sent a password reset link.'
+      message:
+        'If an account with that email exists, we have sent a password reset link.',
     });
-
   } catch (error) {
     console.error('Forgot password error:', error);
-    
+
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Internal server error' 
+      {
+        success: false,
+        error: 'Internal server error',
       },
       { status: 500 }
     );
@@ -149,8 +140,5 @@ export async function POST(request: NextRequest) {
 
 // Handle unsupported methods
 export async function GET() {
-  return NextResponse.json(
-    { error: 'Method not allowed' },
-    { status: 405 }
-  );
-} 
+  return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
+}

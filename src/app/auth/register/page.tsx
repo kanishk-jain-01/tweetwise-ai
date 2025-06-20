@@ -4,7 +4,8 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Sign Up | TweetWiseAI',
-  description: 'Create your TweetWiseAI account to start writing better tweets with AI assistance.',
+  description:
+    'Create your TweetWiseAI account to start writing better tweets with AI assistance.',
 };
 
 export default function RegisterPage() {
@@ -27,8 +28,8 @@ export default function RegisterPage() {
         <div className="text-center">
           <p className="text-sm text-gray-600">
             Already have an account?{' '}
-            <Link 
-              href="/auth/login" 
+            <Link
+              href="/auth/login"
               className="font-medium text-primary-600 hover:text-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded"
             >
               Sign in here
@@ -38,4 +39,4 @@ export default function RegisterPage() {
       </div>
     </div>
   );
-} 
+}

@@ -56,7 +56,10 @@ export const LoginForm = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="email"
+          className="block text-sm font-medium text-gray-700"
+        >
           Email address
         </label>
         <div className="mt-1">
@@ -65,7 +68,11 @@ export const LoginForm = () => {
             type="email"
             autoComplete="email"
             {...register('email')}
-            className={errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
+            className={
+              errors.email
+                ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                : ''
+            }
             placeholder="Enter your email"
           />
           {errors.email && (
@@ -77,7 +84,10 @@ export const LoginForm = () => {
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="password"
+          className="block text-sm font-medium text-gray-700"
+        >
           Password
         </label>
         <div className="mt-1">
@@ -86,7 +96,11 @@ export const LoginForm = () => {
             type="password"
             autoComplete="current-password"
             {...register('password')}
-            className={errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
+            className={
+              errors.password
+                ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                : ''
+            }
             placeholder="Enter your password"
           />
           {errors.password && (
@@ -117,4 +131,4 @@ export const LoginForm = () => {
       </div>
     </form>
   );
-}; 
+};

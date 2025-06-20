@@ -23,8 +23,11 @@ Based on PRD: `prd-tweetwise-ai.md`
 - `src/components/features/auth/login-form.tsx` - Login form component
 - `src/components/features/auth/register-form.tsx` - Registration form component
 - `src/lib/auth/auth.ts` - Authentication utilities and NextAuth configuration
-- `src/lib/database/schema.ts` - Database schema definitions
-- `src/lib/database/queries.ts` - Database query functions
+- `src/lib/database/index.ts` - Centralized database client and connection utilities
+- `src/lib/database/schema.ts` - Database schema definitions and TypeScript interfaces
+- `src/lib/database/migrations.ts` - Database migration utilities and schema initialization
+- `src/lib/database/queries.ts` - User database query functions
+- `src/lib/database/tweet-queries.ts` - Tweet database query functions
 - `src/lib/ai/openai.ts` - OpenAI API integration utilities
 - `src/lib/ai/spell-check.ts` - Spell checking logic using GPT-3.5-turbo
 - `src/lib/ai/grammar-check.ts` - Grammar checking logic using GPT-4
@@ -75,14 +78,14 @@ Based on PRD: `prd-tweetwise-ai.md`
 
 - [ ] 3.0 Database Setup and Schema Design
 
-  - [ ] 3.1 Set up Neon PostgreSQL database and obtain connection string
-  - [ ] 3.2 Install database client (pg, prisma, or drizzle) and configure connection
-  - [ ] 3.3 Design and implement Users table schema
-  - [ ] 3.4 Design and implement Tweets table schema with draft/completed status
-  - [ ] 3.5 Design and implement AI_Responses table for caching AI results
-  - [ ] 3.6 Create database query functions for user operations
-  - [ ] 3.7 Create database query functions for tweet CRUD operations
-  - [ ] 3.8 Set up proper database indexing for performance
+  - [x] 3.1 Set up Neon PostgreSQL database and obtain connection string
+  - [x] 3.2 Install database client (pg, prisma, or drizzle) and configure connection
+  - [x] 3.3 Design and implement Users table schema
+  - [x] 3.4 Design and implement Tweets table schema with draft/completed status
+  - [x] 3.5 Design and implement AI_Responses table for caching AI results
+  - [x] 3.6 Create database query functions for user operations
+  - [x] 3.7 Create database query functions for tweet CRUD operations
+  - [x] 3.8 Set up proper database indexing for performance
 
 - [ ] 4.0 Landing Page and User Onboarding
 

@@ -8,18 +8,21 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-const registerSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string()
-    .min(8, 'Password must be at least 8 characters long')
-    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-    .regex(/[0-9]/, 'Password must contain at least one number'),
-  confirmPassword: z.string().min(1, 'Please confirm your password'),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+const registerSchema = z
+  .object({
+    email: z.string().email('Please enter a valid email address'),
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters long')
+      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+      .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+      .regex(/[0-9]/, 'Password must contain at least one number'),
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+  })
+  .refine(data => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
@@ -59,7 +62,9 @@ export const RegisterForm = () => {
       if (!response.ok) {
         if (result.details && Array.isArray(result.details)) {
           // Handle Zod validation errors
-          const errorMessages = result.details.map((detail: any) => detail.message).join(', ');
+          const errorMessages = result.details
+            .map((detail: any) => detail.message)
+            .join(', ');
           setError(errorMessages);
         } else {
           setError(result.error || 'Registration failed. Please try again.');
@@ -69,9 +74,10 @@ export const RegisterForm = () => {
 
       setSuccess(true);
       setTimeout(() => {
-        router.push('/auth/login?message=Registration successful! Please sign in.');
+        router.push(
+          '/auth/login?message=Registration successful! Please sign in.'
+        );
       }, 2000);
-
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
     } finally {
@@ -94,7 +100,10 @@ export const RegisterForm = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="email"
+          className="block text-sm font-medium text-gray-700"
+        >
           Email address
         </label>
         <div className="mt-1">
@@ -103,7 +112,11 @@ export const RegisterForm = () => {
             type="email"
             autoComplete="email"
             {...register('email')}
-            className={errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
+            className={
+              errors.email
+                ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                : ''
+            }
             placeholder="Enter your email"
           />
           {errors.email && (
@@ -115,7 +128,10 @@ export const RegisterForm = () => {
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="password"
+          className="block text-sm font-medium text-gray-700"
+        >
           Password
         </label>
         <div className="mt-1">
@@ -124,7 +140,11 @@ export const RegisterForm = () => {
             type="password"
             autoComplete="new-password"
             {...register('password')}
-            className={errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
+            className={
+              errors.password
+                ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                : ''
+            }
             placeholder="Create a password"
           />
           {errors.password && (
@@ -135,13 +155,17 @@ export const RegisterForm = () => {
         </div>
         <div className="mt-2">
           <p className="text-xs text-gray-500">
-            Password must be at least 8 characters with uppercase, lowercase, and number
+            Password must be at least 8 characters with uppercase, lowercase,
+            and number
           </p>
         </div>
       </div>
 
       <div>
-        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="confirmPassword"
+          className="block text-sm font-medium text-gray-700"
+        >
           Confirm password
         </label>
         <div className="mt-1">
@@ -150,7 +174,11 @@ export const RegisterForm = () => {
             type="password"
             autoComplete="new-password"
             {...register('confirmPassword')}
-            className={errors.confirmPassword ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
+            className={
+              errors.confirmPassword
+                ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                : ''
+            }
             placeholder="Confirm your password"
           />
           {errors.confirmPassword && (
@@ -181,4 +209,4 @@ export const RegisterForm = () => {
       </div>
     </form>
   );
-}; 
+};

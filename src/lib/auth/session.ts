@@ -16,18 +16,18 @@ export async function getCurrentUser() {
 // Require authentication for server components
 export async function requireAuth() {
   const session = await getCurrentSession();
-  
+
   if (!session) {
     redirect('/auth/login');
   }
-  
+
   return session;
 }
 
 // Require guest (no authentication) for server components
 export async function requireGuest() {
   const session = await getCurrentSession();
-  
+
   if (session) {
     redirect('/dashboard');
   }
@@ -46,5 +46,7 @@ export async function getCurrentUserId() {
 }
 
 // Type-safe session with user data
-export type AuthenticatedSession = NonNullable<Awaited<ReturnType<typeof getCurrentSession>>>;
-export type AuthenticatedUser = AuthenticatedSession['user']; 
+export type AuthenticatedSession = NonNullable<
+  Awaited<ReturnType<typeof getCurrentSession>>
+>;
+export type AuthenticatedUser = AuthenticatedSession['user'];

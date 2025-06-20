@@ -13,9 +13,9 @@ export const useAuth = () => {
 
   const logout = async () => {
     try {
-      await signOut({ 
+      await signOut({
         redirect: false,
-        callbackUrl: '/auth/login' 
+        callbackUrl: '/auth/login',
       });
       router.push('/auth/login');
       router.refresh();
@@ -44,17 +44,17 @@ export const useAuth = () => {
     // Session data
     session,
     user,
-    
+
     // Status flags
     isLoading,
     isAuthenticated,
     isUnauthenticated: !isLoading && !isAuthenticated,
-    
+
     // Actions
     logout,
-    
+
     // Utilities
     requireAuth,
     redirectIfAuthenticated,
   };
-}; 
+};

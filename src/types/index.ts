@@ -12,4 +12,4 @@ export interface Tweet {
   status: 'draft' | 'completed';
 }
 
-// More types will be added as needed during development 
+// More types will be added as needed during development

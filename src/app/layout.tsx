@@ -17,8 +17,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'TweetWiseAI - Write Better Tweets with AI',
-  description: 'Enhance your Twitter content with AI-powered grammar checking, spell checking, and tweet analysis. Write better, more engaging tweets with TweetWiseAI.',
-  keywords: 'Twitter, AI, writing, grammar, spell check, social media, content creation',
+  description:
+    'Enhance your Twitter content with AI-powered grammar checking, spell checking, and tweet analysis. Write better, more engaging tweets with TweetWiseAI.',
+  keywords:
+    'Twitter, AI, writing, grammar, spell check, social media, content creation',
   authors: [{ name: 'TweetWiseAI Team' }],
   viewport: 'width=device-width, initial-scale=1',
 };
@@ -35,9 +37,7 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Providers session={session}>
-          {children}
-        </Providers>
+        <Providers session={session}>{children}</Providers>
       </body>
     </html>
   );
