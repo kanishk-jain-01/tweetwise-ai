@@ -25,10 +25,10 @@ export default function DashboardPage() {
     currentContentRef.current = composer.content;
   }, [composer.content]);
 
-  // Memoize the suggestion functions to prevent unnecessary effect runs
-  const fetchSpellingSuggestions = useCallback(
-    (text: string) => suggestions.fetchSpellingSuggestions(text),
-    [suggestions.fetchSpellingSuggestions]
+  // Memoize the suggestion function to prevent unnecessary effect runs
+  const fetchWritingSuggestions = useCallback(
+    (text: string) => suggestions.fetchWritingSuggestions(text),
+    [suggestions.fetchWritingSuggestions]
   );
 
   const clearSuggestions = useCallback(
@@ -36,19 +36,20 @@ export default function DashboardPage() {
     [suggestions.clearSuggestions]
   );
 
-  // Debounced effect for spell checking - now with stable dependencies
+  // Debounced effect for AI checking - now with stable dependencies
   useEffect(() => {
-    // Don't trigger spell check if we're in the middle of applying a suggestion
+    // Don't trigger AI checks if we're in the middle of applying a suggestion
     if (isApplyingSuggestionRef.current) {
       return;
     }
 
     if (debouncedContent.trim()) {
-      fetchSpellingSuggestions(debouncedContent);
+      // Run comprehensive writing check (handles both spelling and grammar)
+      fetchWritingSuggestions(debouncedContent);
     } else {
       clearSuggestions();
     }
-  }, [debouncedContent, fetchSpellingSuggestions, clearSuggestions]);
+  }, [debouncedContent, fetchWritingSuggestions, clearSuggestions]);
 
   // Text replacement function for applying suggestions
   const applyTextReplacement = useCallback(
