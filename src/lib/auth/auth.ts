@@ -38,8 +38,7 @@ export const authOptions: NextAuthOptions = {
           return {
             id: user.id,
             email: user.email,
-            createdAt: user.created_at,
-            updatedAt: user.updated_at,
+            name: user.email.split('@')[0], // Add name field for NextAuth compatibility
           };
         } catch (error) {
           console.error('Auth error:', error);

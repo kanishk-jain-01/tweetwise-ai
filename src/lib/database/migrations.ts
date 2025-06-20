@@ -107,9 +107,9 @@ export async function checkTablesExist(): Promise<{
     `;
 
     return {
-      users: result[0].users_exists,
-      tweets: result[0].tweets_exists,
-      ai_responses: result[0].ai_responses_exists,
+      users: result[0]?.users_exists || false,
+      tweets: result[0]?.tweets_exists || false,
+      ai_responses: result[0]?.ai_responses_exists || false,
     };
   } catch (error) {
     console.error('Failed to check table existence:', error);

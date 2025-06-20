@@ -35,6 +35,7 @@ export const UserProfileDropdown = () => {
   const getUserDisplayName = (email: string) => {
     // Extract name from email (before @) and capitalize
     const name = email.split('@')[0];
+    if (!name) return email; // Fallback to email if name extraction fails
     return name.charAt(0).toUpperCase() + name.slice(1);
   };
 
