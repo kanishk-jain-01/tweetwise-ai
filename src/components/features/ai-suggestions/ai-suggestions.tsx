@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { useAISuggestions } from '@/hooks/use-ai-suggestions';
+import { Suggestion } from '@/hooks/use-ai-suggestions';
 import {
   AlertCircle,
   CheckCircle,
@@ -17,19 +17,47 @@ import {
   Wand2,
 } from 'lucide-react';
 
-export const AISuggestions = () => {
-  const {
-    spellingSuggestions,
-    grammarSuggestions,
-    critique,
-    isLoading,
-    acceptSuggestion,
-    rejectSuggestion,
-    requestCritique,
-  } = useAISuggestions();
+interface AISuggestionsProps {
+  spellingSuggestions: Suggestion[];
+  grammarSuggestions: Suggestion[];
+  critique: any; // Define a proper type for critique later
+  isLoading: boolean;
+  error: string | null;
+  onAccept: (suggestion: Suggestion) => void;
+  onReject: (suggestion: Suggestion) => void;
+  onCritique: () => void;
+}
 
+export const AISuggestions = ({
+  spellingSuggestions,
+  grammarSuggestions,
+  critique,
+  isLoading,
+  error,
+  onAccept,
+  onReject,
+  onCritique,
+}: AISuggestionsProps) => {
   const hasSuggestions =
     spellingSuggestions.length > 0 || grammarSuggestions.length > 0;
+
+  if (error) {
+    return (
+      <div className="p-4">
+        <Card className="border-destructive/50 bg-destructive/10">
+          <CardHeader>
+            <CardTitle className="text-sm text-destructive flex items-center">
+              <AlertCircle className="w-4 h-4 mr-2" />
+              AI Assistant Error
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-destructive">{error}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col">
@@ -70,7 +98,7 @@ export const AISuggestions = () => {
                 </CardHeader>
                 <CardContent className="pt-0 space-y-3">
                   {spellingSuggestions.map((suggestion, index) => (
-                    <div key={index} className="space-y-2">
+                    <div key={suggestion.id} className="space-y-2">
                       <div className="text-sm">
                         <span className="text-muted-foreground">Replace </span>
                         <span className="bg-red-100 text-red-800 px-1 rounded">
@@ -78,14 +106,14 @@ export const AISuggestions = () => {
                         </span>
                         <span className="text-muted-foreground"> with </span>
                         <span className="bg-green-100 text-green-800 px-1 rounded">
-                          {suggestion.replacement}
+                          {suggestion.suggestion}
                         </span>
                       </div>
                       <div className="flex space-x-2">
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => acceptSuggestion(suggestion)}
+                          onClick={() => onAccept(suggestion)}
                           className="h-7 text-xs"
                         >
                           <ThumbsUp className="w-3 h-3 mr-1" />
@@ -94,7 +122,7 @@ export const AISuggestions = () => {
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => rejectSuggestion(suggestion)}
+                          onClick={() => onReject(suggestion)}
                           className="h-7 text-xs"
                         >
                           <ThumbsDown className="w-3 h-3 mr-1" />
@@ -122,7 +150,7 @@ export const AISuggestions = () => {
                 </CardHeader>
                 <CardContent className="pt-0 space-y-3">
                   {grammarSuggestions.map((suggestion, index) => (
-                    <div key={index} className="space-y-2">
+                    <div key={suggestion.id} className="space-y-2">
                       <div className="text-sm">
                         <p className="text-muted-foreground mb-1">
                           {suggestion.explanation}
@@ -134,7 +162,7 @@ export const AISuggestions = () => {
                           </span>
                           <span className="text-muted-foreground"> to </span>
                           <span className="bg-green-100 text-green-800 px-1 rounded">
-                            {suggestion.replacement}
+                            {suggestion.suggestion}
                           </span>
                         </div>
                       </div>
@@ -142,7 +170,7 @@ export const AISuggestions = () => {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => acceptSuggestion(suggestion)}
+                          onClick={() => onAccept(suggestion)}
                           className="h-7 text-xs"
                         >
                           <ThumbsUp className="w-3 h-3 mr-1" />
@@ -151,7 +179,7 @@ export const AISuggestions = () => {
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => rejectSuggestion(suggestion)}
+                          onClick={() => onReject(suggestion)}
                           className="h-7 text-xs"
                         >
                           <ThumbsDown className="w-3 h-3 mr-1" />
@@ -221,7 +249,7 @@ export const AISuggestions = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={requestCritique}
+              onClick={onCritique}
               disabled={isLoading}
               className="w-full"
             >

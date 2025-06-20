@@ -4,10 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -15,19 +15,23 @@ import { useTweetHistory } from '@/hooks/use-tweet-history';
 import { Tweet } from '@/lib/database/schema';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-    CheckCircle,
-    Clock,
-    FileText,
-    Loader2,
-    MoreHorizontal,
-    Search,
-    Trash2,
+  CheckCircle,
+  Clock,
+  FileText,
+  Loader2,
+  MoreHorizontal,
+  Search,
+  Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-export const TweetHistory = () => {
-  const { tweets, isLoading, isRefreshing, loadTweet, refreshTweets } = useTweetHistory();
+interface TweetHistoryProps {
+  onSelectTweet: (tweet: Tweet) => void;
+}
+
+export const TweetHistory = ({ onSelectTweet }: TweetHistoryProps) => {
+  const { tweets, isLoading, isRefreshing, refreshTweets } = useTweetHistory();
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'drafts' | 'completed'>('all');
 
@@ -43,7 +47,7 @@ export const TweetHistory = () => {
   });
 
   const handleTweetClick = (tweet: Tweet) => {
-    loadTweet(tweet);
+    onSelectTweet(tweet);
     toast.success(
       `Loaded ${tweet.status === 'draft' ? 'draft' : 'tweet'} into composer`
     );

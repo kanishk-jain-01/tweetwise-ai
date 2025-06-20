@@ -1,17 +1,30 @@
+'use client';
+
 import { AISuggestions } from '@/components/features/ai-suggestions/ai-suggestions';
 import { TweetComposer } from '@/components/features/tweet-composer/tweet-composer';
 import { TweetHistory } from '@/components/features/tweet-history/tweet-history';
 import { DashboardHeader } from '@/components/layout/dashboard-header';
-import { authOptions } from '@/lib/auth/auth';
-import { getServerSession } from 'next-auth';
-import { redirect } from 'next/navigation';
+import { useAISuggestions } from '@/hooks/use-ai-suggestions';
+import { useDebounce } from '@/hooks/use-debounce';
+import { useTweetComposer } from '@/hooks/use-tweet-composer';
+import { useEffect } from 'react';
 
-export default async function DashboardPage() {
-  const session = await getServerSession(authOptions);
+export default function DashboardPage() {
+  const composer = useTweetComposer();
+  const suggestions = useAISuggestions();
+  const debouncedContent = useDebounce(composer.content, 500);
 
-  if (!session) {
-    redirect('/auth/login');
-  }
+  // Destructure the functions to ensure stable references for the useEffect dependency array
+  const { fetchSpellingSuggestions, clearSuggestions } = suggestions;
+
+  useEffect(() => {
+    if (debouncedContent.trim()) {
+      fetchSpellingSuggestions(debouncedContent);
+    } else {
+      clearSuggestions();
+    }
+    // Add the destructured functions to the dependency array
+  }, [debouncedContent, fetchSpellingSuggestions, clearSuggestions]);
 
   return (
     <div className="h-screen flex flex-col">
@@ -28,7 +41,7 @@ export default async function DashboardPage() {
             </h2>
           </div>
           <div className="flex-1 overflow-hidden">
-            <TweetHistory />
+            <TweetHistory onSelectTweet={composer.loadDraft} />
           </div>
         </aside>
 
@@ -43,7 +56,13 @@ export default async function DashboardPage() {
             </p>
           </div>
           <div className="flex-1 p-6">
-            <TweetComposer />
+            <TweetComposer
+              content={composer.content}
+              onContentChange={composer.setContent}
+              autoSaveStatus={composer.autoSaveStatus}
+              currentTweetId={composer.currentTweetId}
+              onNewDraft={composer.clearContent}
+            />
           </div>
         </main>
 
@@ -55,7 +74,16 @@ export default async function DashboardPage() {
             </h2>
           </div>
           <div className="flex-1 overflow-hidden">
-            <AISuggestions />
+            <AISuggestions
+              spellingSuggestions={suggestions.spellingSuggestions}
+              grammarSuggestions={suggestions.grammarSuggestions}
+              critique={suggestions.critique}
+              isLoading={suggestions.isLoading}
+              error={suggestions.error}
+              onAccept={suggestions.acceptSuggestion}
+              onReject={suggestions.rejectSuggestion}
+              onCritique={() => suggestions.requestCritique(composer.content)}
+            />
           </div>
         </aside>
       </div>
