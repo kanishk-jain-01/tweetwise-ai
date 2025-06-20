@@ -1,22 +1,41 @@
-import { TwitterApi } from 'twitter-api-v2';
-
 // Twitter API Configuration
 const TWITTER_CLIENT_ID = process.env.TWITTER_CLIENT_ID!;
 const TWITTER_CLIENT_SECRET = process.env.TWITTER_CLIENT_SECRET!;
 const CALLBACK_URL = process.env.TWITTER_CALLBACK_URL || `${process.env.NEXTAUTH_URL}/api/twitter/callback`;
 
+// Dynamic import function for TwitterApi
+async function getTwitterApi() {
+  const { TwitterApi } = await import('twitter-api-v2');
+  return TwitterApi;
+}
+
 // Twitter API Client Class
 export class TwitterClient {
-  private client: TwitterApi;
+  private client: any;
 
   constructor(accessToken?: string, accessSecret?: string) {
-    if (accessToken && accessSecret) {
+    // Initialize client as null, will be set up in init method
+    this.client = null;
+    this.accessToken = accessToken;
+    this.accessSecret = accessSecret;
+  }
+
+  private accessToken?: string;
+  private accessSecret?: string;
+
+  // Initialize the Twitter client
+  private async initClient() {
+    if (this.client) return this.client;
+
+    const TwitterApi = await getTwitterApi();
+    
+    if (this.accessToken && this.accessSecret) {
       // Authenticated client for posting tweets
       this.client = new TwitterApi({
         appKey: TWITTER_CLIENT_ID,
         appSecret: TWITTER_CLIENT_SECRET,
-        accessToken,
-        accessSecret,
+        accessToken: this.accessToken,
+        accessSecret: this.accessSecret,
       });
     } else {
       // App-only client for OAuth flow initiation
@@ -25,12 +44,15 @@ export class TwitterClient {
         clientSecret: TWITTER_CLIENT_SECRET,
       });
     }
+    
+    return this.client;
   }
 
   // Initialize OAuth 2.0 PKCE flow
   async generateAuthLink(state?: string) {
     try {
-      const { url, codeVerifier, state: oauthState } = this.client.generateOAuth2AuthLink(
+      const client = await this.initClient();
+      const { url, codeVerifier, state: oauthState } = client.generateOAuth2AuthLink(
         CALLBACK_URL,
         {
           scope: ['tweet.read', 'tweet.write', 'users.read'],
@@ -52,7 +74,8 @@ export class TwitterClient {
   // Exchange authorization code for access tokens
   async exchangeCodeForTokens(code: string, codeVerifier: string) {
     try {
-      const { client: loggedClient, accessToken, refreshToken } = await this.client.loginWithOAuth2({
+      const client = await this.initClient();
+      const { client: loggedClient, accessToken, refreshToken } = await client.loginWithOAuth2({
         code,
         codeVerifier,
         redirectUri: CALLBACK_URL,
@@ -79,8 +102,9 @@ export class TwitterClient {
   // Refresh access token using refresh token
   async refreshAccessToken(refreshToken: string) {
     try {
+      const client = await this.initClient();
       const { client: refreshedClient, accessToken, refreshToken: newRefreshToken } = 
-        await this.client.refreshOAuth2Token(refreshToken);
+        await client.refreshOAuth2Token(refreshToken);
 
       return {
         accessToken,
@@ -95,7 +119,7 @@ export class TwitterClient {
   // Post a tweet
   async postTweet(content: string) {
     try {
-      if (!this.isAuthenticated()) {
+      if (!(await this.isAuthenticated())) {
         throw new Error('Twitter client is not authenticated');
       }
 
@@ -108,7 +132,8 @@ export class TwitterClient {
         throw new Error('Tweet content exceeds 280 character limit');
       }
 
-      const { data: createdTweet } = await this.client.v2.tweet(content);
+      const client = await this.initClient();
+      const { data: createdTweet } = await client.v2.tweet(content);
 
       return {
         id: createdTweet.id,
@@ -134,11 +159,12 @@ export class TwitterClient {
   // Get user's recent tweets
   async getUserTweets(userId: string, maxResults: number = 10) {
     try {
-      if (!this.isAuthenticated()) {
+      if (!(await this.isAuthenticated())) {
         throw new Error('Twitter client is not authenticated');
       }
 
-      const { data: tweets } = await this.client.v2.userTimeline(userId, {
+      const client = await this.initClient();
+      const { data: tweets } = await client.v2.userTimeline(userId, {
         max_results: maxResults,
         'tweet.fields': ['created_at', 'public_metrics'],
       });
@@ -153,11 +179,12 @@ export class TwitterClient {
   // Verify credentials and get user info
   async verifyCredentials() {
     try {
-      if (!this.isAuthenticated()) {
+      if (!(await this.isAuthenticated())) {
         throw new Error('Twitter client is not authenticated');
       }
 
-      const { data: user } = await this.client.v2.me({
+      const client = await this.initClient();
+      const { data: user } = await client.v2.me({
         'user.fields': ['public_metrics', 'verified'],
       });
 
@@ -177,14 +204,17 @@ export class TwitterClient {
   }
 
   // Check if client is authenticated
-  private isAuthenticated(): boolean {
-    return this.client.hasAccessToken();
+  private async isAuthenticated(): Promise<boolean> {
+    if (!this.accessToken) return false;
+    const client = await this.initClient();
+    return client.hasAccessToken();
   }
 
   // Get rate limit status
   async getRateLimitStatus() {
     try {
-      const rateLimits = await this.client.v1.getRateLimitStatuses();
+      const client = await this.initClient();
+      const rateLimits = await client.v1.getRateLimitStatuses();
       return rateLimits;
     } catch (error) {
       console.error('Error getting rate limit status:', error);
