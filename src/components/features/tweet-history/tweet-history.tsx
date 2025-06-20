@@ -4,10 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -15,13 +15,13 @@ import { useTweetHistory } from '@/hooks/use-tweet-history';
 import { Tweet } from '@/lib/database/schema';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  CheckCircle,
-  Clock,
-  FileText,
-  Loader2,
-  MoreHorizontal,
-  Search,
-  Trash2,
+    CheckCircle,
+    Clock,
+    FileText,
+    Loader2,
+    MoreHorizontal,
+    Search,
+    Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -68,6 +68,11 @@ export const TweetHistory = ({ onSelectTweet }: TweetHistoryProps) => {
       if (!response.ok) {
         throw new Error('Failed to delete tweet');
       }
+
+      // Dispatch custom event to notify other components about the deletion
+      window.dispatchEvent(new CustomEvent('tweetDeleted', {
+        detail: { tweetId: tweet.id }
+      }));
 
       toast.success(
         `${tweet.status === 'draft' ? 'Draft' : 'Tweet'} deleted successfully`
