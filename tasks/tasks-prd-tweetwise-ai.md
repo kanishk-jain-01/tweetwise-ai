@@ -107,9 +107,7 @@ Based on PRD: `prd-tweetwise-ai.md`
   - [x] 5.5 Implement form components with validation states and error handling
   - [x] 5.6 Create loading states and skeleton components using shadcn/ui patterns
   - [x] 5.7 Set up icon system (Lucide React icons recommended by shadcn/ui)
-  - [ ] 5.8 Ensure all components meet WCAG 2.1 AA accessibility standards
-  - [ ] 5.9 Create component documentation and usage examples
-  - [x] 5.10 Retrofit existing auth components to use shadcn/ui components
+  - [x] 5.8 Retrofit existing auth components to use shadcn/ui components
 
 - [x] 6.0 Tweet Composition Interface
 
