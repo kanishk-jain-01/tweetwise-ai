@@ -1,11 +1,22 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { zodResolver } from '@hookform/resolvers/zod';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import { z } from 'zod';
 
 const registerSchema = z
@@ -28,185 +39,121 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 export const RegisterForm = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   const router = useRouter();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<RegisterFormData>({
+  const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
   });
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
-    setError(null);
-    setSuccess(false);
-
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: data.email, password: data.password }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        if (result.details && Array.isArray(result.details)) {
-          // Handle Zod validation errors
-          const errorMessages = result.details
-            .map((detail: any) => detail.message)
-            .join(', ');
-          setError(errorMessages);
-        } else {
-          setError(result.error || 'Registration failed. Please try again.');
-        }
+        toast.error('Registration Failed', {
+          description: result.error || 'An unknown error occurred.',
+        });
         return;
       }
 
-      setSuccess(true);
-      setTimeout(() => {
-        router.push(
-          '/auth/login?message=Registration successful! Please sign in.'
-        );
-      }, 2000);
+      toast.success('Registration Successful', {
+        description: 'Your account has been created. Please sign in.',
+      });
+      router.push('/auth/login');
     } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
+      toast.error('An Error Occurred', {
+        description: 'An unexpected error occurred. Please try again.',
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (success) {
-    return (
-      <div className="text-center">
-        <div className="rounded-md bg-green-50 p-4">
-          <p className="text-sm text-green-800">
-            Account created successfully! Redirecting to sign in...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div>
-        <label
-          htmlFor="email"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Email address
-        </label>
-        <div className="mt-1">
-          <Input
-            id="email"
-            type="email"
-            autoComplete="email"
-            {...register('email')}
-            className={
-              errors.email
-                ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                : ''
-            }
-            placeholder="Enter your email"
-          />
-          {errors.email && (
-            <p className="mt-2 text-sm text-red-600" role="alert">
-              {errors.email.message}
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div>
-        <label
-          htmlFor="password"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Password
-        </label>
-        <div className="mt-1">
-          <Input
-            id="password"
-            type="password"
-            autoComplete="new-password"
-            {...register('password')}
-            className={
-              errors.password
-                ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                : ''
-            }
-            placeholder="Create a password"
-          />
-          {errors.password && (
-            <p className="mt-2 text-sm text-red-600" role="alert">
-              {errors.password.message}
-            </p>
-          )}
-        </div>
-        <div className="mt-2">
-          <p className="text-xs text-gray-500">
-            Password must be at least 8 characters with uppercase, lowercase,
-            and number
-          </p>
-        </div>
-      </div>
-
-      <div>
-        <label
-          htmlFor="confirmPassword"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Confirm password
-        </label>
-        <div className="mt-1">
-          <Input
-            id="confirmPassword"
-            type="password"
-            autoComplete="new-password"
-            {...register('confirmPassword')}
-            className={
-              errors.confirmPassword
-                ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                : ''
-            }
-            placeholder="Confirm your password"
-          />
-          {errors.confirmPassword && (
-            <p className="mt-2 text-sm text-red-600" role="alert">
-              {errors.confirmPassword.message}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {error && (
-        <div className="rounded-md bg-red-50 p-4">
-          <p className="text-sm text-red-800" role="alert">
-            {error}
-          </p>
-        </div>
-      )}
-
-      <div>
-        <Button
-          type="submit"
-          isLoading={isLoading}
-          disabled={isLoading}
-          className="w-full"
-        >
-          {isLoading ? 'Creating account...' : 'Create account'}
-        </Button>
-      </div>
-    </form>
+    <Card className="w-full max-w-md">
+      <CardHeader>
+        <CardTitle className="text-2xl font-bold text-center">
+          Create an account
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="name@example.com"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="Create a password"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirm Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="Confirm your password"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" disabled={isLoading} className="w-full">
+              {isLoading ? 'Creating account...' : 'Create Account'}
+            </Button>
+            <div className="text-center text-sm text-muted-foreground">
+              Already have an account?{' '}
+              <Link href="/auth/login" className="text-primary hover:underline">
+                Sign in
+              </Link>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 };

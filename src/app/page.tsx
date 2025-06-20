@@ -1,103 +1,173 @@
-import Image from 'next/image';
+import AnimateOnScroll from '@/components/ui/animate-on-scroll';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import Link from 'next/link';
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{' '}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <>
+      <AnimateOnScroll>
+        <section id="hero" className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
+          <div className="container px-4 md:px-6">
+            <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
+              <div className="flex flex-col justify-center space-y-4">
+                <div className="space-y-2">
+                  <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
+                    Craft Perfect Tweets with AI
+                  </h1>
+                  <p className="max-w-[600px] text-muted-foreground md:text-xl">
+                    TweetWiseAI helps you write engaging, error-free tweets. Get real-time feedback, grammar checks,
+                    and curation assistance to elevate your Twitter game.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2 min-[400px]:flex-row">
+                  <Link href="/auth/register">
+                    <Button size="lg">Get Started</Button>
+                  </Link>
+                  <Link href="/auth/login">
+                    <Button variant="outline" size="lg">
+                      Sign In
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+              <div className="flex items-center justify-center">
+                <Card className="w-full max-w-md">
+                  <CardHeader>
+                    <CardTitle>Example Tweet</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm">
+                      Just used TweetWiseAI to draft my latest thread. The grammar check is a lifesaver, and the
+                      critique feature gave me some great ideas to improve engagement. Highly recommended! #AI #Twitter
+                      #WritingTool
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </section>
+      </AnimateOnScroll>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      <AnimateOnScroll>
+        <section id="features" className="w-full py-12 md:py-24 lg:py-32 bg-muted">
+          <div className="container px-4 md:px-6">
+            <div className="flex flex-col items-center justify-center space-y-4 text-center">
+              <div className="space-y-2">
+                <div className="inline-block rounded-lg bg-muted-foreground px-3 py-1 text-sm text-background">
+                  Key Features
+                </div>
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
+                  Elevate Your Tweets
+                </h2>
+                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                  Our AI-powered tools provide you with everything you need to write compelling and error-free tweets
+                  that capture attention and drive engagement.
+                </p>
+              </div>
+            </div>
+            <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:gap-12 lg:grid-cols-3 lg:gap-16">
+              <div className="grid gap-1">
+                <h3 className="text-lg font-bold">Grammar & Spell Check</h3>
+                <p className="text-sm text-muted-foreground">
+                  Write with confidence. Our real-time checker catches errors and suggests corrections instantly,
+                  ensuring your tweets are professional and clear.
+                </p>
+              </div>
+              <div className="grid gap-1">
+                <h3 className="text-lg font-bold">Tweet Critique</h3>
+                <p className="text-sm text-muted-foreground">
+                  Go beyond grammar. Get AI-powered feedback on your tweet's tone, clarity, and potential engagement to
+                  maximize its impact.
+                </p>
+              </div>
+              <div className="grid gap-1">
+                <h3 className="text-lg font-bold">Content Curation</h3>
+                <p className="text-sm text-muted-foreground">
+                  Never run out of ideas. Our curation assistant helps you find relevant topics and generate engaging
+                  content based on your interests.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </AnimateOnScroll>
+
+      <AnimateOnScroll>
+        <section id="testimonials" className="w-full py-12 md:py-24 lg:py-32">
+          <div className="container grid items-center justify-center gap-4 px-4 text-center md:px-6">
+            <div className="space-y-3">
+              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">
+                What Our Users Are Saying
+              </h2>
+              <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                Trusted by content creators, marketers, and professionals.
+              </p>
+            </div>
+            <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:gap-12 lg:grid-cols-3">
+              <Card>
+                <CardHeader className="p-4">
+                  <div className="flex items-center gap-4">
+                    <Avatar>
+                      <AvatarImage src="/placeholder-user.jpg" />
+                      <AvatarFallback>JD</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <CardTitle className="text-sm font-medium">Jane Doe</CardTitle>
+                      <p className="text-xs text-muted-foreground">Content Creator</p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4 text-sm">
+                  <p>
+                    "TweetWiseAI has been a game-changer for my content workflow. The critique feature is like having a
+                    personal writing coach."
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="p-4">
+                  <div className="flex items-center gap-4">
+                    <Avatar>
+                      <AvatarImage src="/placeholder-user.jpg" />
+                      <AvatarFallback>SM</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <CardTitle className="text-sm font-medium">Sarah Miller</CardTitle>
+                      <p className="text-xs text-muted-foreground">Marketing Manager</p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4 text-sm">
+                  <p>
+                    "I've saved so much time and improved the quality of my tweets immensely. The grammar checker is
+                    top-notch!"
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="p-4">
+                  <div className="flex items-center gap-4">
+                    <Avatar>
+                      <AvatarImage src="/placeholder-user.jpg" />
+                      <AvatarFallback>MJ</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <CardTitle className="text-sm font-medium">Mark Johnson</CardTitle>
+                      <p className="text-xs text-muted-foreground">Indie Hacker</p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4 text-sm">
+                  <p>"The best tool for anyone serious about their Twitter presence. The AI suggestions are incredibly insightful."</p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+      </AnimateOnScroll>
+    </>
   );
 }
