@@ -5,9 +5,9 @@
 
 import { config } from 'dotenv';
 import {
-  getMigrationStatus,
-  rollbackMigration,
-  runMigrations,
+    getMigrationStatus,
+    rollbackMigration,
+    runMigrations,
 } from '../src/lib/database/migration-runner';
 
 // Load environment variables from .env.local
