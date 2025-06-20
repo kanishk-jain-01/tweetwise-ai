@@ -1,7 +1,6 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import Footer from './footer';
 import Header from './header';
 
 interface ConditionalLayoutProps {
@@ -19,12 +18,11 @@ export const ConditionalLayout = ({ children }: ConditionalLayoutProps) => {
     return <>{children}</>;
   }
 
-  // Regular pages: include header and footer
+  // Regular pages: include header only
   return (
     <>
       <Header />
       <main className="flex-1">{children}</main>
-      <Footer />
     </>
   );
 };
