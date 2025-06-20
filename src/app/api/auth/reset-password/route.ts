@@ -1,3 +1,4 @@
+import { UserQueries } from '@/lib/database/queries';
 import bcrypt from 'bcryptjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';

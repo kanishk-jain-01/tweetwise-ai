@@ -1,0 +1,73 @@
+'use client';
+
+import { Tweet } from '@/lib/database/schema';
+import { useCallback, useEffect, useState } from 'react';
+
+interface UseTweetHistoryReturn {
+  tweets: Tweet[];
+  isLoading: boolean;
+  error: string | null;
+  searchTweets: (query: string) => void;
+  loadTweet: (tweet: Tweet) => void;
+  refreshTweets: () => Promise<void>;
+}
+
+export const useTweetHistory = (): UseTweetHistoryReturn => {
+  const [tweets, setTweets] = useState<Tweet[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchTweets = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await fetch('/api/tweets');
+      if (!response.ok) {
+        throw new Error('Failed to fetch tweets');
+      }
+
+      const data = await response.json();
+      setTweets(data.tweets || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      console.error('Error fetching tweets:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const searchTweets = useCallback((query: string) => {
+    // For now, filtering is handled in the component
+    // In the future, this could make API calls for server-side search
+    console.log('Searching tweets for:', query);
+  }, []);
+
+  const loadTweet = useCallback((tweet: Tweet) => {
+    // TODO: Integrate with tweet composer to load selected tweet
+    console.log('Loading tweet:', tweet.id);
+    
+    // Dispatch custom event to notify tweet composer
+    window.dispatchEvent(new CustomEvent('loadTweet', { 
+      detail: { tweet } 
+    }));
+  }, []);
+
+  const refreshTweets = useCallback(async () => {
+    await fetchTweets();
+  }, [fetchTweets]);
+
+  // Initial load
+  useEffect(() => {
+    fetchTweets();
+  }, [fetchTweets]);
+
+  return {
+    tweets,
+    isLoading,
+    error,
+    searchTweets,
+    loadTweet,
+    refreshTweets,
+  };
+}; 

@@ -5,8 +5,8 @@
 ### Application Structure
 
 ```
-Next.js 14+ App Router Architecture
-├── Frontend (React 18+ with TypeScript)
+Next.js 15.3.4 App Router Architecture
+├── Frontend (React 19 with TypeScript)
 ├── API Routes (Next.js API handlers)
 ├── Database (Neon PostgreSQL)
 ├── Authentication (NextAuth.js)
@@ -17,13 +17,13 @@ Next.js 14+ App Router Architecture
 
 #### 1. Next.js App Router Pattern
 
-- **Choice**: Next.js 14+ with App Router over Pages Router
+- **Choice**: Next.js 15.3.4 with App Router over Pages Router
 - **Reasoning**: Better performance, improved developer experience, built-in optimization
 - **Implementation**: Server components by default, client components only when needed
 
-#### 2. Three-Panel Dashboard Layout
+#### 2. Three-Panel Dashboard Layout (IMPLEMENTED)
 
-- **Pattern**: Fixed layout with collapsible sidebars
+- **Pattern**: Fixed layout with responsive collapsible sidebars
 - **Structure**:
   ```
   ┌─────────────┬─────────────────┬─────────────┐
@@ -32,9 +32,24 @@ Next.js 14+ App Router Architecture
   │ (Left)      │ (Center)        │ (Right)     │
   └─────────────┴─────────────────┴─────────────┘
   ```
-- **Responsive**: Collapsible panels for mobile/tablet
+- **Responsive Behavior**:
+  - Desktop (lg+): All three panels visible
+  - Tablet (md+): History hidden, Composer + AI visible
+  - Mobile: Only Composer visible, side panels via drawer navigation
+- **Mobile Navigation**: Header buttons trigger sheet/drawer overlays
 
-#### 3. Component Architecture
+#### 3. Conditional Layout System (IMPLEMENTED)
+
+- **Pattern**: Different layouts for landing pages vs. dashboard
+- **Implementation**:
+  ```typescript
+  // Dashboard pages: No header/footer (app-like experience)
+  // Landing pages: Full header + content + footer
+  const isDashboard = pathname?.startsWith('/dashboard')
+  ```
+- **Benefits**: Clean app experience without landing page navigation
+
+#### 4. Component Architecture (IMPLEMENTED)
 
 ```
 src/components/
@@ -43,46 +58,57 @@ src/components/
 │   ├── tweet-composer/ # Main composition interface
 │   ├── tweet-history/ # History and draft management
 │   └── ai-suggestions/ # AI feedback and suggestions
-├── ui/                # Reusable UI components
+├── ui/                # Reusable UI components (shadcn/ui)
 │   ├── button/        # Button variants
 │   ├── input/         # Form inputs
 │   ├── card/          # Content containers
-│   └── loading/       # Loading states
-└── layout/            # Layout components
+│   ├── loading/       # Loading states and skeletons
+│   └── badge/         # Status indicators
+└── layout/            # Layout-specific components
+    ├── conditional-layout.tsx    # Route-based layout switching
+    ├── dashboard-header.tsx      # Dashboard-specific header
+    ├── user-profile-dropdown.tsx # User management
+    └── mobile-nav-buttons.tsx    # Mobile navigation
 ```
 
 ## Data Flow Patterns
 
-### 1. AI Request Pattern
+### 1. Tweet Composition Flow (IMPLEMENTED)
 
 ```
-User Input → Debounce (500ms) → API Request → Response Processing → UI Update
+User Input → Character Count → Auto-save (30s) → Draft Storage → AI Triggers (500ms debounce)
 ```
 
 #### Implementation Details
 
-- **Debouncing**: Prevent excessive API calls during active typing
-- **Batching**: Combine multiple corrections into single requests
-- **Caching**: Store responses to avoid duplicate requests
-- **Error Handling**: Graceful degradation with retry logic
+- **Real-time Character Counting**: Visual progress ring with color coding
+- **Auto-save**: Every 30 seconds with visual feedback and error handling
+- **Debounced AI Triggers**: 500ms delay to prevent excessive API calls
+- **State Management**: Custom `useTweetComposer` hook
 
-### 2. Draft Management Pattern
-
-```
-User Types → Auto-save (30s) → Local State → Database Sync → History Update
-```
-
-#### State Management
-
-- **Local State**: React hooks for immediate UI updates
-- **Optimistic Updates**: Show changes immediately, sync in background
-- **Conflict Resolution**: Last-write-wins with user notification
-
-### 3. Authentication Flow
+### 2. Responsive Layout Flow (IMPLEMENTED)
 
 ```
-Login → NextAuth Session → Protected Routes → User Context → Feature Access
+Screen Size Detection → Panel Visibility → Mobile Navigation → Drawer Management
 ```
+
+#### Responsive Breakpoints
+
+- **Mobile (< 768px)**: Composer only, drawer navigation for History/AI
+- **Tablet (768px - 1024px)**: Composer + AI panels, History via drawer
+- **Desktop (> 1024px)**: All three panels visible
+
+### 3. User Profile Management (IMPLEMENTED)
+
+```
+NextAuth Session → User Data Extraction → Avatar Generation → Profile Dropdown
+```
+
+#### Profile Features
+
+- **Avatar**: Initials extracted from email/name
+- **User Name**: Intelligent extraction from email prefix
+- **Dropdown Menu**: Account Settings, Sign Out options
 
 ## Database Schema Patterns
 
@@ -173,25 +199,96 @@ interface APIError {
 
 ## Performance Optimization Patterns
 
-### 1. AI Request Optimization
+### 1. Dashboard Performance (IMPLEMENTED)
 
-- **Debouncing**: 500ms delay for user input
-- **Request Batching**: Combine multiple corrections
-- **Response Caching**: Redis/memory cache for repeated requests
-- **Fallback Handling**: Graceful degradation when AI services fail
+- **Component Memoization**: React.memo for expensive components
+- **Debounced Inputs**: 500ms delay for AI triggers and search
+- **Optimistic Updates**: Immediate UI feedback with background sync
+- **Skeleton Loading**: Smooth loading states for all panels
 
-### 2. Frontend Optimization
+### 2. Mobile Performance (IMPLEMENTED)
 
-- **Code Splitting**: Lazy load AI features
-- **Memoization**: React.memo for expensive components
-- **Virtual Scrolling**: For large tweet history lists
-- **Optimistic Updates**: Immediate UI feedback
+- **Drawer Animations**: Smooth sheet transitions using shadcn/ui
+- **Touch Interactions**: Optimized for mobile gestures
+- **Responsive Images**: Proper sizing for different screen densities
+- **Lazy Loading**: Panels load only when accessed on mobile
 
-### 3. Database Optimization
+### 3. State Management Patterns (IMPLEMENTED)
 
-- **Connection Pooling**: Efficient database connections
-- **Query Optimization**: Proper indexing and query structure
-- **Pagination**: Limit data transfer for history views
+```typescript
+// Custom hooks pattern for feature-specific state
+const useTweetComposer = () => {
+  const [content, setContent] = useState('')
+  const [charCount, setCharCount] = useState(0)
+  const [saveStatus, setSaveStatus] = useState('saved')
+  
+  // Auto-save logic
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (content.trim()) {
+        saveDraft(content)
+      }
+    }, 30000)
+    
+    return () => clearTimeout(timer)
+  }, [content])
+  
+  return { content, setContent, charCount, saveStatus }
+}
+```
+
+## UI/UX Design Patterns
+
+### 1. Character Count Visualization (IMPLEMENTED)
+
+```typescript
+// Color-coded character count with visual progress
+const getCharacterCountColor = (count: number) => {
+  if (count <= 252) return 'text-green-600'      // Normal
+  if (count <= 280) return 'text-yellow-600'     // Warning
+  return 'text-red-600'                          // Over-limit
+}
+
+// Progress ring visualization
+const progressPercentage = Math.min((count / 280) * 100, 100)
+```
+
+### 2. Loading State Patterns (IMPLEMENTED)
+
+- **Skeleton Components**: Consistent loading states across all panels
+- **Loading Spinners**: For AI processing and API calls
+- **Progressive Enhancement**: Content loads in stages for better perceived performance
+
+### 3. Mobile-First Design (IMPLEMENTED)
+
+- **Touch Targets**: Minimum 44px for all interactive elements
+- **Drawer Navigation**: Smooth slide-in panels for mobile
+- **Responsive Typography**: Scales appropriately across devices
+- **Accessible Navigation**: Screen reader friendly mobile navigation
+
+## Error Handling Patterns
+
+### 1. Dashboard Error Boundaries (PREPARED)
+
+```typescript
+// Error boundary pattern for dashboard panels
+const DashboardErrorBoundary = ({ children }) => {
+  return (
+    <ErrorBoundary
+      fallback={<DashboardErrorFallback />}
+      onError={(error) => logError('Dashboard', error)}
+    >
+      {children}
+    </ErrorBoundary>
+  )
+}
+```
+
+### 2. Graceful Degradation (IMPLEMENTED)
+
+- **Auto-save Failures**: Visual feedback with retry options
+- **Network Issues**: Offline-friendly state management
+- **Component Failures**: Fallback UI components
 
 ## Security Patterns
 

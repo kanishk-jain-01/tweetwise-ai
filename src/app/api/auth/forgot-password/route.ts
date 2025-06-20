@@ -1,3 +1,4 @@
+import { UserQueries } from '@/lib/database/queries';
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';

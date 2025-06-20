@@ -1,3 +1,4 @@
+import { UserQueries } from '@/lib/database/queries';
 import bcrypt from 'bcryptjs';
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
@@ -73,7 +74,6 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: '/auth/login',
-    signUp: '/auth/register',
   },
   secret: process.env.NEXTAUTH_SECRET,
 };

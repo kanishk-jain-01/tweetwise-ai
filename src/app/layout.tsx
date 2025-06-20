@@ -1,5 +1,4 @@
-import Footer from '@/components/layout/footer';
-import Header from '@/components/layout/header';
+import { ConditionalLayout } from '@/components/layout/conditional-layout';
 import { Toaster } from '@/components/ui/sonner';
 import { authOptions } from '@/lib/auth/auth';
 import { Providers } from '@/lib/auth/providers';
@@ -94,11 +93,11 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Header />
         <Providers session={session}>
-          <main className="flex-1">{children}</main>
+          <ConditionalLayout>
+            {children}
+          </ConditionalLayout>
         </Providers>
-        <Footer />
         <Toaster />
       </body>
     </html>
