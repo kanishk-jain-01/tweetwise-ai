@@ -62,7 +62,7 @@ export async function tableExists(tableName: string): Promise<boolean> {
         AND table_name = ${tableName}
       )
     `;
-    return result[0].exists;
+    return result[0]?.exists || false;
   } catch (error) {
     console.error(`Failed to check if table ${tableName} exists:`, error);
     return false;

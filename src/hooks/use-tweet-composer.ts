@@ -15,7 +15,7 @@ interface UseTweetComposerReturn {
 }
 
 export const useTweetComposer = (
-  debounceMs: number = 1500,
+  debounceMs: number = 1500
 ): UseTweetComposerReturn => {
   const [content, setContent] = useState('');
   const [currentTweetId, setCurrentTweetId] = useState<string | null>(null);
@@ -43,7 +43,38 @@ export const useTweetComposer = (
         });
 
         if (!response.ok) {
-          throw new Error('Failed to save draft');
+          const errorData = await response.json();
+          
+          // If we're trying to update a tweet that no longer exists
+          if (response.status === 404 && currentTweetId) {
+            console.warn('Tweet not found - it may have been deleted. Resetting composer.');
+            setCurrentTweetId(null);
+            setAutoSaveStatus('idle');
+            // Try to save as a new tweet instead
+            const newResponse = await fetch('/api/tweets', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                content: draftContent.trim(),
+                status: 'draft',
+                id: null, // Force creation of new tweet
+              }),
+            });
+            
+            if (newResponse.ok) {
+              const newResult = await newResponse.json();
+              if (newResult.success && newResult.tweet && newResult.tweet.id) {
+                setCurrentTweetId(newResult.tweet.id);
+                setAutoSaveStatus('saved');
+                window.dispatchEvent(new CustomEvent('tweetSaved'));
+                return;
+              }
+            }
+          }
+          
+          throw new Error(errorData.error || 'Failed to save draft');
         }
 
         const result = await response.json();
@@ -59,9 +90,17 @@ export const useTweetComposer = (
       } catch (error) {
         console.error('Error saving draft:', error);
         setAutoSaveStatus('error');
+        
+        // If we get an error and we have a currentTweetId, it might be because
+        // the tweet was deleted. Reset the composer state.
+        if (currentTweetId && error instanceof Error && error.message.includes('not found')) {
+          console.warn('Resetting composer state due to save error - tweet may have been deleted');
+          setCurrentTweetId(null);
+          setAutoSaveStatus('idle');
+        }
       }
     },
-    [currentTweetId],
+    [currentTweetId]
   );
 
   useEffect(() => {
@@ -98,14 +137,11 @@ export const useTweetComposer = (
     setAutoSaveStatus('idle');
   }, []);
 
-  const loadDraft = useCallback(
-    (tweet: { id: string; content: string }) => {
-      setContent(tweet.content);
-      setCurrentTweetId(tweet.id);
-      setAutoSaveStatus('saved');
-    },
-    [],
-  );
+  const loadDraft = useCallback((tweet: { id: string; content: string }) => {
+    setContent(tweet.content);
+    setCurrentTweetId(tweet.id);
+    setAutoSaveStatus('saved');
+  }, []);
 
   useEffect(() => {
     const handleLoadTweet = (event: CustomEvent) => {
@@ -115,12 +151,24 @@ export const useTweetComposer = (
       }
     };
 
+    // Listen for tweet deletion events
+    const handleTweetDeleted = (event: CustomEvent) => {
+      const { tweetId } = event.detail;
+      // If the deleted tweet is the one we're currently editing, reset the composer
+      if (currentTweetId === tweetId) {
+        console.log('Currently loaded tweet was deleted, resetting composer');
+        clearContent();
+      }
+    };
+
     window.addEventListener('loadTweet', handleLoadTweet as EventListener);
+    window.addEventListener('tweetDeleted', handleTweetDeleted as EventListener);
 
     return () => {
       window.removeEventListener('loadTweet', handleLoadTweet as EventListener);
+      window.removeEventListener('tweetDeleted', handleTweetDeleted as EventListener);
     };
-  }, [loadDraft]);
+  }, [loadDraft, clearContent, currentTweetId]);
 
   return {
     content,

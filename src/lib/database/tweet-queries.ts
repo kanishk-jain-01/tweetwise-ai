@@ -218,9 +218,9 @@ export class TweetQueries {
 
       const result = stats[0];
       return {
-        total: parseInt(result.total || '0'),
-        drafts: parseInt(result.drafts || '0'),
-        completed: parseInt(result.completed || '0'),
+        total: parseInt(result?.total || '0'),
+        drafts: parseInt(result?.drafts || '0'),
+        completed: parseInt(result?.completed || '0'),
       };
     } catch (error) {
       console.error('Error getting user tweet stats:', error);
@@ -272,7 +272,7 @@ export class TweetQueries {
         `;
       }
 
-      return parseInt(result[0].count || '0');
+      return parseInt(result[0]?.count || '0');
     } catch (error) {
       console.error('Error counting tweets:', error);
       throw error;
@@ -292,7 +292,7 @@ export class TweetQueries {
         )
       `;
 
-      return result[0].exists || false;
+      return result[0]?.exists || false;
     } catch (error) {
       console.error('Error verifying tweet ownership:', error);
       return false;

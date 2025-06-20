@@ -3,12 +3,12 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ChevronDown, LogOut, Settings } from 'lucide-react';
 import { signOut, useSession } from 'next-auth/react';
@@ -35,6 +35,7 @@ export const UserProfileDropdown = () => {
   const getUserDisplayName = (email: string) => {
     // Extract name from email (before @) and capitalize
     const name = email.split('@')[0];
+    if (!name) return email; // Fallback to email if name extraction fails
     return name.charAt(0).toUpperCase() + name.slice(1);
   };
 

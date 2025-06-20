@@ -87,6 +87,14 @@ export async function POST(request: NextRequest) {
         content: content.trim(),
         status,
       });
+      
+      // If update returns null, the tweet doesn't exist
+      if (!tweet) {
+        return NextResponse.json(
+          { success: false, error: 'Tweet not found or access denied' },
+          { status: 404 }
+        );
+      }
     } else {
       // Create new tweet
       tweet = await TweetQueries.create({

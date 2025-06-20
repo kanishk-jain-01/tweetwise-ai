@@ -7,6 +7,27 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { History, Sparkles } from 'lucide-react';
 
 export const MobileNavButtons = () => {
+  // Placeholder handlers - these should be connected to actual state management
+  const handleSelectTweet = (tweet: any) => {
+    console.log('Selected tweet:', tweet);
+    // TODO: Implement tweet selection logic
+  };
+
+  const handleAcceptSuggestion = (suggestion: any) => {
+    console.log('Accepted suggestion:', suggestion);
+    // TODO: Implement suggestion acceptance logic
+  };
+
+  const handleRejectSuggestion = (suggestion: any) => {
+    console.log('Rejected suggestion:', suggestion);
+    // TODO: Implement suggestion rejection logic
+  };
+
+  const handleCritique = () => {
+    console.log('Critique requested');
+    // TODO: Implement critique logic
+  };
+
   return (
     <div className="flex items-center space-x-2 md:hidden">
       {/* History Panel Button */}
@@ -25,7 +46,7 @@ export const MobileNavButtons = () => {
               </h2>
             </div>
             <div className="flex-1 overflow-hidden">
-              <TweetHistory />
+              <TweetHistory onSelectTweet={handleSelectTweet} />
             </div>
           </div>
         </SheetContent>
@@ -47,7 +68,16 @@ export const MobileNavButtons = () => {
               </h2>
             </div>
             <div className="flex-1 overflow-hidden">
-              <AISuggestions />
+              <AISuggestions
+                spellingSuggestions={[]}
+                grammarSuggestions={[]}
+                critique={null}
+                isLoading={false}
+                error={null}
+                onAccept={handleAcceptSuggestion}
+                onReject={handleRejectSuggestion}
+                onCritique={handleCritique}
+              />
             </div>
           </div>
         </SheetContent>

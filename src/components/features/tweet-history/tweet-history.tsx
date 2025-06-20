@@ -26,8 +26,12 @@ import {
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-export const TweetHistory = () => {
-  const { tweets, isLoading, isRefreshing, loadTweet, refreshTweets } = useTweetHistory();
+interface TweetHistoryProps {
+  onSelectTweet: (tweet: Tweet) => void;
+}
+
+export const TweetHistory = ({ onSelectTweet }: TweetHistoryProps) => {
+  const { tweets, isLoading, isRefreshing, refreshTweets } = useTweetHistory();
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'drafts' | 'completed'>('all');
 
@@ -43,7 +47,7 @@ export const TweetHistory = () => {
   });
 
   const handleTweetClick = (tweet: Tweet) => {
-    loadTweet(tweet);
+    onSelectTweet(tweet);
     toast.success(
       `Loaded ${tweet.status === 'draft' ? 'draft' : 'tweet'} into composer`
     );
@@ -64,6 +68,11 @@ export const TweetHistory = () => {
       if (!response.ok) {
         throw new Error('Failed to delete tweet');
       }
+
+      // Dispatch custom event to notify other components about the deletion
+      window.dispatchEvent(new CustomEvent('tweetDeleted', {
+        detail: { tweetId: tweet.id }
+      }));
 
       toast.success(
         `${tweet.status === 'draft' ? 'Draft' : 'Tweet'} deleted successfully`
@@ -250,9 +259,7 @@ export const TweetHistory = () => {
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <span>{tweet.content.length}/280 chars</span>
                             <span>
-                              {new Date(
-                                tweet.created_at,
-                              ).toLocaleDateString()}
+                              {new Date(tweet.created_at).toLocaleDateString()}
                             </span>
                           </div>
                         </div>
