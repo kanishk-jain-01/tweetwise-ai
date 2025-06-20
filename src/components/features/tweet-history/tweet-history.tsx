@@ -254,9 +254,7 @@ export const TweetHistory = ({ onSelectTweet }: TweetHistoryProps) => {
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <span>{tweet.content.length}/280 chars</span>
                             <span>
-                              {new Date(
-                                tweet.created_at,
-                              ).toLocaleDateString()}
+                              {new Date(tweet.created_at).toLocaleDateString()}
                             </span>
                           </div>
                         </div>

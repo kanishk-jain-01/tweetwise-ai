@@ -4,11 +4,17 @@ import { z } from 'zod';
 
 // Per the PRD, a more robust caching solution like Redis should be considered.
 // For now, a simple in-memory cache is used for demonstration.
-const cache = new Map<string, any>();
+const cache = new Map<string, SpellCheckSuggestion[]>();
 
 const spellCheckSchema = z.object({
   text: z.string().min(1).max(560), // Increased limit to handle longer tweets if needed
 });
+
+interface SpellCheckSuggestion {
+  original: string;
+  suggestion: string;
+  startIndex: number;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -57,8 +63,16 @@ Text to analyze:
       throw new Error('Empty response from OpenAI');
     }
 
-    const result = JSON.parse(responseContent);
-    const suggestions = result.corrections || [];
+    let suggestions: SpellCheckSuggestion[] = [];
+    try {
+      const result = JSON.parse(responseContent);
+      if (result && Array.isArray(result.corrections)) {
+        suggestions = result.corrections;
+      }
+    } catch (e) {
+      console.error("Failed to parse OpenAI response:", e);
+      // Don't throw here, just return no suggestions
+    }
 
     cache.set(cacheKey, suggestions);
 
@@ -75,4 +89,4 @@ Text to analyze:
       { status: 500 }
     );
   }
-} 
+}

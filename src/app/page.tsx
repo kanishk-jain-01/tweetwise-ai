@@ -86,9 +86,9 @@ export default function Home() {
               <div className="grid gap-1">
                 <h3 className="text-lg font-bold">Tweet Critique</h3>
                 <p className="text-sm text-muted-foreground">
-                  Go beyond grammar. Get AI-powered feedback on your tweet&apos;s
-                  tone, clarity, and potential engagement to maximize its
-                  impact.
+                  Go beyond grammar. Get AI-powered feedback on your
+                  tweet&apos;s tone, clarity, and potential engagement to
+                  maximize its impact.
                 </p>
               </div>
               <div className="grid gap-1">
@@ -160,8 +160,9 @@ export default function Home() {
                 </CardHeader>
                 <CardContent className="p-4 text-sm">
                   <p>
-                    &ldquo;I&apos;ve saved so much time and improved the quality of my
-                    tweets immensely. The grammar checker is top-notch!&rdquo;
+                    &ldquo;I&apos;ve saved so much time and improved the quality
+                    of my tweets immensely. The grammar checker is
+                    top-notch!&rdquo;
                   </p>
                 </CardContent>
               </Card>
@@ -185,7 +186,8 @@ export default function Home() {
                 <CardContent className="p-4 text-sm">
                   <p>
                     &ldquo;The best tool for anyone serious about their Twitter
-                    presence. The AI suggestions are incredibly insightful.&rdquo;
+                    presence. The AI suggestions are incredibly
+                    insightful.&rdquo;
                   </p>
                 </CardContent>
               </Card>

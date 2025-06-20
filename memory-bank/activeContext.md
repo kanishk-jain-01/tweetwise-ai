@@ -11,12 +11,13 @@ The first AI feature, real-time spell checking, is now fully integrated. The das
 The focus remains on integrating AI services. With the spell check foundation in place, the next steps are to build upon it.
 
 1.  **Grammar Checking Service**
-    *   Implement the grammar checking API endpoint using GPT-4.
-    *   Integrate grammar suggestions into the `AISuggestions` panel.
+
+    - Implement the grammar checking API endpoint using GPT-4.
+    - Integrate grammar suggestions into the `AISuggestions` panel.
 
 2.  **Error Handling & Performance**
-    *   Implement comprehensive error boundaries for the dashboard.
-    *   Enhance the caching strategy (e.g., move from in-memory to Redis).
+    - Implement comprehensive error boundaries for the dashboard.
+    - Enhance the caching strategy (e.g., move from in-memory to Redis).
 
 ## Recent Changes and Discoveries
 
@@ -67,14 +68,14 @@ The focus remains on integrating AI services. With the spell check foundation in
 1.  **AI Suggestions UI**: Finalize the design for how multiple types of suggestions (spelling, grammar) are displayed together.
 2.  **Loading Indicators**: Differentiate loading states between initial analysis, spell check, and grammar checks.
 
-1. **Dashboard Layout Pattern**: Three-panel fixed layout with responsive collapsing
-2. **User Profile Management**: Dropdown-based profile system with NextAuth integration
-3. **Mobile Navigation**: Header-based drawer system for side panel access
-4. **Character Counting**: Real-time visual feedback with color-coded warnings
-5. **Auto-Save Strategy**: 30-second intervals with visual feedback and error handling
-6. **State Management**: Custom hooks pattern for feature-specific state
-7. **Loading States**: Comprehensive skeleton components and loading indicators
-8. **Error Boundaries**: Prepared infrastructure for AI service error handling
+3.  **Dashboard Layout Pattern**: Three-panel fixed layout with responsive collapsing
+4.  **User Profile Management**: Dropdown-based profile system with NextAuth integration
+5.  **Mobile Navigation**: Header-based drawer system for side panel access
+6.  **Character Counting**: Real-time visual feedback with color-coded warnings
+7.  **Auto-Save Strategy**: 30-second intervals with visual feedback and error handling
+8.  **State Management**: Custom hooks pattern for feature-specific state
+9.  **Loading States**: Comprehensive skeleton components and loading indicators
+10. **Error Boundaries**: Prepared infrastructure for AI service error handling
 
 ## Next Steps (Immediate - Next 1-2 Sessions)
 

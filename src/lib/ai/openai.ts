@@ -18,4 +18,4 @@ export const AI_MODELS = {
   CURATION: 'gpt-4',
 };
 
-export default openai; 
+export default openai;

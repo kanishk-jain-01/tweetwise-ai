@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Suggestion } from '@/hooks/use-ai-suggestions';
+import { Critique, Suggestion } from '@/hooks/use-ai-suggestions';
 import {
   AlertCircle,
   CheckCircle,
@@ -20,7 +20,7 @@ import {
 interface AISuggestionsProps {
   spellingSuggestions: Suggestion[];
   grammarSuggestions: Suggestion[];
-  critique: any; // Define a proper type for critique later
+  critique: Critique | null;
   isLoading: boolean;
   error: string | null;
   onAccept: (suggestion: Suggestion) => void;

@@ -12,7 +12,11 @@ export interface Suggestion {
   explanation?: string;
 }
 
-interface Critique {
+interface SpellCheckApiResponse {
+  suggestions: Omit<Suggestion, 'id' | 'type'>[];
+}
+
+export interface Critique {
   engagementScore: number;
   clarity: number;
   tone: string;
@@ -59,18 +63,21 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch spelling suggestions');
+        throw new Error(
+          errorData.error || 'Failed to fetch spelling suggestions'
+        );
       }
 
-      const data = await response.json();
-      const suggestionsWithIds = data.suggestions.map((s: any) => ({
+      const data: SpellCheckApiResponse = await response.json();
+      const suggestionsWithIds: Suggestion[] = data.suggestions.map((s) => ({
         ...s,
         id: uuidv4(),
         type: 'spelling',
       }));
       setSpellingSuggestions(suggestionsWithIds);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      const errorMessage =
+        err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
       console.error('Error fetching spelling suggestions:', err);
     } finally {

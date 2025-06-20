@@ -15,7 +15,7 @@ interface UseTweetComposerReturn {
 }
 
 export const useTweetComposer = (
-  debounceMs: number = 1500,
+  debounceMs: number = 1500
 ): UseTweetComposerReturn => {
   const [content, setContent] = useState('');
   const [currentTweetId, setCurrentTweetId] = useState<string | null>(null);
@@ -61,7 +61,7 @@ export const useTweetComposer = (
         setAutoSaveStatus('error');
       }
     },
-    [currentTweetId],
+    [currentTweetId]
   );
 
   useEffect(() => {
@@ -98,14 +98,11 @@ export const useTweetComposer = (
     setAutoSaveStatus('idle');
   }, []);
 
-  const loadDraft = useCallback(
-    (tweet: { id: string; content: string }) => {
-      setContent(tweet.content);
-      setCurrentTweetId(tweet.id);
-      setAutoSaveStatus('saved');
-    },
-    [],
-  );
+  const loadDraft = useCallback((tweet: { id: string; content: string }) => {
+    setContent(tweet.content);
+    setCurrentTweetId(tweet.id);
+    setAutoSaveStatus('saved');
+  }, []);
 
   useEffect(() => {
     const handleLoadTweet = (event: CustomEvent) => {

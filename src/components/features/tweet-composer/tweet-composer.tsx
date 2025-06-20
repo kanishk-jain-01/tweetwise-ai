@@ -110,7 +110,10 @@ export const TweetComposer = ({
                   a 15.9155 15.9155 0 0 1 0 31.831
                   a 15.9155 15.9155 0 0 1 0 -31.831"
                 fill="none"
-                stroke={getCharacterCountColor(characterCount).replace('text-', '')}
+                stroke={getCharacterCountColor(characterCount).replace(
+                  'text-',
+                  ''
+                )}
                 strokeWidth="2"
                 strokeDasharray={`${charPercentage}, 100`}
               />
