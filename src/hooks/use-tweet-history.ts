@@ -44,8 +44,7 @@ export const useTweetHistory = (): UseTweetHistoryReturn => {
   }, []);
 
   const loadTweet = useCallback((tweet: Tweet) => {
-    // TODO: Integrate with tweet composer to load selected tweet
-    console.log('Loading tweet:', tweet.id);
+    console.log('Loading tweet:', tweet.id, tweet.content);
     
     // Dispatch custom event to notify tweet composer
     window.dispatchEvent(new CustomEvent('loadTweet', { 
@@ -61,6 +60,20 @@ export const useTweetHistory = (): UseTweetHistoryReturn => {
   useEffect(() => {
     fetchTweets();
   }, [fetchTweets]);
+
+  // Listen for tweet saved events to refresh the list
+  useEffect(() => {
+    const handleTweetSaved = () => {
+      console.log('Tweet saved, refreshing history...');
+      refreshTweets();
+    };
+
+    window.addEventListener('tweetSaved', handleTweetSaved);
+    
+    return () => {
+      window.removeEventListener('tweetSaved', handleTweetSaved);
+    };
+  }, [refreshTweets]);
 
   return {
     tweets,

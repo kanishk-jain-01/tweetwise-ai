@@ -9,6 +9,7 @@ import { useTweetHistory } from '@/hooks/use-tweet-history';
 import { Tweet } from '@/lib/database/schema';
 import { CheckCircle, Clock, FileText, MoreHorizontal, Search } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 export const TweetHistory = () => {
   const { tweets, isLoading, searchTweets, loadTweet } = useTweetHistory();
@@ -17,12 +18,15 @@ export const TweetHistory = () => {
 
   const filteredTweets = tweets.filter(tweet => {
     const matchesSearch = tweet.content.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = filter === 'all' || tweet.status === filter;
+    const matchesFilter = filter === 'all' || 
+      (filter === 'drafts' && tweet.status === 'draft') ||
+      (filter === 'completed' && tweet.status === 'completed');
     return matchesSearch && matchesFilter;
   });
 
   const handleTweetClick = (tweet: Tweet) => {
     loadTweet(tweet);
+    toast.success(`Loaded ${tweet.status === 'draft' ? 'draft' : 'tweet'} into composer`);
   };
 
   const formatDate = (date: Date) => {

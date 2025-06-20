@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface UseTweetComposerReturn {
   content: string;
@@ -50,6 +50,9 @@ export const useTweetComposer = (): UseTweetComposerReturn => {
 
       setLastSaved(new Date());
       hasUnsavedChanges.current = false;
+      
+      // Dispatch event to refresh tweet history
+      window.dispatchEvent(new CustomEvent('tweetSaved'));
     } catch (error) {
       console.error('Error saving draft:', error);
       throw error;
@@ -69,6 +72,22 @@ export const useTweetComposer = (): UseTweetComposerReturn => {
     hasUnsavedChanges.current = false;
     setLastSaved(null); // Reset last saved when loading existing draft
   }, []);
+
+  // Event listener for loading tweets from history
+  useEffect(() => {
+    const handleLoadTweet = (event: CustomEvent) => {
+      const { tweet } = event.detail;
+      if (tweet && tweet.content) {
+        loadDraft(tweet.content);
+      }
+    };
+
+    window.addEventListener('loadTweet', handleLoadTweet as EventListener);
+    
+    return () => {
+      window.removeEventListener('loadTweet', handleLoadTweet as EventListener);
+    };
+  }, [loadDraft]);
 
   return {
     content,

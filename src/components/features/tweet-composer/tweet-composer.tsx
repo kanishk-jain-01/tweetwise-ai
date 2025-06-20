@@ -45,11 +45,14 @@ export const TweetComposer = () => {
     if (!content.trim()) return;
 
     const autoSaveInterval = setInterval(() => {
-      saveDraft();
+      // Only auto-save if there are unsaved changes and we're not currently loading
+      if (!isLoading && !isSaving) {
+        saveDraft();
+      }
     }, AUTO_SAVE_INTERVAL);
 
     return () => clearInterval(autoSaveInterval);
-  }, [content, saveDraft]);
+  }, [content, saveDraft, isLoading, isSaving]);
 
   // Debounced AI trigger (placeholder for now)
   useEffect(() => {
