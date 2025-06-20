@@ -6,27 +6,32 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { History, Sparkles } from 'lucide-react';
 
-export const MobileNavButtons = () => {
-  // Placeholder handlers - these should be connected to actual state management
-  const handleSelectTweet = (tweet: any) => {
-    console.log('Selected tweet:', tweet);
-    // TODO: Implement tweet selection logic
-  };
+interface MobileNavButtonsProps {
+  // Tweet History props
+  onSelectTweet: (tweet: any) => void;
+  
+  // AI Suggestions props
+  spellingSuggestions: any[];
+  grammarSuggestions: any[];
+  critique: any;
+  isLoading: boolean;
+  error: string | null;
+  onAccept: (suggestion: any) => void;
+  onReject: (suggestion: any) => void;
+  onCritique: () => void;
+}
 
-  const handleAcceptSuggestion = (suggestion: any) => {
-    console.log('Accepted suggestion:', suggestion);
-    // TODO: Implement suggestion acceptance logic
-  };
-
-  const handleRejectSuggestion = (suggestion: any) => {
-    console.log('Rejected suggestion:', suggestion);
-    // TODO: Implement suggestion rejection logic
-  };
-
-  const handleCritique = () => {
-    console.log('Critique requested');
-    // TODO: Implement critique logic
-  };
+export const MobileNavButtons = ({
+  onSelectTweet,
+  spellingSuggestions,
+  grammarSuggestions,
+  critique,
+  isLoading,
+  error,
+  onAccept,
+  onReject,
+  onCritique,
+}: MobileNavButtonsProps) => {
 
   return (
     <div className="flex items-center space-x-2 md:hidden">
@@ -46,7 +51,7 @@ export const MobileNavButtons = () => {
               </h2>
             </div>
             <div className="flex-1 overflow-hidden">
-              <TweetHistory onSelectTweet={handleSelectTweet} />
+              <TweetHistory onSelectTweet={onSelectTweet} />
             </div>
           </div>
         </SheetContent>
@@ -69,14 +74,14 @@ export const MobileNavButtons = () => {
             </div>
             <div className="flex-1 overflow-hidden">
               <AISuggestions
-                spellingSuggestions={[]}
-                grammarSuggestions={[]}
-                critique={null}
-                isLoading={false}
-                error={null}
-                onAccept={handleAcceptSuggestion}
-                onReject={handleRejectSuggestion}
-                onCritique={handleCritique}
+                spellingSuggestions={spellingSuggestions}
+                grammarSuggestions={grammarSuggestions}
+                critique={critique}
+                isLoading={isLoading}
+                error={error}
+                onAccept={onAccept}
+                onReject={onReject}
+                onCritique={onCritique}
               />
             </div>
           </div>

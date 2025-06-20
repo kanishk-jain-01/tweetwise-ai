@@ -159,7 +159,17 @@ export default function DashboardPage() {
   return (
     <div className="h-screen flex flex-col">
       {/* Dashboard Header */}
-      <DashboardHeader />
+      <DashboardHeader
+        onSelectTweet={composer.loadDraft}
+        spellingSuggestions={suggestions.spellingSuggestions}
+        grammarSuggestions={suggestions.grammarSuggestions}
+        critique={suggestions.critique}
+        isLoading={suggestions.isLoading}
+        error={suggestions.error}
+        onAccept={handleAcceptSuggestion}
+        onReject={handleRejectSuggestion}
+        onCritique={() => suggestions.requestCritique(composer.content)}
+      />
 
       {/* Three-Panel Layout */}
       <div className="flex-1 flex overflow-hidden">

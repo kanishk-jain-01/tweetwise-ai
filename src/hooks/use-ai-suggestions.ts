@@ -134,6 +134,20 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
   }, []);
 
   const requestCritique = useCallback(async (text: string) => {
+    if (!text.trim()) {
+      setCritique(null);
+      return;
+    }
+
+    // Cancel any ongoing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new AbortController for this request
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     setIsLoading(true);
     setError(null);
 
@@ -146,19 +160,44 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
         body: JSON.stringify({
           content: text,
         }),
+        signal: abortController.signal,
       });
 
+      // Check if request was aborted
+      if (abortController.signal.aborted) {
+        return;
+      }
+
       if (!response.ok) {
-        throw new Error('Failed to get critique');
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || 'Failed to get critique'
+        );
       }
 
       const data = await response.json();
+      
+      // Double-check abort status before updating state
+      if (abortController.signal.aborted) {
+        return;
+      }
+
       setCritique(data.critique);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      // Ignore AbortError - it's expected when cancelling requests
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
+      
+      const errorMessage =
+        err instanceof Error ? err.message : 'An error occurred';
+      setError(errorMessage);
       console.error('Error requesting critique:', err);
     } finally {
-      setIsLoading(false);
+      // Only set loading to false if this request wasn't aborted
+      if (!abortController.signal.aborted) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
