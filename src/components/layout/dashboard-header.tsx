@@ -6,7 +6,7 @@ import { UserProfileDropdown } from './user-profile-dropdown';
 interface DashboardHeaderProps {
   // Tweet History props
   onSelectTweet: (tweet: any) => void;
-  
+
   // AI Suggestions props
   spellingSuggestions: any[];
   grammarSuggestions: any[];

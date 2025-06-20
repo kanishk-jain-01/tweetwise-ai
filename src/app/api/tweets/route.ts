@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
         content: content.trim(),
         status,
       });
-      
+
       // If update returns null, the tweet doesn't exist
       if (!tweet) {
         return NextResponse.json(

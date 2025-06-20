@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    
+
     const validation = critiqueSchema.safeParse(body);
 
     if (!validation.success) {
@@ -118,18 +118,23 @@ Tweet to analyze:
     let critique: TweetCritique;
     try {
       const result = JSON.parse(responseContent);
-      
+
       // Validate the response structure
-      if (!result || 
-          typeof result.engagementScore !== 'number' ||
-          typeof result.clarity !== 'number' ||
-          typeof result.tone !== 'string' ||
-          !Array.isArray(result.suggestions)) {
+      if (
+        !result ||
+        typeof result.engagementScore !== 'number' ||
+        typeof result.clarity !== 'number' ||
+        typeof result.tone !== 'string' ||
+        !Array.isArray(result.suggestions)
+      ) {
         throw new Error('Invalid response structure from AI');
       }
 
       // Ensure scores are within valid range
-      const engagementScore = Math.max(1, Math.min(10, Math.round(result.engagementScore)));
+      const engagementScore = Math.max(
+        1,
+        Math.min(10, Math.round(result.engagementScore))
+      );
       const clarity = Math.max(1, Math.min(10, Math.round(result.clarity)));
 
       critique = {
@@ -141,22 +146,24 @@ Tweet to analyze:
     } catch (e) {
       console.error('Failed to parse OpenAI critique response:', e);
       console.error('Response content:', responseContent);
-      
+
       // Provide fallback critique
       critique = {
         engagementScore: 5,
         clarity: 5,
         tone: 'Neutral',
-        suggestions: ['Unable to analyze tweet at this time. Please try again.'],
+        suggestions: [
+          'Unable to analyze tweet at this time. Please try again.',
+        ],
       };
     }
 
     // Cache the result
     cache.set(cacheKey, critique);
 
-    return NextResponse.json({ 
-      critique, 
-      cached: false 
+    return NextResponse.json({
+      critique,
+      cached: false,
     });
   } catch (error) {
     console.error('Tweet critique API error:', error);
@@ -169,4 +176,4 @@ Tweet to analyze:
       { status: 500 }
     );
   }
-} 
+}

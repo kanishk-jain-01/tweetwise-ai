@@ -9,7 +9,7 @@ import { History, Sparkles } from 'lucide-react';
 interface MobileNavButtonsProps {
   // Tweet History props
   onSelectTweet: (tweet: any) => void;
-  
+
   // AI Suggestions props
   spellingSuggestions: any[];
   grammarSuggestions: any[];
@@ -32,7 +32,6 @@ export const MobileNavButtons = ({
   onReject,
   onCritique,
 }: MobileNavButtonsProps) => {
-
   return (
     <div className="flex items-center space-x-2 md:hidden">
       {/* History Panel Button */}

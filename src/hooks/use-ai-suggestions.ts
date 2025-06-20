@@ -45,7 +45,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
   const [critique, setCritique] = useState<Critique | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Add ref to track and cancel ongoing requests
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -67,7 +67,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
 
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch('/api/ai/writing-check', {
         method: 'POST',
@@ -89,7 +89,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
       }
 
       const data: WritingCheckApiResponse = await response.json();
-      
+
       // Double-check abort status before updating state
       if (abortController.signal.aborted) {
         return;
@@ -102,8 +102,12 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
       }));
 
       // Filter into spelling and grammar arrays
-      const spellingSuggestions = suggestionsWithIds.filter(s => s.type === 'spelling');
-      const grammarSuggestions = suggestionsWithIds.filter(s => s.type === 'grammar');
+      const spellingSuggestions = suggestionsWithIds.filter(
+        s => s.type === 'spelling'
+      );
+      const grammarSuggestions = suggestionsWithIds.filter(
+        s => s.type === 'grammar'
+      );
 
       setSpellingSuggestions(spellingSuggestions);
       setGrammarSuggestions(grammarSuggestions);
@@ -112,7 +116,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
       if (err instanceof Error && err.name === 'AbortError') {
         return;
       }
-      
+
       const errorMessage =
         err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
@@ -170,13 +174,11 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(
-          errorData.error || 'Failed to get critique'
-        );
+        throw new Error(errorData.error || 'Failed to get critique');
       }
 
       const data = await response.json();
-      
+
       // Double-check abort status before updating state
       if (abortController.signal.aborted) {
         return;
@@ -188,7 +190,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
       if (err instanceof Error && err.name === 'AbortError') {
         return;
       }
-      
+
       const errorMessage =
         err instanceof Error ? err.message : 'An error occurred';
       setError(errorMessage);
@@ -206,7 +208,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-    
+
     setSpellingSuggestions([]);
     setGrammarSuggestions([]);
     setCritique(null);

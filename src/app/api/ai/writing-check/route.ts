@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    
+
     const validation = writingCheckSchema.safeParse(body);
 
     if (!validation.success) {
@@ -132,4 +132,4 @@ Text to analyze:
       { status: 500 }
     );
   }
-} 
+}

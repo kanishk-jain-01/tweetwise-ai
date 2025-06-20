@@ -16,7 +16,7 @@ export default function DashboardPage() {
 
   // Use ref to track current content to avoid stale closures
   const currentContentRef = useRef(composer.content);
-  
+
   // Track if we're in the middle of applying a suggestion to prevent re-analysis
   const isApplyingSuggestionRef = useRef(false);
 
@@ -64,7 +64,9 @@ export default function DashboardPage() {
       if (actualText !== original) {
         // Fallback: Search for the first occurrence of the word in the text
         // Use word boundaries to avoid partial matches
-        const regex = new RegExp(`\\b${original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
+        const regex = new RegExp(
+          `\\b${original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`
+        );
         const match = text.match(regex);
         if (match && match.index !== undefined) {
           // Use the found index instead
@@ -141,11 +143,7 @@ export default function DashboardPage() {
       // Note: We removed the immediate re-analysis call here to prevent race conditions
       // The debounced effect will handle re-analysis after the timeout
     },
-    [
-      applyTextReplacement,
-      composer.setContent,
-      suggestions.rejectSuggestion,
-    ]
+    [applyTextReplacement, composer.setContent, suggestions.rejectSuggestion]
   );
 
   // Handle suggestion rejection
