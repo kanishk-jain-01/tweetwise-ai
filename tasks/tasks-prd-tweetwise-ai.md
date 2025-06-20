@@ -118,9 +118,7 @@ Based on PRD: `prd-tweetwise-ai.md`
   - [x] 6.3 Add character limit warnings (normal/warning/over-limit states)
   - [x] 6.4 Implement auto-save functionality (every 30 seconds or on pause)
   - [x] 6.5 Create debounced input handling (500ms delay) for AI triggers
-  - [ ] 6.6 Add rich text editing support with basic formatting preservation
-  - [ ] 6.7 Implement keyboard shortcuts (Ctrl+S for save, etc.)
-  - [x] 6.8 Create custom hook (use-tweet-composer) for composition logic
+  - [x] 6.6 Create custom hook (use-tweet-composer) for composition logic
 
 - [x] 7.0 AI Integration and Services (In Progress)
 
