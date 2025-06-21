@@ -1,12 +1,12 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { AutoSaveStatus } from '@/hooks/use-tweet-composer';
 import { cn } from '@/lib/utils/cn';
-import { AlertCircle, Check, CircleDashed, FilePlus, Send } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { AlertCircle, Calendar, Check, CircleDashed, FilePlus } from 'lucide-react';
 import { useCallback } from 'react';
+import { toast } from 'sonner';
 
 interface TweetComposerProps {
   content: string;
@@ -14,6 +14,7 @@ interface TweetComposerProps {
   autoSaveStatus: AutoSaveStatus;
   currentTweetId: string | null;
   onNewDraft: () => void;
+  onScheduleTweet?: () => void;
 }
 
 export const TweetComposer = ({
@@ -21,6 +22,7 @@ export const TweetComposer = ({
   onContentChange,
   autoSaveStatus,
   onNewDraft,
+  onScheduleTweet,
 }: TweetComposerProps) => {
   const characterCount = content.length;
   const maxChars = 280;
@@ -136,9 +138,10 @@ export const TweetComposer = ({
           size="sm"
           disabled={characterCount === 0 || characterCount > maxChars}
           className="bg-blue-500 hover:bg-blue-600 text-white"
+          onClick={onScheduleTweet}
         >
-          <Send className="w-4 h-4 mr-2" />
-          Complete Tweet
+          <Calendar className="w-4 h-4 mr-2" />
+          Schedule/Send Tweet
         </Button>
       </div>
     </div>

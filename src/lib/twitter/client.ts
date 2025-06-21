@@ -1,3 +1,5 @@
+import { TwitterApi } from 'twitter-api-v2';
+
 // Twitter API Configuration
 const TWITTER_CLIENT_ID = process.env.TWITTER_CLIENT_ID!;
 const TWITTER_CLIENT_SECRET = process.env.TWITTER_CLIENT_SECRET!;
@@ -5,40 +7,30 @@ const CALLBACK_URL =
   process.env.TWITTER_CALLBACK_URL ||
   `${process.env.NEXTAUTH_URL}/api/twitter/callback`;
 
-// Dynamic import function for TwitterApi
-async function getTwitterApi() {
-  const { TwitterApi } = await import('twitter-api-v2');
-  return TwitterApi;
-}
+
 
 // Twitter API Client Class
 export class TwitterClient {
   private client: any;
 
-  constructor(accessToken?: string, accessSecret?: string) {
+  constructor(accessToken?: string, refreshToken?: string) {
     // Initialize client as null, will be set up in init method
     this.client = null;
     this.accessToken = accessToken;
-    this.accessSecret = accessSecret;
+    this.refreshToken = refreshToken;
   }
 
   private accessToken?: string;
-  private accessSecret?: string;
+  private refreshToken?: string;
 
   // Initialize the Twitter client
   private async initClient() {
     if (this.client) return this.client;
 
-    const TwitterApi = await getTwitterApi();
-
-    if (this.accessToken && this.accessSecret) {
-      // Authenticated client for posting tweets
-      this.client = new TwitterApi({
-        appKey: TWITTER_CLIENT_ID,
-        appSecret: TWITTER_CLIENT_SECRET,
-        accessToken: this.accessToken,
-        accessSecret: this.accessSecret,
-      });
+    if (this.accessToken) {
+      // OAuth 2.0 Bearer token authenticated client
+      // Pass the access token directly as the bearer token
+      this.client = new TwitterApi(this.accessToken);
     } else {
       // App-only client for OAuth flow initiation
       this.client = new TwitterApi({
@@ -59,7 +51,7 @@ export class TwitterClient {
         codeVerifier,
         state: oauthState,
       } = client.generateOAuth2AuthLink(CALLBACK_URL, {
-        scope: ['tweet.read', 'tweet.write', 'users.read'],
+        scope: ['tweet.read', 'tweet.write', 'users.read', 'offline.access'],
         state: state || 'default',
       });
 
@@ -126,10 +118,6 @@ export class TwitterClient {
   // Post a tweet
   async postTweet(content: string) {
     try {
-      if (!(await this.isAuthenticated())) {
-        throw new Error('Twitter client is not authenticated');
-      }
-
       // Validate tweet content
       if (!content.trim()) {
         throw new Error('Tweet content cannot be empty');
@@ -168,10 +156,6 @@ export class TwitterClient {
   // Get user's recent tweets
   async getUserTweets(userId: string, maxResults: number = 10) {
     try {
-      if (!(await this.isAuthenticated())) {
-        throw new Error('Twitter client is not authenticated');
-      }
-
       const client = await this.initClient();
       const { data: tweets } = await client.v2.userTimeline(userId, {
         max_results: maxResults,
@@ -188,10 +172,6 @@ export class TwitterClient {
   // Verify credentials and get user info
   async verifyCredentials() {
     try {
-      if (!(await this.isAuthenticated())) {
-        throw new Error('Twitter client is not authenticated');
-      }
-
       const client = await this.initClient();
       const { data: user } = await client.v2.me({
         'user.fields': ['public_metrics', 'verified'],
@@ -206,17 +186,10 @@ export class TwitterClient {
         followingCount: user.public_metrics?.following_count || 0,
         tweetCount: user.public_metrics?.tweet_count || 0,
       };
-    } catch (error) {
-      console.error('Error verifying Twitter credentials:', error);
-      throw new Error('Failed to verify Twitter credentials');
+    } catch (error: any) {
+      console.error('Error verifying Twitter credentials:', error.data?.detail || error.message);
+      throw error;
     }
-  }
-
-  // Check if client is authenticated
-  private async isAuthenticated(): Promise<boolean> {
-    if (!this.accessToken) return false;
-    const client = await this.initClient();
-    return client.hasAccessToken();
   }
 
   // Get rate limit status
@@ -235,9 +208,9 @@ export class TwitterClient {
 // Utility function to create authenticated Twitter client
 export function createAuthenticatedTwitterClient(
   accessToken: string,
-  accessSecret: string
+  refreshToken?: string
 ) {
-  return new TwitterClient(accessToken, accessSecret);
+  return new TwitterClient(accessToken, refreshToken);
 }
 
 // Utility function to create app-only Twitter client for OAuth

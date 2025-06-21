@@ -1,18 +1,22 @@
 'use client';
 
 import { AISuggestions } from '@/components/features/ai-suggestions/ai-suggestions';
+import { ScheduleModal } from '@/components/features/tweet-composer/schedule-modal';
 import { TweetComposer } from '@/components/features/tweet-composer/tweet-composer';
 import { TweetHistory } from '@/components/features/tweet-history/tweet-history';
 import { DashboardHeader } from '@/components/layout/dashboard-header';
 import { Suggestion, useAISuggestions } from '@/hooks/use-ai-suggestions';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useTweetComposer } from '@/hooks/use-tweet-composer';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export default function DashboardPage() {
   const composer = useTweetComposer();
   const suggestions = useAISuggestions();
   const debouncedContent = useDebounce(composer.content, 500);
+
+  // Schedule modal state
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
   // Use ref to track current content to avoid stale closures
   const currentContentRef = useRef(composer.content);
@@ -154,6 +158,20 @@ export default function DashboardPage() {
     [suggestions.rejectSuggestion]
   );
 
+  // Handle opening the schedule modal
+  const handleScheduleTweet = useCallback(() => {
+    setIsScheduleModalOpen(true);
+  }, []);
+
+  // Handle tweet posting/scheduling
+  const handleTweetPost = useCallback(async (scheduledFor?: Date) => {
+    // TODO: Implement actual tweet posting logic
+    console.log('Posting tweet:', {
+      content: composer.content,
+      scheduledFor,
+    });
+  }, [composer.content]);
+
   return (
     <div className="h-screen flex flex-col">
       {/* Dashboard Header */}
@@ -200,6 +218,7 @@ export default function DashboardPage() {
               autoSaveStatus={composer.autoSaveStatus}
               currentTweetId={composer.currentTweetId}
               onNewDraft={composer.clearContent}
+              onScheduleTweet={handleScheduleTweet}
             />
           </div>
         </main>
@@ -223,8 +242,17 @@ export default function DashboardPage() {
               onCritique={() => suggestions.requestCritique(composer.content)}
             />
           </div>
-        </aside>
+                  </aside>
+        </div>
+
+        {/* Schedule Modal */}
+        <ScheduleModal
+          isOpen={isScheduleModalOpen}
+          onClose={() => setIsScheduleModalOpen(false)}
+          tweetContent={composer.content}
+          characterCount={composer.content.length}
+          onScheduleTweet={handleTweetPost}
+        />
       </div>
-    </div>
-  );
-}
+    );
+  }

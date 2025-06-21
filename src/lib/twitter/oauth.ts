@@ -12,17 +12,18 @@ interface OAuthState {
 // In-memory storage for OAuth states (in production, use Redis or database)
 const oauthStates = new Map<string, OAuthState>();
 
-// Twitter User Token Storage Interface
+// Twitter User Token Storage Interface (matches database schema)
 export interface TwitterTokens {
-  userId: string;
-  accessToken: string;
-  refreshToken: string;
-  twitterUserId: string;
-  twitterUsername: string;
-  twitterName: string;
-  expiresAt?: Date;
-  createdAt: Date;
-  updatedAt: Date;
+  id?: string;
+  user_id: string;
+  access_token: string;
+  refresh_token: string | null;
+  twitter_user_id: string;
+  twitter_username: string;
+  twitter_name: string;
+  expires_at?: Date;
+  created_at: Date;
+  updated_at: Date;
 }
 
 // OAuth Flow Handlers
@@ -107,7 +108,7 @@ export class TwitterOAuth {
   static async storeUserTokens(tokenData: {
     userId: string;
     accessToken: string;
-    refreshToken: string;
+    refreshToken: string | null;
     twitterUserId: string;
     twitterUsername: string;
     twitterName: string;
@@ -119,7 +120,19 @@ export class TwitterOAuth {
         WHERE user_id = ${tokenData.userId}
       `;
 
-      // Insert new tokens
+      // Debug: Log what we're trying to store
+      console.log('=== STORING TOKENS TO DATABASE ===');
+      console.log('Input data:', {
+        userId: tokenData.userId,
+        accessTokenLength: tokenData.accessToken?.length,
+        accessTokenPrefix: tokenData.accessToken?.substring(0, 20) + '...',
+        refreshTokenLength: tokenData.refreshToken?.length,
+        twitterUserId: tokenData.twitterUserId,
+        twitterUsername: tokenData.twitterUsername,
+        twitterName: tokenData.twitterName
+      });
+
+      // Insert new tokens (refresh_token can be null)
       const result = await sql`
         INSERT INTO twitter_tokens (
           user_id, 
@@ -133,7 +146,7 @@ export class TwitterOAuth {
         ) VALUES (
           ${tokenData.userId},
           ${tokenData.accessToken},
-          ${tokenData.refreshToken},
+          ${tokenData.refreshToken || null},
           ${tokenData.twitterUserId},
           ${tokenData.twitterUsername},
           ${tokenData.twitterName},
@@ -142,6 +155,19 @@ export class TwitterOAuth {
         )
         RETURNING *
       `;
+
+      console.log('Database result:', {
+        resultLength: result.length,
+        firstRow: result[0] ? {
+          user_id: result[0].user_id,
+          access_token: result[0].access_token ? 'EXISTS' : 'NULL',
+          access_token_length: result[0].access_token?.length,
+          refresh_token: result[0].refresh_token ? 'EXISTS' : 'NULL',
+          twitter_user_id: result[0].twitter_user_id,
+          twitter_username: result[0].twitter_username,
+          twitter_name: result[0].twitter_name
+        } : 'NO_ROW'
+      });
 
       if (result.length === 0) {
         throw new Error('Failed to store Twitter tokens');
@@ -163,6 +189,22 @@ export class TwitterOAuth {
         ORDER BY created_at DESC
         LIMIT 1
       `;
+
+      console.log('=== RETRIEVING TOKENS FROM DATABASE ===');
+      console.log('Query result:', {
+        userId,
+        resultLength: result.length,
+        firstRow: result[0] ? {
+          user_id: result[0].user_id,
+          access_token: result[0].access_token ? 'EXISTS' : 'NULL',
+          access_token_length: result[0].access_token?.length,
+          refresh_token: result[0].refresh_token ? 'EXISTS' : 'NULL',
+          twitter_user_id: result[0].twitter_user_id,
+          twitter_username: result[0].twitter_username,
+          twitter_name: result[0].twitter_name,
+          allKeys: Object.keys(result[0])
+        } : 'NO_ROW'
+      });
 
       return result.length > 0 ? (result[0] as TwitterTokens) : null;
     } catch (error) {
@@ -192,9 +234,17 @@ export class TwitterOAuth {
         throw new Error('No Twitter tokens found for user');
       }
 
+      // Check if we have a refresh token
+      if (!currentTokens.refresh_token) {
+        console.warn('No refresh token available for user:', userId);
+        // If no refresh token, we can't refresh - disconnect user
+        await this.disconnectUser(userId);
+        return null;
+      }
+
       const client = createTwitterOAuthClient();
       const { accessToken, refreshToken } = await client.refreshAccessToken(
-        currentTokens.refreshToken
+        currentTokens.refresh_token
       );
 
       // Update tokens in database
@@ -202,7 +252,7 @@ export class TwitterOAuth {
         UPDATE twitter_tokens 
         SET 
           access_token = ${accessToken},
-          refresh_token = ${refreshToken},
+          refresh_token = ${refreshToken || null},
           updated_at = NOW()
         WHERE user_id = ${userId}
         RETURNING *
@@ -243,9 +293,9 @@ export class TwitterOAuth {
       }
 
       return {
-        id: tokens.twitterUserId,
-        username: tokens.twitterUsername,
-        name: tokens.twitterName,
+        id: tokens.twitter_user_id,
+        username: tokens.twitter_username,
+        name: tokens.twitter_name,
       };
     } catch (error) {
       console.error('Error getting Twitter user info:', error);

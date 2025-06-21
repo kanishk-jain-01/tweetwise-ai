@@ -1,6 +1,7 @@
 import { authOptions } from '@/lib/auth/auth';
 import { TwitterQueries } from '@/lib/database/twitter-queries';
 import { TwitterClient } from '@/lib/twitter/client';
+import { TwitterOAuth } from '@/lib/twitter/oauth';
 import { TwitterTokenManager } from '@/lib/twitter/token-manager';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
@@ -82,14 +83,39 @@ export async function GET(req: NextRequest) {
       oauthState.codeVerifier
     );
 
-    // Store tokens in database
-    await tokenManager.storeTokens(userId, {
+    // Test the tokens immediately after receiving them from Twitter
+    console.log('=== TESTING TOKENS IMMEDIATELY AFTER OAUTH ===');
+    try {
+      const testClient = new TwitterClient(tokenData.accessToken, tokenData.refreshToken || undefined);
+      const testUser = await testClient.verifyCredentials();
+      console.log('✅ Tokens work immediately after OAuth:', {
+        id: testUser.id,
+        username: testUser.username,
+        name: testUser.name
+      });
+    } catch (testError: any) {
+      console.error('❌ Tokens fail immediately after OAuth:', {
+        error: testError.message,
+        data: testError.data,
+        status: testError.status
+      });
+    }
+
+    // Store the tokens directly without validation to avoid premature disconnection
+    const storedTokens = await TwitterOAuth.storeUserTokens({
+      userId,
       accessToken: tokenData.accessToken,
-      refreshToken: tokenData.refreshToken,
+      refreshToken: tokenData.refreshToken || null,
       twitterUserId: tokenData.user.id,
       twitterUsername: tokenData.user.username,
       twitterName: tokenData.user.name,
-      expiresAt: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours (Twitter's default)
+    });
+    
+    console.log('✅ Tokens stored in database:', {
+      hasTokens: !!storedTokens,
+      accessTokenLength: storedTokens?.access_token?.length,
+      twitterUserId: storedTokens?.twitter_user_id,
+      twitterUsername: storedTokens?.twitter_username
     });
 
     // Store user information

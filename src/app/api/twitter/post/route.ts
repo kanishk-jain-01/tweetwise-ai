@@ -69,8 +69,8 @@ export async function POST(req: NextRequest) {
 
     // Create authenticated Twitter client
     const twitterClient = createAuthenticatedTwitterClient(
-      tokens.accessToken,
-      tokens.refreshToken || ''
+      tokens.access_token,
+      tokens.refresh_token || ''
     );
 
     // Post tweet to Twitter

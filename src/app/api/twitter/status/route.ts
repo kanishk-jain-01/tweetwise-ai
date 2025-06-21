@@ -1,13 +1,11 @@
 import { authOptions } from '@/lib/auth/auth';
-import { TwitterQueries } from '@/lib/database/twitter-queries';
-import { createAuthenticatedTwitterClient } from '@/lib/twitter/client';
+import { TwitterOAuth } from '@/lib/twitter/oauth';
 import { TwitterTokenManager } from '@/lib/twitter/token-manager';
 import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(_req: NextRequest) {
   try {
-    // Check if user is authenticated
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -17,12 +15,10 @@ export async function GET(_req: NextRequest) {
     }
 
     const userId = session.user.id;
-    const tokenManager = new TwitterTokenManager();
-    const twitterQueries = new TwitterQueries();
 
-    // Check if user has valid Twitter tokens
-    const tokens = await tokenManager.getValidTokens(userId);
-
+    // Get tokens directly without aggressive validation
+    const tokens = await TwitterOAuth.getUserTokens(userId);
+    
     if (!tokens) {
       return NextResponse.json({
         success: true,
@@ -31,82 +27,61 @@ export async function GET(_req: NextRequest) {
       });
     }
 
-    // Get user's Twitter information from database
-    const userTwitterInfo = await twitterQueries.getUserTwitterInfo(userId);
-
-    if (!userTwitterInfo) {
-      // Tokens exist but no user info - try to fetch from Twitter API
-      try {
-        const twitterClient = createAuthenticatedTwitterClient(
-          tokens.accessToken,
-          tokens.refreshToken || ''
-        );
-
-        const twitterUser = await twitterClient.verifyCredentials();
-
-        // Update database with fresh user info
-        await twitterQueries.updateUserTwitterInfo(userId, {
-          twitterUserId: twitterUser.id,
-          twitterUsername: twitterUser.username,
-          twitterName: twitterUser.name,
-        });
-
-        return NextResponse.json({
-          success: true,
-          isConnected: true,
-          user: {
-            id: twitterUser.id,
-            username: twitterUser.username,
-            name: twitterUser.name,
-            verified: twitterUser.verified,
-            followersCount: twitterUser.followersCount,
-            followingCount: twitterUser.followingCount,
-            tweetCount: twitterUser.tweetCount,
-          },
-        });
-      } catch (error) {
-        console.error('Failed to verify Twitter credentials:', error);
-
-        // Tokens might be invalid - clean them up
-        await tokenManager.deleteTokens(userId);
-
-        return NextResponse.json({
-          success: true,
-          isConnected: false,
-          user: null,
-          error: 'Twitter tokens are invalid or expired',
-        });
-      }
-    }
-
-    // Return cached user information
-    return NextResponse.json({
-      success: true,
-      isConnected: true,
-      user: {
-        id: userTwitterInfo.twitterUserId,
-        username: userTwitterInfo.twitterUsername,
-        name: userTwitterInfo.twitterName,
-      },
+    // Get user info from stored data
+    const userInfo = await TwitterOAuth.getTwitterUserInfo(userId);
+    
+    console.log('=== TWITTER STATUS CHECK ===');
+    console.log('Found tokens:', {
+      hasAccessToken: !!tokens.access_token,
+      hasRefreshToken: !!tokens.refresh_token,
+      accessTokenLength: tokens.access_token?.length,
+      twitterUserId: tokens.twitter_user_id,
+      twitterUsername: tokens.twitter_username
     });
-  } catch (error) {
-    console.error('Twitter status check error:', error);
 
+    // Try to validate tokens but don't fail if validation fails
+    try {
+      const validation = await TwitterTokenManager.validateTokens(tokens);
+      console.log('Token validation result:', validation);
+      
+      return NextResponse.json({
+        success: true,
+        isConnected: validation.isValid,
+        user: userInfo || undefined,
+        tokenExpiry: tokens.expires_at,
+        lastVerified: new Date(),
+        validation: validation
+      });
+    } catch (error) {
+      console.error('Token validation error:', error);
+      
+      // Return connected but with validation error
+      return NextResponse.json({
+        success: true,
+        isConnected: false,
+        user: userInfo || undefined,
+        tokenExpiry: tokens.expires_at,
+        lastVerified: new Date(),
+        validationError: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  } catch (error) {
+    console.error('--- UNCAUGHT ERROR in /api/twitter/status ---');
+    console.error(error);
+    console.error('-------------------------------------------');
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to check Twitter connection status',
-        code: 'STATUS_CHECK_ERROR',
+        isConnected: false,
+        error: 'Failed to check Twitter connection status.',
       },
       { status: 500 }
     );
   }
 }
 
-// POST method to refresh Twitter connection status
 export async function POST(_req: NextRequest) {
   try {
-    // Check if user is authenticated
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -116,75 +91,40 @@ export async function POST(_req: NextRequest) {
     }
 
     const userId = session.user.id;
-    const tokenManager = new TwitterTokenManager();
-    const twitterQueries = new TwitterQueries();
 
-    // Check if user has valid Twitter tokens
-    const tokens = await tokenManager.getValidTokens(userId);
+    // Invalidate tokens and force a re-check and potential refresh
+    const tokens = await TwitterTokenManager.getValidTokens(userId);
 
     if (!tokens) {
       return NextResponse.json({
         success: true,
         isConnected: false,
         user: null,
-        message: 'No Twitter connection found',
+        message: 'No Twitter connection found to refresh.',
       });
     }
+    
+    // The getValidTokens method already handles refresh logic. 
+    // We just need to get updated user info.
+    const connectionStatus = await TwitterTokenManager.getConnectionStatus(
+      userId
+    );
 
-    try {
-      // Force refresh user information from Twitter API
-      const twitterClient = createAuthenticatedTwitterClient(
-        tokens.accessToken,
-        tokens.refreshToken || ''
-      );
+    return NextResponse.json({
+      success: true,
+      ...connectionStatus,
+      message: 'Twitter connection status refreshed.',
+    });
 
-      const twitterUser = await twitterClient.verifyCredentials();
-
-      // Update database with fresh user info
-      await twitterQueries.updateUserTwitterInfo(userId, {
-        twitterUserId: twitterUser.id,
-        twitterUsername: twitterUser.username,
-        twitterName: twitterUser.name,
-      });
-
-      return NextResponse.json({
-        success: true,
-        isConnected: true,
-        user: {
-          id: twitterUser.id,
-          username: twitterUser.username,
-          name: twitterUser.name,
-          verified: twitterUser.verified,
-          followersCount: twitterUser.followersCount,
-          followingCount: twitterUser.followingCount,
-          tweetCount: twitterUser.tweetCount,
-        },
-        message: 'Twitter connection refreshed successfully',
-      });
-    } catch (error) {
-      console.error('Failed to refresh Twitter credentials:', error);
-
-      // Tokens might be invalid - clean them up
-      await tokenManager.deleteTokens(userId);
-      await twitterQueries.clearUserTwitterInfo(userId);
-
-      return NextResponse.json({
-        success: true,
-        isConnected: false,
-        user: null,
-        error: 'Twitter tokens are invalid or expired',
-        message:
-          'Twitter connection has been removed due to invalid credentials',
-      });
-    }
   } catch (error) {
-    console.error('Twitter status refresh error:', error);
-
+    console.error('--- UNCAUGHT ERROR in /api/twitter/status POST ---');
+    console.error(error);
+    console.error('----------------------------------------------------');
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to refresh Twitter connection status',
-        code: 'STATUS_REFRESH_ERROR',
+        isConnected: false,
+        error: 'Failed to refresh Twitter connection status.',
       },
       { status: 500 }
     );

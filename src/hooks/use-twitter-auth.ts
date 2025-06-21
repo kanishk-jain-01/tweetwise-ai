@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 // Twitter authentication state
 export interface TwitterAuthState {
@@ -30,77 +30,127 @@ export interface UseTwitterAuthReturn extends TwitterAuthState {
   clearError: () => void;
 }
 
+// Global cache for Twitter auth state to prevent excessive API calls
+let globalTwitterState: TwitterAuthState | null = null;
+let lastFetchTime = 0;
+let activePromise: Promise<void> | null = null;
+const CACHE_DURATION = 30000; // 30 seconds cache
+
 // Custom hook for Twitter authentication
 export const useTwitterAuth = (): UseTwitterAuthReturn => {
   const { data: session } = useSession();
 
-  const [state, setState] = useState<TwitterAuthState>({
-    isConnected: false,
-    isLoading: true,
-    isConnecting: false,
-    isDisconnecting: false,
-    user: null,
-    error: null,
-    connectionStatus: 'disconnected',
+  const [state, setState] = useState<TwitterAuthState>(() => {
+    // Initialize with cached state if available and still valid
+    if (globalTwitterState && Date.now() - lastFetchTime < CACHE_DURATION) {
+      return globalTwitterState;
+    }
+    return {
+      isConnected: false,
+      isLoading: true,
+      isConnecting: false,
+      isDisconnecting: false,
+      user: null,
+      error: null,
+      connectionStatus: 'disconnected',
+    };
   });
 
-  // Check Twitter connection status
-  const checkConnectionStatus = useCallback(async () => {
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Check Twitter connection status with caching and deduplication
+  const checkConnectionStatus = useCallback(async (force = false) => {
     if (!session?.user?.id) {
-      setState(prev => ({
-        ...prev,
+      const newState = {
         isLoading: false,
         isConnected: false,
-        connectionStatus: 'disconnected',
+        connectionStatus: 'disconnected' as const,
         user: null,
-      }));
+        error: null,
+        isConnecting: false,
+        isDisconnecting: false,
+      };
+      setState(newState);
+      globalTwitterState = newState;
       return;
     }
 
-    try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
-
-      const response = await fetch('/api/twitter/status', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to check Twitter connection status');
-      }
-
-      const data = await response.json();
-
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        isConnected: data.isConnected,
-        connectionStatus: data.isConnected ? 'connected' : 'disconnected',
-        user: data.user
-          ? {
-              id: data.user.id,
-              username: data.user.username,
-              name: data.user.name,
-              handle: `@${data.user.username}`,
-            }
-          : null,
-      }));
-    } catch (error) {
-      console.error('Error checking Twitter connection:', error);
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        isConnected: false,
-        connectionStatus: 'error',
-        error:
-          error instanceof Error
-            ? error.message
-            : 'Failed to check connection status',
-        user: null,
-      }));
+    // Use cached data if available and not forced
+    if (!force && globalTwitterState && Date.now() - lastFetchTime < CACHE_DURATION) {
+      setState(globalTwitterState);
+      return;
     }
+
+    // If there's already an active request, wait for it
+    if (activePromise) {
+      await activePromise;
+      if (globalTwitterState) {
+        setState(globalTwitterState);
+      }
+      return;
+    }
+
+    // Create new request
+    activePromise = (async () => {
+      try {
+        setState(prev => ({ ...prev, isLoading: true, error: null }));
+
+        const response = await fetch('/api/twitter/status', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to check Twitter connection status');
+        }
+
+        const data = await response.json();
+
+        const newState = {
+          isLoading: false,
+          isConnected: data.isConnected,
+          connectionStatus: data.isConnected ? 'connected' as const : 'disconnected' as const,
+          user: data.user
+            ? {
+                id: data.user.id,
+                username: data.user.username,
+                name: data.user.name,
+                handle: `@${data.user.username}`,
+              }
+            : null,
+          error: null,
+          isConnecting: false,
+          isDisconnecting: false,
+        };
+
+        setState(newState);
+        globalTwitterState = newState;
+        lastFetchTime = Date.now();
+      } catch (error) {
+        console.error('Error checking Twitter connection:', error);
+        const errorState = {
+          isLoading: false,
+          isConnected: false,
+          connectionStatus: 'error' as const,
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Failed to check connection status',
+          user: null,
+          isConnecting: false,
+          isDisconnecting: false,
+        };
+        setState(errorState);
+        globalTwitterState = errorState;
+        lastFetchTime = Date.now();
+      } finally {
+        activePromise = null;
+      }
+    })();
+
+    await activePromise;
   }, [session?.user?.id]);
 
   // Connect to Twitter (initiate OAuth flow)
@@ -200,18 +250,38 @@ export const useTwitterAuth = (): UseTwitterAuthReturn => {
 
   // Refresh connection status
   const refresh = useCallback(async () => {
-    await checkConnectionStatus();
+    await checkConnectionStatus(true); // Force refresh
   }, [checkConnectionStatus]);
 
   // Clear error state
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: null }));
+    if (globalTwitterState) {
+      globalTwitterState = { ...globalTwitterState, error: null };
+    }
   }, []);
 
-  // Check connection status on mount and when session changes
-  useEffect(() => {
-    checkConnectionStatus();
+  // Debounced status check to prevent excessive API calls
+  const debouncedCheckStatus = useCallback(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => {
+      checkConnectionStatus();
+    }, 1000); // 1 second debounce
   }, [checkConnectionStatus]);
+
+  // Check connection status on mount and when session changes (debounced)
+  useEffect(() => {
+    debouncedCheckStatus();
+    
+    // Cleanup timeout on unmount
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [debouncedCheckStatus]);
 
   // Handle OAuth callback completion (when user returns from Twitter)
   useEffect(() => {
@@ -222,9 +292,9 @@ export const useTwitterAuth = (): UseTwitterAuthReturn => {
       const error = urlParams.get('twitter_error');
 
       if (success === 'true') {
-        // OAuth was successful, refresh status
+        // OAuth was successful, refresh status (force refresh)
         setTimeout(() => {
-          checkConnectionStatus();
+          checkConnectionStatus(true);
         }, 1000);
 
         // Clean up URL
