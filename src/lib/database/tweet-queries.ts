@@ -7,13 +7,13 @@ export class TweetQueries {
   static async create(tweetData: {
     user_id: string;
     content: string;
-    status: 'draft' | 'completed';
+    status: 'draft' | 'completed' | 'scheduled' | 'sent';
   }): Promise<Tweet> {
     try {
       const tweets = await sql`
         INSERT INTO tweets (user_id, content, status, created_at, updated_at)
         VALUES (${tweetData.user_id}, ${tweetData.content}, ${tweetData.status}, NOW(), NOW())
-        RETURNING id, user_id, content, status, created_at, updated_at
+        RETURNING id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
       `;
 
       if (tweets.length === 0) {
@@ -31,7 +31,7 @@ export class TweetQueries {
   static async findById(id: string): Promise<Tweet | null> {
     try {
       const tweets = await sql`
-        SELECT id, user_id, content, status, created_at, updated_at
+        SELECT id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
         FROM tweets 
         WHERE id = ${id}
         LIMIT 1
@@ -52,7 +52,7 @@ export class TweetQueries {
   ): Promise<Tweet[]> {
     try {
       const tweets = await sql`
-        SELECT id, user_id, content, status, created_at, updated_at
+        SELECT id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
         FROM tweets 
         WHERE user_id = ${userId}
         ORDER BY updated_at DESC
@@ -73,7 +73,7 @@ export class TweetQueries {
   ): Promise<Tweet[]> {
     try {
       const tweets = await sql`
-        SELECT id, user_id, content, status, created_at, updated_at
+        SELECT id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
         FROM tweets 
         WHERE user_id = ${userId} AND status = 'draft'
         ORDER BY updated_at DESC
@@ -95,7 +95,7 @@ export class TweetQueries {
   ): Promise<Tweet[]> {
     try {
       const tweets = await sql`
-        SELECT id, user_id, content, status, created_at, updated_at
+        SELECT id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
         FROM tweets 
         WHERE user_id = ${userId} AND status = 'completed'
         ORDER BY created_at DESC
@@ -119,7 +119,7 @@ export class TweetQueries {
         UPDATE tweets 
         SET content = ${content}, updated_at = NOW()
         WHERE id = ${id}
-        RETURNING id, user_id, content, status, created_at, updated_at
+        RETURNING id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
       `;
 
       return tweets.length > 0 ? (tweets[0] as Tweet) : null;
@@ -132,14 +132,14 @@ export class TweetQueries {
   // Update tweet status
   static async updateStatus(
     id: string,
-    status: 'draft' | 'completed'
+    status: 'draft' | 'completed' | 'scheduled' | 'sent'
   ): Promise<Tweet | null> {
     try {
       const tweets = await sql`
         UPDATE tweets 
         SET status = ${status}, updated_at = NOW()
         WHERE id = ${id}
-        RETURNING id, user_id, content, status, created_at, updated_at
+        RETURNING id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
       `;
 
       return tweets.length > 0 ? (tweets[0] as Tweet) : null;
@@ -154,7 +154,7 @@ export class TweetQueries {
     id: string,
     updates: {
       content?: string;
-      status?: 'draft' | 'completed';
+      status?: 'draft' | 'completed' | 'scheduled' | 'sent';
     }
   ): Promise<Tweet | null> {
     try {
@@ -169,7 +169,7 @@ export class TweetQueries {
           UPDATE tweets 
           SET content = ${content}, status = ${status}, updated_at = NOW()
           WHERE id = ${id}
-          RETURNING id, user_id, content, status, created_at, updated_at
+          RETURNING id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
         `;
         return tweets.length > 0 ? (tweets[0] as Tweet) : null;
       } else if (content) {
@@ -205,13 +205,17 @@ export class TweetQueries {
     total: number;
     drafts: number;
     completed: number;
+    scheduled: number;
+    sent: number;
   }> {
     try {
       const stats = await sql`
         SELECT 
           COUNT(*) as total,
           COUNT(CASE WHEN status = 'draft' THEN 1 END) as drafts,
-          COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed
+          COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed,
+          COUNT(CASE WHEN status = 'scheduled' THEN 1 END) as scheduled,
+          COUNT(CASE WHEN status = 'sent' THEN 1 END) as sent
         FROM tweets 
         WHERE user_id = ${userId}
       `;
@@ -221,6 +225,8 @@ export class TweetQueries {
         total: parseInt(result?.total || '0'),
         drafts: parseInt(result?.drafts || '0'),
         completed: parseInt(result?.completed || '0'),
+        scheduled: parseInt(result?.scheduled || '0'),
+        sent: parseInt(result?.sent || '0'),
       };
     } catch (error) {
       console.error('Error getting user tweet stats:', error);
@@ -236,7 +242,7 @@ export class TweetQueries {
   ): Promise<Tweet[]> {
     try {
       const tweets = await sql`
-        SELECT id, user_id, content, status, created_at, updated_at
+        SELECT id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
         FROM tweets 
         WHERE user_id = ${userId} 
         AND content ILIKE ${`%${searchTerm}%`}
@@ -254,7 +260,7 @@ export class TweetQueries {
   // Count tweets by user and status
   static async countByUserAndStatus(
     userId: string,
-    status?: 'draft' | 'completed'
+    status?: 'draft' | 'completed' | 'scheduled' | 'sent'
   ): Promise<number> {
     try {
       let result;

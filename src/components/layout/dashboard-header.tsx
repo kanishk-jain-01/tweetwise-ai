@@ -1,9 +1,35 @@
 'use client';
 
+import { TwitterConnectionStatus } from '@/components/features/tweet-composer/twitter-connect';
 import { MobileNavButtons } from './mobile-nav-buttons';
 import { UserProfileDropdown } from './user-profile-dropdown';
 
-export const DashboardHeader = () => {
+interface DashboardHeaderProps {
+  // Tweet History props
+  onSelectTweet: (tweet: any) => void;
+
+  // AI Suggestions props
+  spellingSuggestions: any[];
+  grammarSuggestions: any[];
+  critique: any;
+  isLoading: boolean;
+  error: string | null;
+  onAccept: (suggestion: any) => void;
+  onReject: (suggestion: any) => void;
+  onCritique: () => void;
+}
+
+export const DashboardHeader = ({
+  onSelectTweet,
+  spellingSuggestions,
+  grammarSuggestions,
+  critique,
+  isLoading,
+  error,
+  onAccept,
+  onReject,
+  onCritique,
+}: DashboardHeaderProps) => {
   return (
     <header className="h-14 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between px-6">
       {/* Logo */}
@@ -11,9 +37,28 @@ export const DashboardHeader = () => {
         <h1 className="text-lg font-semibold">TweetWiseAI</h1>
       </div>
 
+      {/* Center - Twitter Connection Status */}
+      <div className="hidden md:flex flex-1 justify-center">
+        <TwitterConnectionStatus />
+      </div>
+
       {/* Mobile Nav + User Menu */}
       <div className="flex items-center space-x-4">
-        <MobileNavButtons />
+        {/* Mobile Twitter Status */}
+        <div className="md:hidden">
+          <TwitterConnectionStatus className="scale-90" />
+        </div>
+        <MobileNavButtons
+          onSelectTweet={onSelectTweet}
+          spellingSuggestions={spellingSuggestions}
+          grammarSuggestions={grammarSuggestions}
+          critique={critique}
+          isLoading={isLoading}
+          error={error}
+          onAccept={onAccept}
+          onReject={onReject}
+          onCritique={onCritique}
+        />
         <UserProfileDropdown />
       </div>
     </header>

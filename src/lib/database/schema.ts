@@ -6,6 +6,9 @@ export interface User {
   password_hash: string;
   reset_token?: string | null;
   reset_token_expiry?: Date | null;
+  twitter_user_id?: string | null;
+  twitter_username?: string | null;
+  twitter_name?: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -14,7 +17,11 @@ export interface Tweet {
   id: string;
   user_id: string;
   content: string;
-  status: 'draft' | 'completed';
+  status: 'draft' | 'completed' | 'scheduled' | 'sent';
+  scheduled_for?: Date | null;
+  tweet_id?: string | null;
+  sent_at?: Date | null;
+  error_message?: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -46,7 +53,11 @@ export const CREATE_TWEETS_TABLE = `
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
-    status VARCHAR(20) NOT NULL CHECK (status IN ('draft', 'completed')),
+    status VARCHAR(20) NOT NULL CHECK (status IN ('draft', 'completed', 'scheduled', 'sent')),
+    scheduled_for TIMESTAMP WITH TIME ZONE NULL,
+    tweet_id VARCHAR(255) NULL,
+    sent_at TIMESTAMP WITH TIME ZONE NULL,
+    error_message TEXT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
   );
@@ -72,6 +83,14 @@ export const CREATE_INDEXES = `
   CREATE INDEX IF NOT EXISTS idx_tweets_user_id ON tweets(user_id);
   CREATE INDEX IF NOT EXISTS idx_tweets_user_status ON tweets(user_id, status);
   CREATE INDEX IF NOT EXISTS idx_tweets_created_at ON tweets(created_at DESC);
+  
+  -- Twitter integration indexes
+  CREATE INDEX IF NOT EXISTS idx_tweets_scheduled_for ON tweets(scheduled_for) 
+    WHERE scheduled_for IS NOT NULL;
+  CREATE INDEX IF NOT EXISTS idx_tweets_tweet_id ON tweets(tweet_id) 
+    WHERE tweet_id IS NOT NULL;
+  CREATE INDEX IF NOT EXISTS idx_tweets_status_scheduled ON tweets(status, scheduled_for) 
+    WHERE status = 'scheduled';
   
   -- AI response caching
   CREATE INDEX IF NOT EXISTS idx_ai_responses_hash ON ai_responses(request_hash);

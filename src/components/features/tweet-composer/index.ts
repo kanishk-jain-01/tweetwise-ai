@@ -1,2 +1,6 @@
-// Tweet composer component will be implemented here
-export * from './tweet-composer';
+export { TweetComposer } from './tweet-composer';
+export {
+  TwitterConnect,
+  TwitterConnectionBanner,
+  TwitterConnectionStatus,
+} from './twitter-connect';

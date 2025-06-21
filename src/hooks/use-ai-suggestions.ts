@@ -45,7 +45,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
   const [critique, setCritique] = useState<Critique | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Add ref to track and cancel ongoing requests
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -67,7 +67,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
 
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch('/api/ai/writing-check', {
         method: 'POST',
@@ -89,7 +89,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
       }
 
       const data: WritingCheckApiResponse = await response.json();
-      
+
       // Double-check abort status before updating state
       if (abortController.signal.aborted) {
         return;
@@ -102,8 +102,12 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
       }));
 
       // Filter into spelling and grammar arrays
-      const spellingSuggestions = suggestionsWithIds.filter(s => s.type === 'spelling');
-      const grammarSuggestions = suggestionsWithIds.filter(s => s.type === 'grammar');
+      const spellingSuggestions = suggestionsWithIds.filter(
+        s => s.type === 'spelling'
+      );
+      const grammarSuggestions = suggestionsWithIds.filter(
+        s => s.type === 'grammar'
+      );
 
       setSpellingSuggestions(spellingSuggestions);
       setGrammarSuggestions(grammarSuggestions);
@@ -112,7 +116,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
       if (err instanceof Error && err.name === 'AbortError') {
         return;
       }
-      
+
       const errorMessage =
         err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
@@ -134,6 +138,20 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
   }, []);
 
   const requestCritique = useCallback(async (text: string) => {
+    if (!text.trim()) {
+      setCritique(null);
+      return;
+    }
+
+    // Cancel any ongoing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new AbortController for this request
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     setIsLoading(true);
     setError(null);
 
@@ -146,19 +164,42 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
         body: JSON.stringify({
           content: text,
         }),
+        signal: abortController.signal,
       });
 
+      // Check if request was aborted
+      if (abortController.signal.aborted) {
+        return;
+      }
+
       if (!response.ok) {
-        throw new Error('Failed to get critique');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to get critique');
       }
 
       const data = await response.json();
+
+      // Double-check abort status before updating state
+      if (abortController.signal.aborted) {
+        return;
+      }
+
       setCritique(data.critique);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      // Ignore AbortError - it's expected when cancelling requests
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
+
+      const errorMessage =
+        err instanceof Error ? err.message : 'An error occurred';
+      setError(errorMessage);
       console.error('Error requesting critique:', err);
     } finally {
-      setIsLoading(false);
+      // Only set loading to false if this request wasn't aborted
+      if (!abortController.signal.aborted) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
@@ -167,7 +208,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-    
+
     setSpellingSuggestions([]);
     setGrammarSuggestions([]);
     setCritique(null);

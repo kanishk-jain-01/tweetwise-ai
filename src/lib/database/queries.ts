@@ -4,6 +4,9 @@ import type { User } from './schema';
 // Export TweetQueries from separate file to avoid complex linting issues
 export { TweetQueries } from './tweet-queries';
 
+// Export TwitterQueries for Twitter-specific operations
+export { TwitterQueries } from './twitter-queries';
+
 // User Query Functions
 export class UserQueries {
   // Find user by email
