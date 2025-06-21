@@ -525,51 +525,89 @@ export class TwitterQueries {
     tweetId: string,
     userId: string,
     status: string,
-    data: any
+    data: any = {}
   ): Promise<Tweet> {
     try {
-      // Build dynamic query based on provided data
-      const updates: string[] = ['status = $3', 'updated_at = NOW()'];
-      const values: any[] = [tweetId, userId, status];
-
-      if (data.scheduledFor) {
-        updates.push('scheduled_for = $' + (values.length + 1));
-        values.push(
-          data.scheduledFor instanceof Date
-            ? data.scheduledFor.toISOString()
-            : data.scheduledFor
-        );
+      // Use individual queries based on what data is provided
+      // This is more reliable than dynamic SQL construction
+      
+      if (data.tweetId && data.sentAt) {
+        // For successful tweet posting
+        const result = await sql`
+          UPDATE tweets 
+          SET status = ${status}, 
+              tweet_id = ${data.tweetId},
+              sent_at = ${data.sentAt instanceof Date ? data.sentAt.toISOString() : data.sentAt},
+              error_message = ${data.errorMessage || null},
+              updated_at = NOW()
+          WHERE id = ${tweetId} AND user_id = ${userId}
+          RETURNING id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
+        `;
+        
+        if (result.length === 0) {
+          throw new Error('Tweet not found or access denied');
+        }
+        return result[0] as Tweet;
+      } else if (data.scheduledFor) {
+        // For scheduling tweets
+        let result;
+        if (data.content) {
+          result = await sql`
+            UPDATE tweets 
+            SET status = ${status},
+                content = ${data.content},
+                scheduled_for = ${data.scheduledFor instanceof Date ? data.scheduledFor.toISOString() : data.scheduledFor},
+                error_message = ${data.errorMessage || null},
+                updated_at = NOW()
+            WHERE id = ${tweetId} AND user_id = ${userId}
+            RETURNING id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
+          `;
+        } else {
+          result = await sql`
+            UPDATE tweets 
+            SET status = ${status},
+                scheduled_for = ${data.scheduledFor instanceof Date ? data.scheduledFor.toISOString() : data.scheduledFor},
+                error_message = ${data.errorMessage || null},
+                updated_at = NOW()
+            WHERE id = ${tweetId} AND user_id = ${userId}
+            RETURNING id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
+          `;
+        }
+        
+        if (result.length === 0) {
+          throw new Error('Tweet not found or access denied');
+        }
+        return result[0] as Tweet;
+      } else if (data.errorMessage !== undefined) {
+        // For error updates
+        const result = await sql`
+          UPDATE tweets 
+          SET status = ${status},
+              error_message = ${data.errorMessage},
+              updated_at = NOW()
+          WHERE id = ${tweetId} AND user_id = ${userId}
+          RETURNING id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
+        `;
+        
+        if (result.length === 0) {
+          throw new Error('Tweet not found or access denied');
+        }
+        return result[0] as Tweet;
+      } else {
+        // Basic status update
+        const result = await sql`
+          UPDATE tweets 
+          SET status = ${status},
+              updated_at = NOW()
+          WHERE id = ${tweetId} AND user_id = ${userId}
+          RETURNING id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
+        `;
+        
+        if (result.length === 0) {
+          throw new Error('Tweet not found or access denied');
+        }
+        return result[0] as Tweet;
       }
-
-      if (data.tweetId) {
-        updates.push('tweet_id = $' + (values.length + 1));
-        values.push(data.tweetId);
-      }
-
-      if (data.sentAt) {
-        updates.push('sent_at = $' + (values.length + 1));
-        values.push(
-          data.sentAt instanceof Date ? data.sentAt.toISOString() : data.sentAt
-        );
-      }
-
-      if (data.errorMessage !== undefined) {
-        updates.push('error_message = $' + (values.length + 1));
-        values.push(data.errorMessage);
-      }
-
-      const result = await sql`
-        UPDATE tweets 
-        SET ${sql.unsafe(updates.join(', '))}
-        WHERE id = ${tweetId} AND user_id = ${userId}
-        RETURNING id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
-      `;
-
-      if (result.length === 0) {
-        throw new Error('Tweet not found or access denied');
-      }
-
-      return result[0] as Tweet;
     } catch (error) {
       console.error('Error updating tweet status:', error);
       throw error;

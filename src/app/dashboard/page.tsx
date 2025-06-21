@@ -9,6 +9,7 @@ import { Suggestion, useAISuggestions } from '@/hooks/use-ai-suggestions';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useTweetComposer } from '@/hooks/use-tweet-composer';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 export default function DashboardPage() {
   const composer = useTweetComposer();
@@ -165,12 +166,83 @@ export default function DashboardPage() {
 
   // Handle tweet posting/scheduling
   const handleTweetPost = useCallback(async (scheduledFor?: Date) => {
-    // TODO: Implement actual tweet posting logic
-    console.log('Posting tweet:', {
-      content: composer.content,
-      scheduledFor,
-    });
-  }, [composer.content]);
+    if (!composer.content.trim()) {
+      toast.error('Tweet content cannot be empty');
+      return;
+    }
+
+    if (composer.content.length > 280) {
+      toast.error('Tweet content exceeds 280 characters');
+      return;
+    }
+
+    try {
+      if (scheduledFor) {
+        // Schedule tweet for later
+        const response = await fetch('/api/twitter/schedule', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            content: composer.content,
+            scheduledFor: scheduledFor.toISOString(),
+            tweetId: composer.currentTweetId,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to schedule tweet');
+        }
+
+        toast.success(`Tweet scheduled for ${scheduledFor.toLocaleString()}`);
+        
+        // Clear the composer after successful scheduling
+        composer.clearContent();
+      } else {
+        // Post tweet immediately
+        const response = await fetch('/api/twitter/post', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            content: composer.content,
+            tweetId: composer.currentTweetId,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          // Handle specific error cases
+          if (data.code === 'NOT_CONNECTED') {
+            toast.error('Please connect your Twitter account first');
+            return;
+          }
+          if (data.code === 'DUPLICATE_TWEET') {
+            toast.error('This tweet appears to be a duplicate');
+            return;
+          }
+          if (data.code === 'RATE_LIMITED') {
+            toast.error('Twitter rate limit exceeded. Please try again later.');
+            return;
+          }
+          throw new Error(data.error || 'Failed to post tweet');
+        }
+
+        toast.success('Tweet posted successfully!');
+        
+        // Clear the composer after successful posting
+        composer.clearContent();
+      }
+    } catch (error) {
+      console.error('Error posting/scheduling tweet:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to post tweet');
+    }
+  }, [composer.content, composer.currentTweetId, composer.clearContent]);
 
   return (
     <div className="h-screen flex flex-col">
@@ -242,17 +314,17 @@ export default function DashboardPage() {
               onCritique={() => suggestions.requestCritique(composer.content)}
             />
           </div>
-                  </aside>
-        </div>
-
-        {/* Schedule Modal */}
-        <ScheduleModal
-          isOpen={isScheduleModalOpen}
-          onClose={() => setIsScheduleModalOpen(false)}
-          tweetContent={composer.content}
-          characterCount={composer.content.length}
-          onScheduleTweet={handleTweetPost}
-        />
+        </aside>
       </div>
-    );
-  }
+
+      {/* Schedule Modal */}
+      <ScheduleModal
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
+        tweetContent={composer.content}
+        characterCount={composer.content.length}
+        onScheduleTweet={handleTweetPost}
+      />
+    </div>
+  );
+}
