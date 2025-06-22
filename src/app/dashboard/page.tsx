@@ -327,6 +327,8 @@ export default function DashboardPage() {
               onContentChange={composer.setContent}
               autoSaveStatus={composer.autoSaveStatus}
               currentTweetId={composer.currentTweetId}
+              loadedTweetType={composer.loadedTweetType}
+              loadedTweetInfo={composer.loadedTweetInfo}
               onNewDraft={composer.clearContent}
               onScheduleTweet={handleScheduleTweet}
             />

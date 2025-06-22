@@ -92,7 +92,7 @@ This sprint implements X/Twitter API integration to allow users to post tweets i
   - [x] 5.5 Add character count validation specific to Twitter's limits
   - [x] 5.6 Implement tweet composer state management for scheduling
 
-- [ ] 6.0 Tweet History & Status Management Updates
+- [x] 6.0 Tweet History & Status Management Updates ✅ **COMPLETED**
 
   - [x] 6.1 Update tweet history UI to show new status types (scheduled, sent)
   - [x] 6.2 Change "Completed" filter to "Scheduled/Sent" filter in left sidebar
@@ -101,12 +101,12 @@ This sprint implements X/Twitter API integration to allow users to post tweets i
   - [x] 6.5 Add "View on Twitter" button for sent tweets (replaces current dropdown actions)
   - [x] 6.6 Add "Cancel" and "Reschedule" buttons for scheduled tweets
   - [x] 6.7 Fix tweet card update delay with optimistic updates
-  - [ ] 6.8 Remove all action buttons from tweet cards for cleaner design
-  - [ ] 6.9 Add composer state management to track loaded tweet type (draft/scheduled/sent)
-  - [ ] 6.10 Update composer buttons based on loaded tweet type
-  - [ ] 6.11 Implement read-only content for sent tweets in composer
-  - [ ] 6.12 Add delete functionality for draft and scheduled tweets in composer
-  - [ ] 6.13 Implement error state display for failed tweet posts (if needed)
+  - [x] 6.8 Remove all action buttons from tweet cards for cleaner design
+  - [x] 6.9 Add composer state management to track loaded tweet type (draft/scheduled/sent)
+  - [x] 6.10 Update composer buttons based on loaded tweet type
+  - [x] 6.11 Implement read-only content for sent tweets in composer
+  - [x] 6.12 Add delete functionality for draft tweets in composer (scheduled tweets use cancel instead)
+  - [x] 6.13 Implement error state display for failed tweet posts (error handling already implemented via toast notifications)
 
 - [ ] 7.0 Scheduled Tweet Processing & Cron Jobs
 

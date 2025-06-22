@@ -1,17 +1,24 @@
 'use client';
 
+import { Tweet } from '@/lib/database/schema';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 export type AutoSaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+export type LoadedTweetType = 'draft' | 'scheduled' | 'sent' | 'completed' | null;
+
+// Use the Tweet interface from schema for consistency
+type LoadedTweetInfo = Tweet;
 
 interface UseTweetComposerReturn {
   content: string;
   setContent: (content: string) => void;
   isLoading: boolean;
   clearContent: () => void;
-  loadDraft: (tweet: { id: string; content: string }) => void;
+  loadDraft: (tweet: LoadedTweetInfo) => void;
   autoSaveStatus: AutoSaveStatus;
   currentTweetId: string | null;
+  loadedTweetType: LoadedTweetType;
+  loadedTweetInfo: LoadedTweetInfo | null;
 }
 
 export const useTweetComposer = (
@@ -19,6 +26,8 @@ export const useTweetComposer = (
 ): UseTweetComposerReturn => {
   const [content, setContent] = useState('');
   const [currentTweetId, setCurrentTweetId] = useState<string | null>(null);
+  const [loadedTweetType, setLoadedTweetType] = useState<LoadedTweetType>(null);
+  const [loadedTweetInfo, setLoadedTweetInfo] = useState<LoadedTweetInfo | null>(null);
   const [isLoading] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>('idle');
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
@@ -51,6 +60,8 @@ export const useTweetComposer = (
               'Tweet not found - it may have been deleted. Resetting composer.'
             );
             setCurrentTweetId(null);
+            setLoadedTweetType(null);
+            setLoadedTweetInfo(null);
             setAutoSaveStatus('idle');
             // Try to save as a new tweet instead
             const newResponse = await fetch('/api/tweets', {
@@ -68,7 +79,10 @@ export const useTweetComposer = (
             if (newResponse.ok) {
               const newResult = await newResponse.json();
               if (newResult.success && newResult.tweet && newResult.tweet.id) {
-                setCurrentTweetId(newResult.tweet.id);
+                const newTweet = newResult.tweet;
+                setCurrentTweetId(newTweet.id);
+                setLoadedTweetType('draft');
+                setLoadedTweetInfo(newTweet);
                 setAutoSaveStatus('saved');
                 window.dispatchEvent(new CustomEvent('tweetSaved'));
                 return;
@@ -83,6 +97,15 @@ export const useTweetComposer = (
         if (result.success && result.tweet && result.tweet.id) {
           if (!currentTweetId) {
             setCurrentTweetId(result.tweet.id);
+            setLoadedTweetType('draft');
+            setLoadedTweetInfo(result.tweet);
+          } else if (loadedTweetInfo) {
+            // Update existing loaded tweet info
+            setLoadedTweetInfo({
+              ...loadedTweetInfo,
+              content: draftContent.trim(),
+              updated_at: new Date()
+            });
           }
           setAutoSaveStatus('saved');
           window.dispatchEvent(new CustomEvent('tweetSaved'));
@@ -104,11 +127,13 @@ export const useTweetComposer = (
             'Resetting composer state due to save error - tweet may have been deleted'
           );
           setCurrentTweetId(null);
+          setLoadedTweetType(null);
+          setLoadedTweetInfo(null);
           setAutoSaveStatus('idle');
         }
       }
     },
-    [currentTweetId]
+    [currentTweetId, loadedTweetInfo]
   );
 
   useEffect(() => {
@@ -119,6 +144,11 @@ export const useTweetComposer = (
 
     if (content.trim() === '') {
       setAutoSaveStatus('idle');
+      return;
+    }
+
+    // Only auto-save for drafts, not for scheduled/sent tweets
+    if (loadedTweetType && loadedTweetType !== 'draft') {
       return;
     }
 
@@ -137,17 +167,21 @@ export const useTweetComposer = (
         clearTimeout(debounceTimer.current);
       }
     };
-  }, [content, debounceMs, saveDraft]);
+  }, [content, debounceMs, saveDraft, loadedTweetType]);
 
   const clearContent = useCallback(() => {
     setContent('');
     setCurrentTweetId(null);
+    setLoadedTweetType(null);
+    setLoadedTweetInfo(null);
     setAutoSaveStatus('idle');
   }, []);
 
-  const loadDraft = useCallback((tweet: { id: string; content: string }) => {
+  const loadDraft = useCallback((tweet: LoadedTweetInfo) => {
     setContent(tweet.content);
     setCurrentTweetId(tweet.id);
+    setLoadedTweetType(tweet.status);
+    setLoadedTweetInfo(tweet);
     setAutoSaveStatus('saved');
   }, []);
 
@@ -192,5 +226,7 @@ export const useTweetComposer = (
     loadDraft,
     autoSaveStatus,
     currentTweetId,
+    loadedTweetType,
+    loadedTweetInfo,
   };
 };
