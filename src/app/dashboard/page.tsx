@@ -25,6 +25,9 @@ export default function DashboardPage() {
   // Track if we're in the middle of applying a suggestion to prevent re-analysis
   const isApplyingSuggestionRef = useRef(false);
 
+  // Track the last loaded content to prevent AI calls on card clicks
+  const lastLoadedContentRef = useRef<string>('');
+
   // Update ref whenever content changes
   useEffect(() => {
     currentContentRef.current = composer.content;
@@ -45,6 +48,11 @@ export default function DashboardPage() {
   useEffect(() => {
     // Don't trigger AI checks if we're in the middle of applying a suggestion
     if (isApplyingSuggestionRef.current) {
+      return;
+    }
+
+    // Don't trigger AI checks if content matches the last loaded content (prevents AI calls on card clicks)
+    if (debouncedContent === lastLoadedContentRef.current) {
       return;
     }
 
@@ -176,6 +184,23 @@ export default function DashboardPage() {
       window.removeEventListener('openScheduleModal', handleOpenScheduleModal);
     };
   }, []);
+
+  // Listen for content loading events to prevent AI triggers
+  useEffect(() => {
+    const handleContentLoading = (event: CustomEvent) => {
+      // Track the loaded content to prevent AI calls
+      lastLoadedContentRef.current = event.detail.content;
+      
+      // Clear suggestions when loading a tweet
+      clearSuggestions();
+    };
+
+    window.addEventListener('contentLoading', handleContentLoading as EventListener);
+
+    return () => {
+      window.removeEventListener('contentLoading', handleContentLoading as EventListener);
+    };
+  }, [clearSuggestions]);
 
   // Handle tweet posting/scheduling
   const handleTweetPost = useCallback(async (scheduledFor?: Date) => {

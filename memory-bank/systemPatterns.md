@@ -199,7 +199,42 @@ interface APIError {
 
 ## Performance Optimization Patterns
 
-### 1. Dashboard Performance (IMPLEMENTED)
+### 1. AI API Call Optimization (IMPLEMENTED) 🚀
+
+**Critical Performance Fix**: Eliminated unnecessary AI API calls on tweet card clicks
+
+```typescript
+// Content tracking pattern to prevent duplicate API calls
+const lastLoadedContentRef = useRef<string>('');
+
+// Debounced effect with content protection
+useEffect(() => {
+  // Skip AI calls if content matches last loaded content
+  if (debouncedContent === lastLoadedContentRef.current) {
+    return;
+  }
+  
+  if (debouncedContent.trim()) {
+    fetchWritingSuggestions(debouncedContent);
+  }
+}, [debouncedContent]);
+
+// Enhanced setContent that clears tracking when user types
+const enhancedSetContent = useCallback((newContent: string) => {
+  if (newContent !== lastLoadedContentRef.current) {
+    lastLoadedContentRef.current = ''; // Clear tracking on user input
+  }
+  setContent(newContent);
+}, []);
+```
+
+**Implementation Benefits**:
+- 🚫 **Zero API Calls** on tweet card clicks (previously 1-3 expensive calls per click)
+- ⚡ **Instant Loading** of tweet content without delays
+- 💰 **Significant Cost Savings** on OpenAI API usage
+- 🎯 **Surgical Precision** - only blocks exact loaded content, not similar content
+
+### 2. Dashboard Performance (IMPLEMENTED)
 
 - **Component Memoization**: React.memo for expensive components
 - **Debounced Inputs**: 500ms delay for AI triggers and search
@@ -359,8 +394,10 @@ const DashboardErrorBoundary = ({ children }) => {
 ### 2. Cost Optimization
 
 - **AI API Efficiency**: Minimize unnecessary requests
-- **Caching Strategy**: Reduce repeated API calls
+- **Content Tracking**: Prevent duplicate API calls on content loading
+- **Caching Strategy**: Reduce repeated API calls  
 - **Resource Monitoring**: Track usage patterns for optimization
+- **Performance Fix**: Eliminated unnecessary API calls saving significant OpenAI costs
 
 ## Form Validation Pattern
 

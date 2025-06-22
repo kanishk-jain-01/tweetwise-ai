@@ -31,6 +31,7 @@ export const useTweetComposer = (
   const [isLoading] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>('idle');
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const lastLoadedContentRef = useRef<string>('');
 
   const saveDraft = useCallback(
     async (draftContent: string) => {
@@ -149,6 +150,11 @@ export const useTweetComposer = (
       return;
     }
 
+    // Don't auto-save if content matches the last loaded content (prevents auto-save on card clicks)
+    if (content === lastLoadedContentRef.current) {
+      return;
+    }
+
     setAutoSaveStatus('saving');
 
     if (debounceTimer.current) {
@@ -167,6 +173,14 @@ export const useTweetComposer = (
   }, [content, debounceMs, saveDraft, loadedTweetType]);
 
   const clearContent = useCallback(() => {
+    // Track the cleared content
+    lastLoadedContentRef.current = '';
+    
+    // Dispatch event to signal that content is being cleared (not typed)
+    window.dispatchEvent(new CustomEvent('contentLoading', { 
+      detail: { content: '' } 
+    }));
+    
     setContent('');
     setCurrentTweetId(null);
     setLoadedTweetType(null);
@@ -175,6 +189,14 @@ export const useTweetComposer = (
   }, []);
 
   const loadDraft = useCallback((tweet: LoadedTweetInfo) => {
+    // Track the loaded content to distinguish from user typing
+    lastLoadedContentRef.current = tweet.content;
+    
+    // Dispatch event to signal that content is being loaded (not typed)
+    window.dispatchEvent(new CustomEvent('contentLoading', { 
+      detail: { content: tweet.content } 
+    }));
+    
     setContent(tweet.content);
     setCurrentTweetId(tweet.id);
     setLoadedTweetType(tweet.status);
@@ -215,9 +237,18 @@ export const useTweetComposer = (
     };
   }, [loadDraft, clearContent, currentTweetId]);
 
+  // Enhanced setContent that clears loaded content tracking when user types
+  const enhancedSetContent = useCallback((newContent: string) => {
+    // If content is different from loaded content, user is typing
+    if (newContent !== lastLoadedContentRef.current) {
+      lastLoadedContentRef.current = '';
+    }
+    setContent(newContent);
+  }, []);
+
   return {
     content,
-    setContent,
+    setContent: enhancedSetContent,
     isLoading,
     clearContent,
     loadDraft,
