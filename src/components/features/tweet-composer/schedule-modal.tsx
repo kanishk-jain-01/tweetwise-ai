@@ -213,7 +213,9 @@ export const ScheduleModal = ({
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
                         <Calendar className="w-4 h-4 text-gray-400" />
-                        <span className="font-medium text-gray-500">Schedule for Later (Coming Soon)</span>
+                        <span className="font-medium text-gray-500">
+                          Schedule for Later (Coming Soon)
+                        </span>
                       </div>
                       <p className="text-sm text-gray-400 mt-1">
                         Scheduling feature will be available soon

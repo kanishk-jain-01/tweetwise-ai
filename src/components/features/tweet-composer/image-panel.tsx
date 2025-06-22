@@ -7,14 +7,14 @@ import { LoadingSpinner } from '@/components/ui/loading';
 import type { ImageStyle } from '@/lib/database/schema';
 import { cn } from '@/lib/utils/cn';
 import {
-    Clock,
-    Image as ImageIcon,
-    Palette,
-    Sparkles,
-    Trash2,
-    Upload,
-    Wand2,
-    Zap,
+  Clock,
+  Image as ImageIcon,
+  Palette,
+  Sparkles,
+  Trash2,
+  Upload,
+  Wand2,
+  Zap,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -118,7 +118,7 @@ export const ImagePanel = ({
 
   // Removal state (removed replace functionality)
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
-  
+
   // Image modal state
   const [showImageModal, setShowImageModal] = useState(false);
 
@@ -393,9 +393,10 @@ export const ImagePanel = ({
     setShowRemoveConfirm(false);
   }, []);
 
-  const handleUploadClick = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
+  // Upload functionality is disabled for submission
+  // const handleUploadClick = useCallback(() => {
+  //   fileInputRef.current?.click();
+  // }, []);
 
   // Image modal handlers
   const handleImageClick = useCallback(() => {
@@ -508,10 +509,10 @@ export const ImagePanel = ({
             </p>
           </div>
         ) : displayImage ? (
-          <div 
+          <div
             className="relative w-full h-full rounded-lg overflow-hidden border-2 border-dashed border-gray-200 bg-gray-50 cursor-pointer hover:border-gray-300 transition-colors group"
             onClick={handleImageClick}
-            onKeyDown={(e) => {
+            onKeyDown={e => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 handleImageClick();
@@ -527,7 +528,7 @@ export const ImagePanel = ({
               alt={isAIGenerated ? currentImage?.prompt : 'Uploaded image'}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
             />
-            
+
             {/* Hover overlay */}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200 flex items-center justify-center">
               <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/90 rounded-full p-2">
@@ -773,16 +774,16 @@ export const ImagePanel = ({
 
       {/* Image Modal */}
       {showImageModal && displayImage && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
           onClick={handleCloseModal}
           role="dialog"
           aria-modal="true"
           aria-label="Enlarged image view"
         >
-          <div 
+          <div
             className="relative max-w-4xl max-h-[90vh] mx-4"
-            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking the image
+            onClick={e => e.stopPropagation()} // Prevent closing when clicking the image
           >
             {/* Close button */}
             <button
@@ -791,8 +792,18 @@ export const ImagePanel = ({
               aria-label="Close enlarged image"
               title="Close (Esc)"
             >
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-8 h-8"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
 
@@ -808,18 +819,29 @@ export const ImagePanel = ({
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent text-white p-4 rounded-b-lg">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-2">
-                    <Badge variant="secondary" className="bg-white/20 text-white">
-                      {STYLE_OPTIONS.find(s => s.value === currentImage.style)?.name}
+                    <Badge
+                      variant="secondary"
+                      className="bg-white/20 text-white"
+                    >
+                      {
+                        STYLE_OPTIONS.find(s => s.value === currentImage.style)
+                          ?.name
+                      }
                     </Badge>
                     {currentImage.savedToDatabase && (
-                      <Badge variant="secondary" className="bg-green-500/20 text-white">
+                      <Badge
+                        variant="secondary"
+                        className="bg-green-500/20 text-white"
+                      >
                         Saved
                       </Badge>
                     )}
                   </div>
                   <div className="flex items-center space-x-1 text-sm">
                     <Clock className="w-4 h-4" />
-                    <span>{Math.round(currentImage.generationTimeMs / 1000)}s</span>
+                    <span>
+                      {Math.round(currentImage.generationTimeMs / 1000)}s
+                    </span>
                   </div>
                 </div>
                 <p className="text-sm opacity-90">{currentImage.prompt}</p>
@@ -829,7 +851,10 @@ export const ImagePanel = ({
             {/* Upload info for uploaded images */}
             {!isAIGenerated && uploadedImage && (
               <div className="absolute top-4 right-4">
-                <Badge variant="secondary" className="bg-blue-500/80 text-white">
+                <Badge
+                  variant="secondary"
+                  className="bg-blue-500/80 text-white"
+                >
                   <Upload className="w-4 h-4 mr-1" />
                   Uploaded Image
                 </Badge>
