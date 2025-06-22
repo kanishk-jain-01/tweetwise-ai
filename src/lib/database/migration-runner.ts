@@ -6,6 +6,9 @@ import { config } from 'dotenv';
 import { MIGRATION_001_METADATA } from './migrations/001-add-twitter-fields';
 import { MIGRATION_002_METADATA } from './migrations/002-add-twitter-tokens-table';
 import { MIGRATION_003_METADATA } from './migrations/003-add-twitter-user-fields';
+import { MIGRATION_004_METADATA } from './migrations/004-fix-twitter-refresh-token';
+import { MIGRATION_005_METADATA } from './migrations/005-add-images-table';
+import { MIGRATION_006_METADATA } from './migrations/006-add-unique-constraint-images';
 
 // Load environment variables
 config({ path: '.env.local' });
@@ -18,6 +21,9 @@ const MIGRATIONS = [
   MIGRATION_001_METADATA,
   MIGRATION_002_METADATA,
   MIGRATION_003_METADATA,
+  MIGRATION_004_METADATA,
+  MIGRATION_005_METADATA,
+  MIGRATION_006_METADATA,
 ];
 
 // Migration tracking table

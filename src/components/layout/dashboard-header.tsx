@@ -13,10 +13,12 @@ interface DashboardHeaderProps {
   grammarSuggestions: any[];
   critique: any;
   isLoading: boolean;
+  analysisLoading: boolean;
   error: string | null;
+  analysisMetadata: any;
   onAccept: (suggestion: any) => void;
   onReject: (suggestion: any) => void;
-  onCritique: () => void;
+  onCritique: (forceRefresh?: boolean) => void;
 }
 
 export const DashboardHeader = ({
@@ -25,7 +27,9 @@ export const DashboardHeader = ({
   grammarSuggestions,
   critique,
   isLoading,
+  analysisLoading,
   error,
+  analysisMetadata,
   onAccept,
   onReject,
   onCritique,
@@ -54,7 +58,9 @@ export const DashboardHeader = ({
           grammarSuggestions={grammarSuggestions}
           critique={critique}
           isLoading={isLoading}
+          analysisLoading={analysisLoading}
           error={error}
+          analysisMetadata={analysisMetadata}
           onAccept={onAccept}
           onReject={onReject}
           onCritique={onCritique}

@@ -3,25 +3,19 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTweetHistory } from '@/hooks/use-tweet-history';
 import { Tweet } from '@/lib/database/schema';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  Calendar,
   CheckCircle,
   Clock,
   FileText,
   Loader2,
-  MoreHorizontal,
   Search,
-  Trash2,
+  Send,
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -31,9 +25,16 @@ interface TweetHistoryProps {
 }
 
 export const TweetHistory = ({ onSelectTweet }: TweetHistoryProps) => {
-  const { tweets, isLoading, isRefreshing, refreshTweets } = useTweetHistory();
+  const {
+    tweets,
+    isLoading,
+    isRefreshing,
+    refreshTweets: _refreshTweets,
+  } = useTweetHistory();
   const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState<'all' | 'drafts' | 'completed'>('all');
+  const [filter, setFilter] = useState<'all' | 'drafts' | 'scheduled-sent'>(
+    'all'
+  );
 
   const filteredTweets = tweets.filter(tweet => {
     const matchesSearch = tweet.content
@@ -42,7 +43,10 @@ export const TweetHistory = ({ onSelectTweet }: TweetHistoryProps) => {
     const matchesFilter =
       filter === 'all' ||
       (filter === 'drafts' && tweet.status === 'draft') ||
-      (filter === 'completed' && tweet.status === 'completed');
+      (filter === 'scheduled-sent' &&
+        (tweet.status === 'scheduled' ||
+          tweet.status === 'sent' ||
+          tweet.status === 'completed'));
     return matchesSearch && matchesFilter;
   });
 
@@ -53,39 +57,6 @@ export const TweetHistory = ({ onSelectTweet }: TweetHistoryProps) => {
     );
   };
 
-  const handleDeleteTweet = async (tweet: Tweet, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click event
-
-    if (!confirm(`Are you sure you want to delete this ${tweet.status}?`)) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/tweets?id=${tweet.id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete tweet');
-      }
-
-      // Dispatch custom event to notify other components about the deletion
-      window.dispatchEvent(
-        new CustomEvent('tweetDeleted', {
-          detail: { tweetId: tweet.id },
-        })
-      );
-
-      toast.success(
-        `${tweet.status === 'draft' ? 'Draft' : 'Tweet'} deleted successfully`
-      );
-      await refreshTweets(); // Refresh the list
-    } catch (error) {
-      console.error('Error deleting tweet:', error);
-      toast.error('Failed to delete tweet');
-    }
-  };
-
   const formatDate = (date: Date) => {
     return new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(
       Math.floor((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
@@ -93,25 +64,94 @@ export const TweetHistory = ({ onSelectTweet }: TweetHistoryProps) => {
     );
   };
 
+  const formatDateTime = (date: Date) => {
+    return new Intl.DateTimeFormat('en', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    }).format(date);
+  };
+
+  const getDisplayTime = (tweet: Tweet) => {
+    switch (tweet.status) {
+      case 'scheduled':
+        return tweet.scheduled_for
+          ? new Date(tweet.scheduled_for)
+          : new Date(tweet.created_at);
+      case 'sent':
+        return tweet.sent_at
+          ? new Date(tweet.sent_at)
+          : new Date(tweet.updated_at);
+      case 'completed':
+      case 'draft':
+      default:
+        return new Date(tweet.updated_at);
+    }
+  };
+
+  const getTimeLabel = (tweet: Tweet) => {
+    switch (tweet.status) {
+      case 'scheduled':
+        return 'Scheduled for';
+      case 'sent':
+        return 'Sent';
+      case 'completed':
+        return 'Completed';
+      case 'draft':
+      default:
+        return 'Updated';
+    }
+  };
+
   const getStatusIcon = (status: string) => {
-    return status === 'completed' ? (
-      <CheckCircle className="w-4 h-4 text-green-500" />
-    ) : (
-      <Clock className="w-4 h-4 text-yellow-500" />
-    );
+    switch (status) {
+      case 'sent':
+        return <Send className="w-4 h-4 text-green-500" />;
+      case 'completed':
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'scheduled':
+        return <Calendar className="w-4 h-4 text-blue-500" />;
+      case 'draft':
+      default:
+        return <Clock className="w-4 h-4 text-yellow-500" />;
+    }
   };
 
   const getStatusBadge = (status: string) => {
-    return status === 'completed' ? (
-      <Badge
-        variant="default"
-        className="bg-green-100 text-green-800 hover:bg-green-100"
-      >
-        Completed
-      </Badge>
-    ) : (
-      <Badge variant="secondary">Draft</Badge>
-    );
+    switch (status) {
+      case 'sent':
+        return (
+          <Badge
+            variant="default"
+            className="bg-green-100 text-green-800 hover:bg-green-100"
+          >
+            Sent
+          </Badge>
+        );
+      case 'completed':
+        return (
+          <Badge
+            variant="default"
+            className="bg-green-100 text-green-800 hover:bg-green-100"
+          >
+            Completed
+          </Badge>
+        );
+      case 'scheduled':
+        return (
+          <Badge
+            variant="default"
+            className="bg-blue-100 text-blue-800 hover:bg-blue-100"
+          >
+            Scheduled
+          </Badge>
+        );
+      case 'draft':
+      default:
+        return <Badge variant="secondary">Draft</Badge>;
+    }
   };
 
   return (
@@ -148,11 +188,11 @@ export const TweetHistory = ({ onSelectTweet }: TweetHistoryProps) => {
             Drafts
           </Button>
           <Button
-            variant={filter === 'completed' ? 'default' : 'outline'}
+            variant={filter === 'scheduled-sent' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setFilter('completed')}
+            onClick={() => setFilter('scheduled-sent')}
           >
-            Completed
+            Scheduled/Sent
           </Button>
         </div>
       </div>
@@ -223,35 +263,9 @@ export const TweetHistory = ({ onSelectTweet }: TweetHistoryProps) => {
                               {getStatusIcon(tweet.status)}
                               {getStatusBadge(tweet.status)}
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <span className="text-xs text-muted-foreground">
-                                {formatDate(new Date(tweet.updated_at))}
-                              </span>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 w-6 p-0"
-                                    onClick={e => e.stopPropagation()}
-                                  >
-                                    <MoreHorizontal className="w-4 h-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem
-                                    onClick={e => handleDeleteTweet(tweet, e)}
-                                    className="text-destructive focus:text-destructive"
-                                  >
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Delete{' '}
-                                    {tweet.status === 'draft'
-                                      ? 'Draft'
-                                      : 'Tweet'}
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {formatDate(new Date(tweet.updated_at))}
+                            </span>
                           </div>
 
                           <p className="text-sm line-clamp-3 text-foreground">
@@ -260,9 +274,18 @@ export const TweetHistory = ({ onSelectTweet }: TweetHistoryProps) => {
 
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <span>{tweet.content.length}/280 chars</span>
-                            <span>
-                              {new Date(tweet.created_at).toLocaleDateString()}
-                            </span>
+                            <div className="flex flex-col items-end">
+                              <span className="font-medium">
+                                {getTimeLabel(tweet)}:{' '}
+                                {formatDateTime(getDisplayTime(tweet))}
+                              </span>
+                              <span>
+                                Created{' '}
+                                {new Date(
+                                  tweet.created_at
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </CardContent>

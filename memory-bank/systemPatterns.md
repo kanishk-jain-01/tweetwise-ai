@@ -55,7 +55,11 @@ Next.js 15.3.4 App Router Architecture
 src/components/
 ├── features/           # Feature-specific components
 │   ├── auth/          # Authentication components
-│   ├── tweet-composer/ # Main composition interface
+│   ├── tweet-composer/ # Main composition interface (ENHANCED WITH IMAGE SUPPORT)
+│   │   ├── tweet-composer.tsx      # Dual-panel layout (text + image)
+│   │   ├── image-panel.tsx         # AI image generation panel
+│   │   ├── schedule-modal.tsx      # Tweet scheduling
+│   │   └── twitter-connect.tsx     # Twitter OAuth integration
 │   ├── tweet-history/ # History and draft management
 │   └── ai-suggestions/ # AI feedback and suggestions
 ├── ui/                # Reusable UI components (shadcn/ui)
@@ -143,6 +147,21 @@ ai_responses (
   response_data JSONB,
   created_at TIMESTAMP
 )
+
+-- Images table (NEW - AI GENERATED IMAGES)
+images (
+  id UUID PRIMARY KEY,
+  tweet_id UUID REFERENCES tweets(id),
+  base64_data TEXT NOT NULL, -- Base64 encoded image from gpt-image-1
+  prompt TEXT NOT NULL, -- Generation prompt
+  style VARCHAR CHECK (style IN ('ghibli', 'photo_realistic')),
+  size VARCHAR NOT NULL, -- Image dimensions
+  format VARCHAR CHECK (format IN ('png', 'jpeg', 'webp')),
+  quality VARCHAR CHECK (quality IN ('high', 'medium', 'low')),
+  generation_time_ms INTEGER, -- Performance tracking
+  file_size_bytes INTEGER, -- Storage tracking
+  created_at TIMESTAMP
+)
 ```
 
 ### Indexing Strategy
@@ -162,6 +181,7 @@ ai_responses (
 ├── spell-check    # Spell checking service
 ├── grammar-check  # Grammar checking service
 ├── critique       # Tweet analysis service
+├── generate-image # AI image generation (NEW - gpt-image-1)
 └── curate         # Content curation service
 ```
 
@@ -199,7 +219,43 @@ interface APIError {
 
 ## Performance Optimization Patterns
 
-### 1. Dashboard Performance (IMPLEMENTED)
+### 1. AI API Call Optimization (IMPLEMENTED) 🚀
+
+**Critical Performance Fix**: Eliminated unnecessary AI API calls on tweet card clicks
+
+```typescript
+// Content tracking pattern to prevent duplicate API calls
+const lastLoadedContentRef = useRef<string>('');
+
+// Debounced effect with content protection
+useEffect(() => {
+  // Skip AI calls if content matches last loaded content
+  if (debouncedContent === lastLoadedContentRef.current) {
+    return;
+  }
+
+  if (debouncedContent.trim()) {
+    fetchWritingSuggestions(debouncedContent);
+  }
+}, [debouncedContent]);
+
+// Enhanced setContent that clears tracking when user types
+const enhancedSetContent = useCallback((newContent: string) => {
+  if (newContent !== lastLoadedContentRef.current) {
+    lastLoadedContentRef.current = ''; // Clear tracking on user input
+  }
+  setContent(newContent);
+}, []);
+```
+
+**Implementation Benefits**:
+
+- 🚫 **Zero API Calls** on tweet card clicks (previously 1-3 expensive calls per click)
+- ⚡ **Instant Loading** of tweet content without delays
+- 💰 **Significant Cost Savings** on OpenAI API usage
+- 🎯 **Surgical Precision** - only blocks exact loaded content, not similar content
+
+### 2. Dashboard Performance (IMPLEMENTED)
 
 - **Component Memoization**: React.memo for expensive components
 - **Debounced Inputs**: 500ms delay for AI triggers and search
@@ -359,8 +415,10 @@ const DashboardErrorBoundary = ({ children }) => {
 ### 2. Cost Optimization
 
 - **AI API Efficiency**: Minimize unnecessary requests
+- **Content Tracking**: Prevent duplicate API calls on content loading
 - **Caching Strategy**: Reduce repeated API calls
 - **Resource Monitoring**: Track usage patterns for optimization
+- **Performance Fix**: Eliminated unnecessary API calls saving significant OpenAI costs
 
 ## Form Validation Pattern
 

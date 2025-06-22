@@ -1,24 +1,32 @@
 'use client';
 
 import { AISuggestions } from '@/components/features/ai-suggestions/ai-suggestions';
+import { ScheduleModal } from '@/components/features/tweet-composer/schedule-modal';
 import { TweetComposer } from '@/components/features/tweet-composer/tweet-composer';
 import { TweetHistory } from '@/components/features/tweet-history/tweet-history';
 import { DashboardHeader } from '@/components/layout/dashboard-header';
 import { Suggestion, useAISuggestions } from '@/hooks/use-ai-suggestions';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useTweetComposer } from '@/hooks/use-tweet-composer';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 export default function DashboardPage() {
   const composer = useTweetComposer();
   const suggestions = useAISuggestions();
   const debouncedContent = useDebounce(composer.content, 500);
 
+  // Schedule modal state
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+
   // Use ref to track current content to avoid stale closures
   const currentContentRef = useRef(composer.content);
 
   // Track if we're in the middle of applying a suggestion to prevent re-analysis
   const isApplyingSuggestionRef = useRef(false);
+
+  // Track the last loaded content to prevent AI calls on card clicks
+  const lastLoadedContentRef = useRef<string>('');
 
   // Update ref whenever content changes
   useEffect(() => {
@@ -40,6 +48,11 @@ export default function DashboardPage() {
   useEffect(() => {
     // Don't trigger AI checks if we're in the middle of applying a suggestion
     if (isApplyingSuggestionRef.current) {
+      return;
+    }
+
+    // Don't trigger AI checks if content matches the last loaded content (prevents AI calls on card clicks)
+    if (debouncedContent === lastLoadedContentRef.current) {
       return;
     }
 
@@ -154,6 +167,159 @@ export default function DashboardPage() {
     [suggestions.rejectSuggestion]
   );
 
+  // Handle opening the schedule modal
+  const handleScheduleTweet = useCallback(() => {
+    setIsScheduleModalOpen(true);
+  }, []);
+
+  // Listen for openScheduleModal events from tweet history
+  useEffect(() => {
+    const handleOpenScheduleModal = () => {
+      setIsScheduleModalOpen(true);
+    };
+
+    window.addEventListener('openScheduleModal', handleOpenScheduleModal);
+
+    return () => {
+      window.removeEventListener('openScheduleModal', handleOpenScheduleModal);
+    };
+  }, []);
+
+  // Listen for content loading events to prevent AI triggers
+  useEffect(() => {
+    const handleContentLoading = (event: CustomEvent) => {
+      // Track the loaded content to prevent AI calls
+      lastLoadedContentRef.current = event.detail.content;
+
+      // Clear suggestions when loading a tweet
+      clearSuggestions();
+    };
+
+    window.addEventListener(
+      'contentLoading',
+      handleContentLoading as EventListener
+    );
+
+    return () => {
+      window.removeEventListener(
+        'contentLoading',
+        handleContentLoading as EventListener
+      );
+    };
+  }, [clearSuggestions]);
+
+  // Handle tweet posting/scheduling
+  const handleTweetPost = useCallback(
+    async (scheduledFor?: Date) => {
+      if (!composer.content.trim()) {
+        toast.error('Tweet content cannot be empty');
+        return;
+      }
+
+      if (composer.content.length > 280) {
+        toast.error('Tweet content exceeds 280 characters');
+        return;
+      }
+
+      try {
+        if (scheduledFor) {
+          // Schedule tweet for later
+          const response = await fetch('/api/twitter/schedule', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              content: composer.content,
+              scheduledFor: scheduledFor.toISOString(),
+              tweetId: composer.currentTweetId,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || 'Failed to schedule tweet');
+          }
+
+          toast.success(`Tweet scheduled for ${scheduledFor.toLocaleString()}`);
+
+          // Dispatch event for optimistic update
+          window.dispatchEvent(
+            new CustomEvent('tweetPosted', {
+              detail: {
+                tweetId: composer.currentTweetId,
+                status: 'scheduled',
+                tweetData: {
+                  scheduledFor: scheduledFor.toISOString(),
+                  ...data.data,
+                },
+              },
+            })
+          );
+
+          // Clear the composer after successful scheduling
+          composer.clearContent();
+        } else {
+          // Post tweet immediately
+          const response = await fetch('/api/twitter/post', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              content: composer.content,
+              tweetId: composer.currentTweetId,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            // Handle specific error cases
+            if (data.code === 'NOT_CONNECTED') {
+              toast.error('Please connect your Twitter account first');
+              return;
+            }
+            if (data.code === 'DUPLICATE_TWEET') {
+              toast.error('This tweet appears to be a duplicate');
+              return;
+            }
+            if (data.code === 'RATE_LIMITED') {
+              toast.error(
+                'Twitter rate limit exceeded. Please try again later.'
+              );
+              return;
+            }
+            throw new Error(data.error || 'Failed to post tweet');
+          }
+
+          toast.success('Tweet posted successfully!');
+
+          // Dispatch event for optimistic update
+          window.dispatchEvent(
+            new CustomEvent('tweetPosted', {
+              detail: {
+                tweetId: composer.currentTweetId,
+                status: 'sent',
+                tweetData: data.data,
+              },
+            })
+          );
+
+          // Clear the composer after successful posting
+          composer.clearContent();
+        }
+      } catch (error) {
+        console.error('Error posting/scheduling tweet:', error);
+        toast.error(
+          error instanceof Error ? error.message : 'Failed to post tweet'
+        );
+      }
+    },
+    [composer.content, composer.currentTweetId, composer.clearContent]
+  );
+
   return (
     <div className="h-screen flex flex-col">
       {/* Dashboard Header */}
@@ -163,10 +329,18 @@ export default function DashboardPage() {
         grammarSuggestions={suggestions.grammarSuggestions}
         critique={suggestions.critique}
         isLoading={suggestions.isLoading}
+        analysisLoading={suggestions.analysisLoading}
         error={suggestions.error}
+        analysisMetadata={suggestions.analysisMetadata}
         onAccept={handleAcceptSuggestion}
         onReject={handleRejectSuggestion}
-        onCritique={() => suggestions.requestCritique(composer.content)}
+        onCritique={forceRefresh =>
+          suggestions.requestCritique(
+            composer.content,
+            composer.currentTweetId || undefined,
+            forceRefresh
+          )
+        }
       />
 
       {/* Three-Panel Layout */}
@@ -199,7 +373,10 @@ export default function DashboardPage() {
               onContentChange={composer.setContent}
               autoSaveStatus={composer.autoSaveStatus}
               currentTweetId={composer.currentTweetId}
+              loadedTweetType={composer.loadedTweetType}
+              loadedTweetInfo={composer.loadedTweetInfo}
               onNewDraft={composer.clearContent}
+              onScheduleTweet={handleScheduleTweet}
             />
           </div>
         </main>
@@ -217,14 +394,31 @@ export default function DashboardPage() {
               grammarSuggestions={suggestions.grammarSuggestions}
               critique={suggestions.critique}
               isLoading={suggestions.isLoading}
+              analysisLoading={suggestions.analysisLoading}
               error={suggestions.error}
+              analysisMetadata={suggestions.analysisMetadata}
               onAccept={handleAcceptSuggestion}
               onReject={handleRejectSuggestion}
-              onCritique={() => suggestions.requestCritique(composer.content)}
+              onCritique={forceRefresh =>
+                suggestions.requestCritique(
+                  composer.content,
+                  composer.currentTweetId || undefined,
+                  forceRefresh
+                )
+              }
             />
           </div>
         </aside>
       </div>
+
+      {/* Schedule Modal */}
+      <ScheduleModal
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
+        tweetContent={composer.content}
+        characterCount={composer.content.length}
+        onScheduleTweet={handleTweetPost}
+      />
     </div>
   );
 }

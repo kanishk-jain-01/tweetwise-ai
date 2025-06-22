@@ -57,7 +57,7 @@ export class TwitterTokenManager {
     userId: string,
     tokenData: {
       accessToken: string;
-      refreshToken: string;
+      refreshToken: string | null;
       twitterUserId: string;
       twitterUsername: string;
       twitterName: string;
@@ -121,7 +121,7 @@ export class TwitterTokenManager {
     userId: string,
     tokenData: {
       accessToken: string;
-      refreshToken: string;
+      refreshToken: string | null;
       twitterUserId: string;
       twitterUsername: string;
       twitterName: string;
@@ -195,8 +195,8 @@ export class TwitterTokenManager {
   ): Promise<TokenValidationResult> {
     try {
       const client = createAuthenticatedTwitterClient(
-        tokens.accessToken,
-        tokens.refreshToken
+        tokens.access_token,
+        tokens.refresh_token || undefined
       );
 
       // Test tokens by verifying credentials
@@ -207,9 +207,8 @@ export class TwitterTokenManager {
         needsRefresh: false,
       };
     } catch (error: any) {
-      console.error('Token validation failed:', error);
-
-      const errorMessage = error?.message || '';
+      const errorMessage = error.data?.detail || error?.message || '';
+      console.error('Token validation failed:', errorMessage);
 
       // Check if error indicates expired tokens that can be refreshed
       if (
@@ -295,7 +294,7 @@ export class TwitterTokenManager {
       return {
         isConnected: validation.isValid,
         user: userInfo || undefined,
-        tokenExpiry: tokens.expiresAt,
+        tokenExpiry: tokens.expires_at,
         lastVerified: new Date(),
       };
     } catch (error) {
@@ -313,8 +312,8 @@ export class TwitterTokenManager {
     }
 
     return createAuthenticatedTwitterClient(
-      tokens.accessToken,
-      tokens.refreshToken
+      tokens.access_token,
+      tokens.refresh_token || undefined
     );
   }
 
@@ -404,7 +403,7 @@ export class TwitterTokenManager {
         return { hasTokens: false };
       }
 
-      if (!tokens.expiresAt) {
+      if (!tokens.expires_at) {
         return {
           hasTokens: true,
           expiresAt: undefined,
@@ -413,15 +412,15 @@ export class TwitterTokenManager {
       }
 
       const now = new Date();
-      const isExpired = tokens.expiresAt < now;
+      const isExpired = tokens.expires_at < now;
       const expiresInHours = Math.max(
         0,
-        (tokens.expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60)
+        (tokens.expires_at.getTime() - now.getTime()) / (1000 * 60 * 60)
       );
 
       return {
         hasTokens: true,
-        expiresAt: tokens.expiresAt,
+        expiresAt: tokens.expires_at,
         isExpired,
         expiresInHours,
       };
@@ -458,7 +457,7 @@ export const TokenUtils = {
     if (!tokens) return null;
 
     const now = new Date();
-    const created = new Date(tokens.createdAt);
+    const created = new Date(tokens.created_at);
     return Math.floor(
       (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)
     );
