@@ -55,15 +55,12 @@ export const TweetComposer = ({
 
   // Load image when switching between tweets
   useEffect(() => {
-    if (
-      currentTweetId &&
-      loadedTweetType !== 'completed' &&
-      loadedTweetType !== 'sent'
-    ) {
-      // Load any existing image for editable tweets (drafts, scheduled)
+    if (currentTweetId) {
+      // Load image for all tweets (drafts, scheduled, sent, completed)
+      // Images should be viewable even for read-only tweets
       imageGeneration.actions.loadImageForTweet(currentTweetId);
     } else {
-      // Clear image state for sent/completed tweets or when no tweet is loaded
+      // Clear image state only when no tweet is loaded
       imageGeneration.actions.clearImageState();
     }
   }, [currentTweetId, loadedTweetType]); // Removed imageGeneration.actions from deps
@@ -390,24 +387,25 @@ export const TweetComposer = ({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Compact Status Bar */}
-      {loadedTweetType && (
-        <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/20">
-          <div className="flex items-center space-x-2">
-            {getLoadedTweetIndicator()}
-          </div>
+      {/* Always-visible Status Bar - Fixed Height */}
+      <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/20 h-12 flex-shrink-0">
+        <div className="flex items-center space-x-2">
+          {loadedTweetType ? (
+            getLoadedTweetIndicator()
+          ) : (
+            <div className="h-6 flex items-center">
+              <span className="text-sm text-muted-foreground">New Tweet</span>
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
-      {/* Dual Panel Layout - Better height calculation */}
-      <div
-        className="flex flex-col lg:flex-row gap-4 p-4"
-        style={{ height: 'calc(100% - 140px)' }}
-      >
-        {/* Left Panel - Text Composer */}
+      {/* Fixed Dual Panel Layout */}
+      <div className="flex flex-col lg:flex-row gap-4 p-4 flex-1 min-h-0">
+        {/* Left Panel - Text Composer with Fixed Heights */}
         <div className="flex-1 flex flex-col min-h-0">
-          {/* Text Area with proper height constraints */}
-          <div className="relative flex-1 mb-3" style={{ minHeight: '200px' }}>
+          {/* Text Area with Fixed Height */}
+          <div className="relative mb-3 h-80 flex-shrink-0">
             <Textarea
               value={content}
               onChange={e => onContentChange(e.target.value)}
@@ -416,31 +414,37 @@ export const TweetComposer = ({
                   ? 'This tweet has already been posted and cannot be edited.'
                   : "What's happening?"
               }
-              className="w-full h-full text-lg resize-none border-2 border-gray-200 rounded-lg focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:border-blue-500 p-4"
+              className="w-full h-full text-lg resize-none border-2 border-gray-200 rounded-lg focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:border-blue-500 p-4 transition-all duration-200"
               aria-label="Tweet composer"
               readOnly={isReadOnly}
               disabled={isReadOnly}
             />
             {isReadOnly && (
-              <div className="absolute inset-0 bg-muted/20 pointer-events-none rounded-lg" />
+              <div className="absolute inset-0 bg-muted/20 pointer-events-none rounded-lg transition-opacity duration-200" />
             )}
           </div>
 
-          {/* Compact Character Count and Auto-save Status */}
-          <div className="flex items-center justify-between p-2 border border-gray-200 rounded-lg bg-gray-50 flex-shrink-0">
-            <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-              {!isReadOnly && getAutoSaveIndicator()}
+          {/* Fixed Height Character Count and Auto-save Status */}
+          <div className="flex items-center justify-between p-2 border border-gray-200 rounded-lg bg-gray-50 h-12 flex-shrink-0">
+            <div className="flex items-center space-x-2 text-xs text-muted-foreground min-w-0">
+              {!isReadOnly ? (
+                getAutoSaveIndicator()
+              ) : (
+                <div className="h-4 flex items-center">
+                  <span>Read Only</span>
+                </div>
+              )}
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 flex-shrink-0">
               <div
                 className={cn(
-                  'font-medium text-sm',
+                  'font-medium text-sm transition-colors duration-200',
                   getCharacterCountColor(characterCount)
                 )}
               >
                 {characterCount}/{maxChars}
               </div>
-              <div className="relative w-6 h-6">
+              <div className="relative w-6 h-6 flex-shrink-0">
                 <svg className="w-full h-full" viewBox="0 0 36 36">
                   <path
                     d="M18 2.0845
@@ -465,6 +469,7 @@ export const TweetComposer = ({
                     strokeWidth="2"
                     strokeDasharray={`${Math.min(charPercentage, 100)}, 100`}
                     strokeLinecap="round"
+                    className="transition-all duration-300"
                   />
                 </svg>
               </div>
@@ -472,8 +477,8 @@ export const TweetComposer = ({
           </div>
         </div>
 
-        {/* Right Panel - Image Generation */}
-        <div className="lg:w-64 flex flex-col min-h-0">
+        {/* Right Panel - Image Generation with Fixed Width */}
+        <div className="lg:w-80 w-full flex flex-col min-h-0">
           <ImagePanel
             tweetContent={content}
             currentTweetId={currentTweetId}
@@ -497,13 +502,13 @@ export const TweetComposer = ({
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex items-center justify-between p-4 border-t bg-muted/20 flex-shrink-0">
-        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+      {/* Fixed Height Action Buttons */}
+      <div className="flex items-center justify-between p-4 border-t bg-muted/20 h-20 flex-shrink-0">
+        <div className="flex items-center space-x-2 text-xs text-muted-foreground min-w-0 flex-1">
           {imageGeneration.hasImage && (
-            <span className="flex items-center space-x-1">
+            <span className="flex items-center space-x-1 transition-opacity duration-200">
               <span>📸</span>
-              <span>
+              <span className="truncate">
                 Image attached (
                 {imageGeneration.formatFileSize(
                   imageGeneration.imageMetadata?.fileSize || 0
@@ -513,12 +518,13 @@ export const TweetComposer = ({
             </span>
           )}
           {imageGeneration.state.error && (
-            <span className="text-red-500">
-              ⚠️ {imageGeneration.state.error}
+            <span className="text-red-500 flex items-center space-x-1 transition-opacity duration-200">
+              <span>⚠️</span>
+              <span className="truncate">{imageGeneration.state.error}</span>
             </span>
           )}
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3 flex-shrink-0">
           {renderActionButtons()}
         </div>
       </div>

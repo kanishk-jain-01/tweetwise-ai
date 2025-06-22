@@ -495,22 +495,14 @@ export const useImageGeneration = (
           return;
         }
 
-        // Verify we're still on the same tweet
-        if (currentTweetId !== tweetId) {
-          console.log(
-            `Load completed for different tweet, ignoring result. Loaded: ${tweetId}, Current: ${currentTweetId}`
-          );
-          return;
-        }
+        // Note: Removed currentTweetId check here to fix race condition
+        // The event system ensures we only load images for the correct tweet
 
         if (response.ok) {
           const imageData = await response.json();
 
-          // Final check before setting state
-          if (
-            !loadAbortController.signal.aborted &&
-            currentTweetId === tweetId
-          ) {
+          // Final check before setting state - only check if request was aborted
+          if (!loadAbortController.signal.aborted) {
             if (imageData.image) {
               const generatedImage: GeneratedImage = {
                 id: imageData.image.id,
@@ -540,10 +532,7 @@ export const useImageGeneration = (
           }
         } else if (response.status === 404) {
           // No image found for this tweet - this is normal
-          if (
-            currentTweetId === tweetId &&
-            !loadAbortController.signal.aborted
-          ) {
+          if (!loadAbortController.signal.aborted) {
             setState(prev => ({
               ...prev,
               currentImage: null,
@@ -563,8 +552,8 @@ export const useImageGeneration = (
 
         console.error('Error loading image for tweet:', error);
 
-        // Only update state if still on same tweet and not aborted
-        if (currentTweetId === tweetId && !loadAbortController.signal.aborted) {
+        // Only update state if not aborted
+        if (!loadAbortController.signal.aborted) {
           setState(prev => ({
             ...prev,
             currentImage: null,
@@ -575,7 +564,7 @@ export const useImageGeneration = (
         }
       }
     },
-    [currentTweetId]
+    [] // Removed currentTweetId dependency to fix race condition
   );
 
   // Clear image state

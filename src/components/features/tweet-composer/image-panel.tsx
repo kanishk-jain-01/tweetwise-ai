@@ -7,14 +7,14 @@ import { LoadingSpinner } from '@/components/ui/loading';
 import type { ImageStyle } from '@/lib/database/schema';
 import { cn } from '@/lib/utils/cn';
 import {
-  Clock,
-  Image as ImageIcon,
-  Palette,
-  Sparkles,
-  Trash2,
-  Upload,
-  Wand2,
-  Zap,
+    Clock,
+    Image as ImageIcon,
+    Palette,
+    Sparkles,
+    Trash2,
+    Upload,
+    Wand2,
+    Zap,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -118,6 +118,9 @@ export const ImagePanel = ({
 
   // Removal state (removed replace functionality)
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  
+  // Image modal state
+  const [showImageModal, setShowImageModal] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -394,36 +397,68 @@ export const ImagePanel = ({
     fileInputRef.current?.click();
   }, []);
 
+  // Image modal handlers
+  const handleImageClick = useCallback(() => {
+    if (displayImage) {
+      setShowImageModal(true);
+    }
+  }, [displayImage]);
+
+  const handleCloseModal = useCallback(() => {
+    setShowImageModal(false);
+  }, []);
+
+  // Keyboard support for image modal
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && showImageModal) {
+        handleCloseModal();
+      }
+    };
+
+    if (showImageModal) {
+      document.addEventListener('keydown', handleKeyDown);
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [showImageModal, handleCloseModal]);
+
   return (
     <Card className="p-4 h-full flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between mb-3 flex-shrink-0">
+      {/* Fixed Height Header */}
+      <div className="flex items-center justify-between mb-3 h-8 flex-shrink-0">
         <div className="flex items-center space-x-2">
           <ImageIcon className="w-5 h-5 text-muted-foreground" />
           <h3 className="font-semibold text-sm">Image</h3>
         </div>
-        {displayImage && !showRemoveConfirm && (
-          <div className="flex items-center space-x-1">
+        <div className="flex items-center space-x-2 min-w-0">
+          {displayImage && !showRemoveConfirm && (
             <Button
               variant="ghost"
               size="sm"
               onClick={handleRemoveImage}
               disabled={disabled || isGenerating || isLoadingTweet}
-              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 transition-all duration-200 opacity-100"
               aria-label="Remove image"
               title="Remove image"
             >
               <Trash2 className="w-4 h-4" />
             </Button>
-          </div>
-        )}
-        {isLoadingTweet && (
-          <div className="flex items-center space-x-2">
-            <LoadingSpinner size="sm" />
-            <span className="text-xs text-muted-foreground">
-              Loading image...
-            </span>
-          </div>
-        )}
+          )}
+          {isLoadingTweet && (
+            <div className="flex items-center space-x-2 transition-opacity duration-200">
+              <LoadingSpinner size="sm" />
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                Loading...
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Confirmation Dialog for Removal */}
@@ -462,23 +497,43 @@ export const ImagePanel = ({
         </div>
       )}
 
-      {/* Image Display Area - Compact height */}
-      <div className="mb-3 flex-shrink-0" style={{ height: '120px' }}>
+      {/* Fixed Height Image Display Area */}
+      <div className="mb-3 h-28 flex-shrink-0 transition-all duration-300">
         {isLoadingTweet ? (
           // Loading state for tweet switching
-          <div className="w-full h-full rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 flex flex-col items-center justify-center text-center p-4">
+          <div className="w-full h-full rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 flex flex-col items-center justify-center text-center p-4 transition-all duration-200">
             <LoadingSpinner size="md" />
             <p className="text-sm text-muted-foreground mt-2">
               Loading image...
             </p>
           </div>
         ) : displayImage ? (
-          <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-dashed border-gray-200 bg-gray-50">
+          <div 
+            className="relative w-full h-full rounded-lg overflow-hidden border-2 border-dashed border-gray-200 bg-gray-50 cursor-pointer hover:border-gray-300 transition-colors group"
+            onClick={handleImageClick}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleImageClick();
+              }
+            }}
+            tabIndex={0}
+            role="button"
+            aria-label="Click to enlarge image"
+            title="Click to enlarge image"
+          >
             <img
               src={displayImage}
               alt={isAIGenerated ? currentImage?.prompt : 'Uploaded image'}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
             />
+            
+            {/* Hover overlay */}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200 flex items-center justify-center">
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/90 rounded-full p-2">
+                <ImageIcon className="w-4 h-4 text-gray-700" />
+              </div>
+            </div>
 
             {/* Image Metadata Overlay */}
             {isAIGenerated && currentImage && (
@@ -579,9 +634,9 @@ export const ImagePanel = ({
         )}
       </div>
 
-      {/* Generation Progress Bar (when generating) */}
+      {/* Generation Progress Bar (only when generating) */}
       {isGenerating && (
-        <div className="mb-3 flex-shrink-0">
+        <div className="mb-3 flex-shrink-0 transition-all duration-300">
           <div className="flex items-center justify-between text-xs text-purple-600 mb-1">
             <span className="font-medium">Generating Image</span>
             <span>{Math.round(generationProgress)}%</span>
@@ -593,9 +648,9 @@ export const ImagePanel = ({
             />
           </div>
           <div className="flex items-center justify-between text-xs text-purple-500 mt-1">
-            <span>{generationMessage}</span>
+            <span className="truncate">{generationMessage}</span>
             {estimatedTimeRemaining > 0 && (
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center space-x-1 flex-shrink-0">
                 <Zap className="w-3 h-3" />
                 <span>~{estimatedTimeRemaining}s</span>
               </div>
@@ -605,7 +660,7 @@ export const ImagePanel = ({
       )}
 
       {/* AI Generation Section - Scrollable */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto min-h-0">
         <div className="space-y-3">
           <div className="flex items-center space-x-2">
             <Wand2 className="w-4 h-4 text-purple-500" />
@@ -643,13 +698,13 @@ export const ImagePanel = ({
             ))}
           </div>
 
-          {/* Generate Button - Compact */}
+          {/* Generate Button - Fixed Height */}
           <Button
             onClick={handleGenerateImage}
             disabled={disabled || isGenerating || !tweetContent.trim()}
             size="sm"
             className={cn(
-              'w-full bg-purple-600 hover:bg-purple-700 text-white transition-all duration-200',
+              'w-full h-10 bg-purple-600 hover:bg-purple-700 text-white transition-all duration-200',
               isGenerating && 'bg-purple-500 cursor-not-allowed'
             )}
             aria-label="Generate AI image from tweet content"
@@ -688,12 +743,12 @@ export const ImagePanel = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={handleUploadClick}
-              disabled={disabled || isGenerating}
-              className="w-full border-blue-200 text-blue-600 hover:bg-blue-50"
+              onClick={() => {}} // Disabled - no click handler
+              disabled={true} // Always disabled
+              className="w-full h-10 border-gray-200 text-gray-400 cursor-not-allowed transition-all duration-200"
             >
               <Upload className="w-3 h-3 mr-1" />
-              <span className="text-xs">Upload Image</span>
+              <span className="text-xs">Upload Image (Coming Soon)</span>
             </Button>
           </div>
 
@@ -709,12 +764,80 @@ export const ImagePanel = ({
             )}
             {displayImage && (
               <p className="text-green-600 font-medium">
-                • Generate or upload again to replace current image
+                • Click image to enlarge
               </p>
             )}
           </div>
         </div>
       </div>
+
+      {/* Image Modal */}
+      {showImageModal && displayImage && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={handleCloseModal}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Enlarged image view"
+        >
+          <div 
+            className="relative max-w-4xl max-h-[90vh] mx-4"
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking the image
+          >
+            {/* Close button */}
+            <button
+              onClick={handleCloseModal}
+              className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors z-10"
+              aria-label="Close enlarged image"
+              title="Close (Esc)"
+            >
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Enlarged image */}
+            <img
+              src={displayImage}
+              alt={isAIGenerated ? currentImage?.prompt : 'Uploaded image'}
+              className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+            />
+
+            {/* Image info overlay */}
+            {isAIGenerated && currentImage && (
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent text-white p-4 rounded-b-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-2">
+                    <Badge variant="secondary" className="bg-white/20 text-white">
+                      {STYLE_OPTIONS.find(s => s.value === currentImage.style)?.name}
+                    </Badge>
+                    {currentImage.savedToDatabase && (
+                      <Badge variant="secondary" className="bg-green-500/20 text-white">
+                        Saved
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-1 text-sm">
+                    <Clock className="w-4 h-4" />
+                    <span>{Math.round(currentImage.generationTimeMs / 1000)}s</span>
+                  </div>
+                </div>
+                <p className="text-sm opacity-90">{currentImage.prompt}</p>
+              </div>
+            )}
+
+            {/* Upload info for uploaded images */}
+            {!isAIGenerated && uploadedImage && (
+              <div className="absolute top-4 right-4">
+                <Badge variant="secondary" className="bg-blue-500/80 text-white">
+                  <Upload className="w-4 h-4 mr-1" />
+                  Uploaded Image
+                </Badge>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </Card>
   );
 };

@@ -201,34 +201,22 @@ export const ScheduleModal = ({
                   </div>
                 </div>
 
-                {/* Scheduled Option */}
+                {/* Scheduled Option - Disabled */}
                 <div
-                  className={`relative cursor-pointer rounded-lg border p-4 transition-colors ${
-                    postingMode === 'scheduled'
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                  onClick={() => setPostingMode('scheduled')}
+                  className="relative cursor-not-allowed rounded-lg border p-4 border-gray-200 bg-gray-50 opacity-60"
+                  onClick={() => {}} // Disabled - no click handler
                 >
                   <div className="flex items-center space-x-3">
-                    <div
-                      className={`w-4 h-4 rounded-full border-2 ${
-                        postingMode === 'scheduled'
-                          ? 'border-blue-500 bg-blue-500'
-                          : 'border-gray-300'
-                      }`}
-                    >
-                      {postingMode === 'scheduled' && (
-                        <div className="w-full h-full rounded-full bg-white scale-50"></div>
-                      )}
+                    <div className="w-4 h-4 rounded-full border-2 border-gray-300">
+                      {/* Always unchecked */}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
-                        <Calendar className="w-4 h-4 text-blue-500" />
-                        <span className="font-medium">Schedule for Later</span>
+                        <Calendar className="w-4 h-4 text-gray-400" />
+                        <span className="font-medium text-gray-500">Schedule for Later (Coming Soon)</span>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Choose a specific date and time
+                      <p className="text-sm text-gray-400 mt-1">
+                        Scheduling feature will be available soon
                       </p>
                     </div>
                   </div>
