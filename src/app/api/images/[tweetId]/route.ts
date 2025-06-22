@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // GET /api/images/[tweetId] - Get image for a specific tweet
 export async function GET(
   request: NextRequest,
-  { params }: { params: { tweetId: string } }
+  { params }: { params: Promise<{ tweetId: string }> }
 ) {
   try {
     // Check authentication
@@ -18,7 +18,7 @@ export async function GET(
       );
     }
 
-    const { tweetId } = params;
+    const { tweetId } = await params;
 
     if (!tweetId || typeof tweetId !== 'string') {
       return NextResponse.json(
@@ -57,7 +57,7 @@ export async function GET(
 // PATCH /api/images/[imageId] - Update image with tweet association
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { tweetId: string } }
+  { params }: { params: Promise<{ tweetId: string }> }
 ) {
   try {
     // Check authentication
@@ -74,7 +74,8 @@ export async function PATCH(
     const { tweet_id } = body;
 
     // The route parameter is actually imageId for PATCH requests
-    const imageId = params.tweetId; // This is confusing but it's the image ID for PATCH
+    const resolvedParams = await params;
+    const imageId = resolvedParams.tweetId; // This is confusing but it's the image ID for PATCH
 
     if (!imageId || typeof imageId !== 'string') {
       return NextResponse.json(

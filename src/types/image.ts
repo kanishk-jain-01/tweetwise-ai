@@ -91,6 +91,7 @@ export interface ImageState {
   uploadedImage: UploadedImage | null;
   isGenerating: boolean;
   isUploading: boolean;
+  isLoadingTweet: boolean;
   generationProgress: number;
   generationMessage: string;
   estimatedTimeRemaining: number;
@@ -101,7 +102,6 @@ export interface ImageActions {
   generateImage: (request: ImageGenerationRequest) => Promise<void>;
   uploadImage: (file: File) => Promise<void>;
   removeImage: () => void;
-  replaceImage: (type: 'upload' | 'generate', data?: any) => Promise<void>;
   loadImageForTweet: (tweetId: string) => Promise<void>;
   saveImageWithTweet: (tweetId: string) => Promise<void>;
   clearImageState: () => void;

@@ -56,8 +56,8 @@ Add AI image generation capability to TweetWise AI using OpenAI's gpt-image-1 mo
   - [x] 4.2 Create `src/types/image.ts` with comprehensive TypeScript interfaces
   - [x] 4.3 Implement automatic image-tweet association when images are generated
   - [ ] 4.4 Update tweet history to display image thumbnails/indicators
-  - [ ] 4.5 Implement image loading when switching between tweets in history
-  - [ ] 4.6 Add image persistence across browser sessions with draft tweets
+  - [x] 4.5 Implement image loading when switching between tweets in history
+  - [x] 4.6 Add image persistence across browser sessions with draft tweets
   - [ ] 4.7 Handle image deletion when tweets are deleted
   - [ ] 4.8 Add image metadata display (generation time, style used, etc.)
 

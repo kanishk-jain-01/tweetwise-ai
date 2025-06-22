@@ -10,7 +10,6 @@ import {
     Clock,
     Image as ImageIcon,
     Palette,
-    RefreshCw,
     Sparkles,
     Trash2,
     Upload,
@@ -55,6 +54,22 @@ interface ImagePanelProps {
   onImageRemoved?: () => void;
   currentImage?: GeneratedImage | null;
   disabled?: boolean;
+  // Add hook actions
+  imageActions?: {
+    generateImage: (request: any) => Promise<void>;
+    uploadImage: (file: File) => Promise<void>;
+    removeImage: () => void;
+  };
+  // Add hook state
+  imageState?: {
+    isGenerating: boolean;
+    isUploading: boolean;
+    isLoadingTweet: boolean;
+    generationProgress: number;
+    generationMessage: string;
+    estimatedTimeRemaining: number;
+    error: string | null;
+  };
 }
 
 // Generation status messages
@@ -72,29 +87,50 @@ export const ImagePanel = ({
   onImageGenerated,
   onImageRemoved,
   currentImage,
-  disabled = false
+  disabled = false,
+  imageActions,
+  imageState
 }: ImagePanelProps) => {
-  const [isGenerating, setIsGenerating] = useState(false);
+  // Use hook state if provided, otherwise fallback to local state
+  const [localIsGenerating, setLocalIsGenerating] = useState(false);
   const [selectedStyle, setSelectedStyle] = useState<ImageStyle>('ghibli');
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   
-  // Enhanced loading states
-  const [generationProgress, setGenerationProgress] = useState(0);
-  const [generationMessage, setGenerationMessage] = useState('');
-  const [estimatedTimeRemaining, setEstimatedTimeRemaining] = useState(0);
+  // Enhanced loading states - use hook state if available
+  const [localGenerationProgress, setLocalGenerationProgress] = useState(0);
+  const [localGenerationMessage, setLocalGenerationMessage] = useState('');
+  const [localEstimatedTimeRemaining, setLocalEstimatedTimeRemaining] = useState(0);
   const [generationStartTime, setGenerationStartTime] = useState<number | null>(null);
   
-  // Removal/Replace states
+  // Use hook state or fallback to local state
+  const isGenerating = imageState?.isGenerating ?? localIsGenerating;
+  const isLoadingTweet = imageState?.isLoadingTweet ?? false;
+  const generationProgress = imageState?.generationProgress ?? localGenerationProgress;
+  const generationMessage = imageState?.generationMessage ?? localGenerationMessage;
+  const estimatedTimeRemaining = imageState?.estimatedTimeRemaining ?? localEstimatedTimeRemaining;
+  
+  // Removal state (removed replace functionality)
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
-  const [showReplaceOptions, setShowReplaceOptions] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const replaceFileInputRef = useRef<HTMLInputElement>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const messageIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Get the current image to display (generated or uploaded)
-  const displayImage = currentImage?.base64Data || uploadedImage;
+  const getDisplayImage = () => {
+    if (currentImage?.base64Data) {
+      // AI generated image - ensure proper data URL format
+      const base64Data = currentImage.base64Data;
+      if (base64Data.startsWith('data:')) {
+        return base64Data; // Already formatted
+      } else {
+        return `data:image/png;base64,${base64Data}`; // Add data URL prefix
+      }
+    }
+    return uploadedImage; // Already formatted for uploaded images
+  };
+  
+  const displayImage = getDisplayImage();
   const isAIGenerated = !!currentImage;
 
   // Cleanup intervals on unmount
@@ -111,9 +147,9 @@ export const ImagePanel = ({
 
   // Progress simulation function
   const startProgressSimulation = useCallback(() => {
-    setGenerationProgress(0);
-    setGenerationMessage(GENERATION_MESSAGES[0] || 'Generating...');
-    setEstimatedTimeRemaining(20); // Start with 20 seconds estimate
+    setLocalGenerationProgress(0);
+    setLocalGenerationMessage(GENERATION_MESSAGES[0] || 'Generating...');
+    setLocalEstimatedTimeRemaining(20); // Start with 20 seconds estimate
     setGenerationStartTime(Date.now());
 
     let progress = 0;
@@ -128,11 +164,11 @@ export const ImagePanel = ({
         progress = 95; // Don't complete until actual response
       }
       
-      setGenerationProgress(progress);
+      setLocalGenerationProgress(progress);
       
       // Update time remaining (decrease by 1-2 seconds)
       timeRemaining = Math.max(0, timeRemaining - (Math.random() * 2 + 1));
-      setEstimatedTimeRemaining(Math.round(timeRemaining));
+      setLocalEstimatedTimeRemaining(Math.round(timeRemaining));
     }, 1000);
 
     // Message rotation
@@ -140,7 +176,7 @@ export const ImagePanel = ({
       messageIndex = (messageIndex + 1) % GENERATION_MESSAGES.length;
       const message = GENERATION_MESSAGES[messageIndex];
       if (message) {
-        setGenerationMessage(message);
+        setLocalGenerationMessage(message);
       }
     }, 3000);
   }, []);
@@ -157,9 +193,9 @@ export const ImagePanel = ({
     }
     
     // Complete the progress bar
-    setGenerationProgress(100);
-    setGenerationMessage('Image generated successfully!');
-    setEstimatedTimeRemaining(0);
+    setLocalGenerationProgress(100);
+    setLocalGenerationMessage('Image generated successfully!');
+    setLocalEstimatedTimeRemaining(0);
   }, []);
 
   const handleGenerateImage = useCallback(async () => {
@@ -172,9 +208,25 @@ export const ImagePanel = ({
       toast.error('Tweet content is too short for image generation');
       return;
     }
+    
+    // Use hook action if available, otherwise fallback to direct API call
+    if (imageActions?.generateImage) {
+      try {
+        await imageActions.generateImage({
+          tweetContent,
+          tweetId: currentTweetId,
+          style: selectedStyle,
+          size: '1024x1024',
+          quality: 'medium',
+        });
+      } catch (error) {
+        console.error('Image generation error:', error);
+      }
+      return;
+    }
 
-    setIsGenerating(true);
-    setShowReplaceOptions(false); // Hide replace options during generation
+    // Fallback to direct API call (legacy behavior)
+    setLocalIsGenerating(true);
     startProgressSimulation();
 
     try {
@@ -227,7 +279,7 @@ export const ImagePanel = ({
       }
     } catch (error) {
       stopProgressSimulation();
-      setGenerationMessage('Generation failed');
+      setLocalGenerationMessage('Generation failed');
       console.error('Image generation error:', error);
       toast.error(
         error instanceof Error 
@@ -235,19 +287,19 @@ export const ImagePanel = ({
           : 'Failed to generate image. Please try again.'
       );
     } finally {
-      setIsGenerating(false);
+      setLocalIsGenerating(false);
       
       // Reset progress states after a short delay
       setTimeout(() => {
-        setGenerationProgress(0);
-        setGenerationMessage('');
-        setEstimatedTimeRemaining(0);
+        setLocalGenerationProgress(0);
+        setLocalGenerationMessage('');
+        setLocalEstimatedTimeRemaining(0);
         setGenerationStartTime(null);
       }, 2000);
     }
   }, [tweetContent, currentTweetId, selectedStyle, onImageGenerated, startProgressSimulation, stopProgressSimulation, generationStartTime]);
 
-  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>, isReplacement = false) => {
+  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -268,15 +320,10 @@ export const ImagePanel = ({
       const base64Data = e.target?.result as string;
       setUploadedImage(base64Data);
       
-      // Clear any AI generated image when user uploads one
+      // Clear any AI generated image when user uploads one (replaces automatically)
       onImageRemoved?.();
       
-      // Hide replace options after successful replacement
-      if (isReplacement) {
-        setShowReplaceOptions(false);
-      }
-      
-      toast.success(isReplacement ? 'Image replaced successfully' : 'Image uploaded successfully');
+      toast.success('Image uploaded successfully');
     };
     reader.onerror = () => {
       toast.error('Failed to read image file');
@@ -294,14 +341,10 @@ export const ImagePanel = ({
     setUploadedImage(null);
     onImageRemoved?.();
     setShowRemoveConfirm(false);
-    setShowReplaceOptions(false);
     
     // Reset file inputs
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
-    }
-    if (replaceFileInputRef.current) {
-      replaceFileInputRef.current.value = '';
     }
     
     toast.success('Image removed');
@@ -311,18 +354,7 @@ export const ImagePanel = ({
     setShowRemoveConfirm(false);
   }, []);
 
-  const handleReplaceImage = useCallback(() => {
-    setShowReplaceOptions(true);
-  }, []);
 
-  const handleReplaceWithUpload = useCallback(() => {
-    replaceFileInputRef.current?.click();
-  }, []);
-
-  const handleReplaceWithAI = useCallback(() => {
-    setShowReplaceOptions(false);
-    handleGenerateImage();
-  }, [handleGenerateImage]);
 
   const handleUploadClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -335,30 +367,25 @@ export const ImagePanel = ({
           <ImageIcon className="w-5 h-5 text-muted-foreground" />
           <h3 className="font-semibold text-sm">Image</h3>
         </div>
-        {displayImage && !showRemoveConfirm && !showReplaceOptions && (
+        {displayImage && !showRemoveConfirm && (
           <div className="flex items-center space-x-1">
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleReplaceImage}
-              disabled={disabled || isGenerating}
-              className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-              aria-label="Replace image"
-              title="Replace image"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
               onClick={handleRemoveImage}
-              disabled={disabled || isGenerating}
+              disabled={disabled || isGenerating || isLoadingTweet}
               className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
               aria-label="Remove image"
               title="Remove image"
             >
               <Trash2 className="w-4 h-4" />
             </Button>
+          </div>
+        )}
+        {isLoadingTweet && (
+          <div className="flex items-center space-x-2">
+            <LoadingSpinner size="sm" />
+            <span className="text-xs text-muted-foreground">Loading image...</span>
           </div>
         )}
       </div>
@@ -395,52 +422,17 @@ export const ImagePanel = ({
         </div>
       )}
 
-      {/* Replace Options */}
-      {showReplaceOptions && (
-        <div className="mb-3 flex-shrink-0">
-          <div className="p-3 border border-blue-200 rounded-lg bg-blue-50">
-            <div className="flex items-center space-x-2 mb-2">
-              <RefreshCw className="w-4 h-4 text-blue-600" />
-              <span className="text-sm font-medium text-blue-800">Replace Image</span>
-            </div>
-            <p className="text-xs text-blue-700 mb-3">
-              Choose how you'd like to replace your current image:
-            </p>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowReplaceOptions(false)}
-                className="text-xs h-7"
-              >
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleReplaceWithUpload}
-                disabled={disabled}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-7"
-              >
-                <Upload className="w-3 h-3 mr-1" />
-                Upload New
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleReplaceWithAI}
-                disabled={disabled || !tweetContent.trim() || tweetContent.length < 10}
-                className="bg-purple-600 hover:bg-purple-700 text-white text-xs h-7"
-              >
-                <Wand2 className="w-3 h-3 mr-1" />
-                Generate AI
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Image Display Area - Fixed height */}
-      <div className="mb-3 flex-shrink-0" style={{ height: '160px' }}>
-        {displayImage ? (
+
+      {/* Image Display Area - Compact height */}
+      <div className="mb-3 flex-shrink-0" style={{ height: '120px' }}>
+        {isLoadingTweet ? (
+          // Loading state for tweet switching
+          <div className="w-full h-full rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 flex flex-col items-center justify-center text-center p-4">
+            <LoadingSpinner size="md" />
+            <p className="text-sm text-muted-foreground mt-2">Loading image...</p>
+          </div>
+        ) : displayImage ? (
           <div className="relative w-full h-full rounded-lg overflow-hidden border-2 border-dashed border-gray-200 bg-gray-50">
             <img
               src={displayImage}
@@ -564,15 +556,15 @@ export const ImagePanel = ({
             <span className="text-sm font-medium">AI Generation</span>
           </div>
 
-          {/* Style Selector */}
-          <div className="grid grid-cols-2 gap-2">
+          {/* Style Selector - Horizontal Layout */}
+          <div className="flex gap-2">
             {STYLE_OPTIONS.map((style) => (
               <button
                 key={style.value}
                 onClick={() => setSelectedStyle(style.value)}
                 disabled={disabled || isGenerating}
                 className={cn(
-                  'p-2 rounded-lg border text-left transition-colors',
+                  'flex-1 p-2 rounded-lg border text-center transition-colors',
                   'hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500',
                   'disabled:opacity-50 disabled:cursor-not-allowed',
                   selectedStyle === style.value
@@ -582,20 +574,22 @@ export const ImagePanel = ({
                 )}
                 aria-label={`Select ${style.name} style`}
               >
-                <div className="flex items-center space-x-2 mb-1">
-                  {style.icon}
+                <div className="flex flex-col items-center space-y-1">
+                  <div className="flex items-center space-x-1">
+                    {style.icon}
+                    <span className="text-sm">{style.preview}</span>
+                  </div>
                   <span className="text-xs font-medium">{style.name}</span>
-                  <span className="text-sm">{style.preview}</span>
                 </div>
-                <p className="text-xs text-gray-500">{style.description}</p>
               </button>
             ))}
           </div>
 
-          {/* Generate Button */}
+          {/* Generate Button - Compact */}
           <Button
             onClick={handleGenerateImage}
             disabled={disabled || isGenerating || !tweetContent.trim()}
+            size="sm"
             className={cn(
               "w-full bg-purple-600 hover:bg-purple-700 text-white transition-all duration-200",
               isGenerating && "bg-purple-500 cursor-not-allowed"
@@ -604,22 +598,22 @@ export const ImagePanel = ({
           >
             {isGenerating ? (
               <>
-                <LoadingSpinner className="w-4 h-4 mr-2" />
-                <span className="animate-pulse">Generating...</span>
+                <LoadingSpinner className="w-3 h-3 mr-1" />
+                <span className="animate-pulse text-xs">Generating...</span>
               </>
             ) : (
               <>
-                <Wand2 className="w-4 h-4 mr-2" />
-                Generate AI Image
+                <Wand2 className="w-3 h-3 mr-1" />
+                <span className="text-xs">Generate AI Image</span>
               </>
             )}
           </Button>
 
-          {/* Upload Section */}
+          {/* Upload Section - Compact */}
           <div className="pt-2 border-t">
-            <div className="flex items-center space-x-2 mb-2">
-              <Upload className="w-4 h-4 text-blue-500" />
-              <span className="text-sm font-medium">Upload Image</span>
+            <div className="flex items-center space-x-2 mb-1">
+              <Upload className="w-3 h-3 text-blue-500" />
+              <span className="text-xs font-medium">Upload Image</span>
             </div>
             
             {/* Main upload input */}
@@ -627,31 +621,23 @@ export const ImagePanel = ({
               ref={fileInputRef}
               type="file"
               accept="image/*"
-              onChange={(e) => handleFileUpload(e, false)}
+              onChange={handleFileUpload}
               className="hidden"
               disabled={disabled || isGenerating}
               aria-label="Upload image file"
             />
 
-            {/* Replace upload input */}
-            <input
-              ref={replaceFileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={(e) => handleFileUpload(e, true)}
-              className="hidden"
-              disabled={disabled || isGenerating}
-              aria-label="Replace with uploaded image file"
-            />
+
             
             <Button
               variant="outline"
+              size="sm"
               onClick={handleUploadClick}
               disabled={disabled || isGenerating}
-              className="w-full"
+              className="w-full border-blue-200 text-blue-600 hover:bg-blue-50"
             >
-              <Upload className="w-4 h-4 mr-2" />
-              Upload Image
+              <Upload className="w-3 h-3 mr-1" />
+              <span className="text-xs">Upload Image</span>
             </Button>
           </div>
 
@@ -664,7 +650,7 @@ export const ImagePanel = ({
               <p className="text-purple-600 font-medium">• Generation typically takes 15-30 seconds</p>
             )}
             {displayImage && (
-              <p className="text-blue-600 font-medium">• Use replace button to change current image</p>
+              <p className="text-green-600 font-medium">• Generate or upload again to replace current image</p>
             )}
           </div>
         </div>

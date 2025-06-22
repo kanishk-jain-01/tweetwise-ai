@@ -4,14 +4,14 @@
  */
 
 import type {
-    GeneratedImage,
-    ImageError,
-    ImageGenerationRequest,
-    ImageMetadata,
-    ImageState,
-    ImageValidation,
-    UploadedImage,
-    UseImageGenerationReturn
+  GeneratedImage,
+  ImageError,
+  ImageGenerationRequest,
+  ImageMetadata,
+  ImageState,
+  ImageValidation,
+  UploadedImage,
+  UseImageGenerationReturn
 } from '@/types/image';
 import { IMAGE_CONFIG } from '@/types/image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -35,18 +35,23 @@ export const useImageGeneration = (
     uploadedImage: null,
     isGenerating: false,
     isUploading: false,
+    isLoadingTweet: false,
     generationProgress: 0,
     generationMessage: '',
     estimatedTimeRemaining: 0,
     error: null,
   });
 
-  // Refs for cleanup
+  // Refs for cleanup and race condition prevention
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const messageIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const generationStartTimeRef = useRef<number | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const currentGenerationTweetIdRef = useRef<string | null>(null);
+  const loadAbortControllerRef = useRef<AbortController | null>(null);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Cleanup intervals on unmount
+  // Cleanup intervals and abort requests on unmount
   useEffect(() => {
     return () => {
       if (progressIntervalRef.current) {
@@ -54,6 +59,15 @@ export const useImageGeneration = (
       }
       if (messageIntervalRef.current) {
         clearInterval(messageIntervalRef.current);
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      if (loadAbortControllerRef.current) {
+        loadAbortControllerRef.current.abort();
+      }
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
       }
     };
   }, []);
@@ -172,6 +186,19 @@ export const useImageGeneration = (
       return;
     }
 
+    // Cancel any ongoing generation request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new AbortController for this request
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+    
+    // Track which tweet this generation is for
+    const targetTweetId = request.tweetId || currentTweetId;
+    currentGenerationTweetIdRef.current = targetTweetId;
+
     setState(prev => ({
       ...prev,
       isGenerating: true,
@@ -188,12 +215,18 @@ export const useImageGeneration = (
         },
         body: JSON.stringify({
           tweetContent: request.tweetContent,
-          tweetId: request.tweetId || currentTweetId,
+          tweetId: targetTweetId,
           style: request.style,
           size: request.size || '1024x1024',
           quality: request.quality || 'medium',
         }),
+        signal: abortController.signal,
       });
+
+      // Check if request was aborted
+      if (abortController.signal.aborted) {
+        return;
+      }
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -201,6 +234,21 @@ export const useImageGeneration = (
       }
 
       const data = await response.json();
+      
+      // Double-check abort status before updating state
+      if (abortController.signal.aborted) {
+        return;
+      }
+
+      // Verify this response is for the current tweet (prevent race conditions)
+      const currentTweet = currentTweetId;
+      if (targetTweetId !== currentTweet && currentTweet !== null) {
+        console.warn('Image generation completed for different tweet, ignoring result', {
+          generatedFor: targetTweetId,
+          currentTweet: currentTweet
+        });
+        return;
+      }
       
       if (data.success && data.image) {
         stopProgressSimulation();
@@ -233,6 +281,11 @@ export const useImageGeneration = (
         throw new Error('Invalid response from image generation API');
       }
     } catch (error) {
+      // Ignore AbortError - it's expected when cancelling requests
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
+
       stopProgressSimulation();
       const imageError: ImageError = {
         type: 'generation',
@@ -250,18 +303,21 @@ export const useImageGeneration = (
       console.error('Image generation error:', error);
       toast.error(imageError.message);
     } finally {
-      setState(prev => ({ ...prev, isGenerating: false }));
-      
-      // Reset progress states after a short delay
-      setTimeout(() => {
-        setState(prev => ({
-          ...prev,
-          generationProgress: 0,
-          generationMessage: '',
-          estimatedTimeRemaining: 0,
-        }));
-        generationStartTimeRef.current = null;
-      }, 2000);
+      // Only set loading to false if this request wasn't aborted
+      if (!abortController.signal.aborted) {
+        setState(prev => ({ ...prev, isGenerating: false }));
+        
+        // Reset progress states after a short delay
+        setTimeout(() => {
+          setState(prev => ({
+            ...prev,
+            generationProgress: 0,
+            generationMessage: '',
+            estimatedTimeRemaining: 0,
+          }));
+          generationStartTimeRef.current = null;
+        }, 2000);
+      }
     }
   }, [currentTweetId, startProgressSimulation, stopProgressSimulation]);
 
@@ -338,22 +394,56 @@ export const useImageGeneration = (
     toast.success('Image removed');
   }, []);
 
-  // Replace image
-  const replaceImage = useCallback(async (type: 'upload' | 'generate', data?: any) => {
-    if (type === 'upload' && data instanceof File) {
-      await uploadImage(data);
-    } else if (type === 'generate' && data) {
-      await generateImage(data);
-    }
-  }, [uploadImage, generateImage]);
 
-  // Load image for tweet
-  const loadImageForTweet = useCallback(async (tweetId: string) => {
+
+  // Load image for tweet with proper race condition handling
+  const loadImageForTweet = useCallback(async (tweetId: string, retryCount: number = 0) => {
+    const maxRetries = 3;
+    const baseDelay = 500;
+    
+    // Cancel any existing load request and retry timeout
+    if (loadAbortControllerRef.current) {
+      loadAbortControllerRef.current.abort();
+    }
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+
+    // Create new AbortController for this load request
+    const loadAbortController = new AbortController();
+    loadAbortControllerRef.current = loadAbortController;
+    
+    setState(prev => ({
+      ...prev,
+      isLoadingTweet: true,
+      error: null,
+    }));
+
     try {
-      const response = await fetch(`/api/images/${tweetId}`);
+      const response = await fetch(`/api/images/${tweetId}`, {
+        signal: loadAbortController.signal,
+      });
+      
+      // Check if request was aborted
+      if (loadAbortController.signal.aborted) {
+        return;
+      }
+
+      // Verify we're still on the same tweet (critical race condition check)
+      if (currentTweetId !== tweetId) {
+        console.log(`Load completed for different tweet, ignoring result. Loaded: ${tweetId}, Current: ${currentTweetId}`);
+        return;
+      }
       
       if (response.ok) {
         const imageData = await response.json();
+        
+        // Double-check abort status and tweet context after JSON parse
+        if (loadAbortController.signal.aborted || currentTweetId !== tweetId) {
+          return;
+        }
+        
         if (imageData.image) {
           const generatedImage: GeneratedImage = {
             id: imageData.image.id,
@@ -365,18 +455,73 @@ export const useImageGeneration = (
             savedToDatabase: true,
           };
           
-          setState(prev => ({
-            ...prev,
-            currentImage: generatedImage,
-            uploadedImage: null,
-          }));
+          // Final check before setting state
+          if (!loadAbortController.signal.aborted && currentTweetId === tweetId) {
+            setState(prev => ({
+              ...prev,
+              currentImage: generatedImage,
+              uploadedImage: null,
+              isLoadingTweet: false,
+            }));
+          }
+          return;
         }
       }
+      
+      // Handle 404 or empty response - could be timing issue
+      if (response.status === 404 && retryCount < maxRetries && currentTweetId === tweetId) {
+        const delay = baseDelay * Math.pow(2, retryCount);
+        console.log(`Image not found for tweet ${tweetId}, retrying in ${delay}ms (attempt ${retryCount + 1}/${maxRetries + 1})`);
+        
+        retryTimeoutRef.current = setTimeout(() => {
+          // Triple-check we're still on the same tweet before retrying
+          if (currentTweetId === tweetId && !loadAbortController.signal.aborted) {
+            loadImageForTweet(tweetId, retryCount + 1);
+          }
+        }, delay);
+        return;
+      }
+      
+      // No image found after retries, or other error - only update if still on same tweet
+      if (currentTweetId === tweetId && !loadAbortController.signal.aborted) {
+        setState(prev => ({
+          ...prev,
+          currentImage: null,
+          uploadedImage: null,
+          isLoadingTweet: false,
+        }));
+      }
+      
     } catch (error) {
+      // Ignore AbortError - it's expected when cancelling requests
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
+      
       console.error('Failed to load image for tweet:', error);
-      // Don't show error toast for loading failures as they're not critical
+      
+      // Retry on network errors if still on same tweet
+      if (retryCount < maxRetries && currentTweetId === tweetId && !loadAbortController.signal.aborted) {
+        const delay = baseDelay * Math.pow(2, retryCount);
+        console.log(`Network error loading image for tweet ${tweetId}, retrying in ${delay}ms`);
+        
+        retryTimeoutRef.current = setTimeout(() => {
+          if (currentTweetId === tweetId && !loadAbortController.signal.aborted) {
+            loadImageForTweet(tweetId, retryCount + 1);
+          }
+        }, delay);
+        return;
+      }
+      
+      // Only update state if still on same tweet
+      if (currentTweetId === tweetId && !loadAbortController.signal.aborted) {
+        setState(prev => ({
+          ...prev,
+          isLoadingTweet: false,
+        }));
+      }
     }
-  }, []);
+  }, [currentTweetId]);
 
   // Save image with tweet
   const saveImageWithTweet = useCallback(async (tweetId: string) => {
@@ -418,17 +563,79 @@ export const useImageGeneration = (
 
   // Clear image state
   const clearImageState = useCallback(() => {
+    // Cancel any ongoing generation request when clearing state
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Cancel any ongoing load request
+    if (loadAbortControllerRef.current) {
+      loadAbortControllerRef.current.abort();
+    }
+    
+    // Cancel any pending retry
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+    
+    // Clear the current generation tweet tracking
+    currentGenerationTweetIdRef.current = null;
+    
     setState({
       currentImage: null,
       uploadedImage: null,
       isGenerating: false,
       isUploading: false,
+      isLoadingTweet: false,
       generationProgress: 0,
       generationMessage: '',
       estimatedTimeRemaining: 0,
       error: null,
     });
   }, []);
+
+  // Event listener for content loading events to trigger image loading
+  useEffect(() => {
+    const handleContentLoading = (event: CustomEvent) => {
+      const { tweetId } = event.detail;
+      
+      // Cancel any ongoing generation request when switching tweets
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      
+      // Cancel any ongoing load request when switching tweets
+      if (loadAbortControllerRef.current) {
+        loadAbortControllerRef.current.abort();
+      }
+      
+      // Cancel any pending retry
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
+      }
+      
+      if (tweetId) {
+        // Update current generation tracking
+        currentGenerationTweetIdRef.current = tweetId;
+        // Load existing image for the tweet
+        loadImageForTweet(tweetId);
+      } else {
+        // Clear image state when starting a new tweet (no tweetId)
+        currentGenerationTweetIdRef.current = null;
+        clearImageState();
+      }
+    };
+
+    // Add event listener
+    window.addEventListener('contentLoading', handleContentLoading as EventListener);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('contentLoading', handleContentLoading as EventListener);
+    };
+  }, [loadImageForTweet, clearImageState]);
 
   // Utility functions
   const formatFileSize = useCallback((bytes: number): string => {
@@ -458,8 +665,8 @@ export const useImageGeneration = (
   // Computed properties
   const hasImage = Boolean(state.currentImage || state.uploadedImage);
   const displayImage = getImagePreviewUrl();
-  const canGenerate = !state.isGenerating && !state.isUploading;
-  const canUpload = !state.isGenerating && !state.isUploading;
+  const canGenerate = !state.isGenerating && !state.isUploading && !state.isLoadingTweet;
+  const canUpload = !state.isGenerating && !state.isUploading && !state.isLoadingTweet;
 
   const imageMetadata: ImageMetadata | null = (() => {
     if (state.currentImage) {
@@ -492,7 +699,6 @@ export const useImageGeneration = (
     generateImage,
     uploadImage,
     removeImage,
-    replaceImage,
     loadImageForTweet,
     saveImageWithTweet,
     clearImageState,
@@ -500,7 +706,6 @@ export const useImageGeneration = (
     generateImage,
     uploadImage,
     removeImage,
-    replaceImage,
     loadImageForTweet,
     saveImageWithTweet,
     clearImageState,

@@ -396,8 +396,8 @@ export const TweetComposer = ({
         </div>
       )}
 
-      {/* Dual Panel Layout - Fixed height calculation */}
-      <div className="flex flex-col lg:flex-row gap-4 p-4" style={{ height: 'calc(100% - 120px)' }}>
+      {/* Dual Panel Layout - Better height calculation */}
+      <div className="flex flex-col lg:flex-row gap-4 p-4" style={{ height: 'calc(100% - 140px)' }}>
         {/* Left Panel - Text Composer */}
         <div className="flex-1 flex flex-col min-h-0">
           {/* Text Area with proper height constraints */}
@@ -463,7 +463,7 @@ export const TweetComposer = ({
         </div>
 
         {/* Right Panel - Image Generation */}
-        <div className="lg:w-80 flex flex-col min-h-0">
+        <div className="lg:w-64 flex flex-col min-h-0">
           <ImagePanel
             tweetContent={content}
             currentTweetId={currentTweetId}
@@ -477,6 +477,8 @@ export const TweetComposer = ({
             }}
             currentImage={imageGeneration.state.currentImage}
             disabled={isReadOnly || imageGeneration.state.isGenerating || imageGeneration.state.isUploading}
+            imageActions={imageGeneration.actions}
+            imageState={imageGeneration.state}
           />
         </div>
       </div>
