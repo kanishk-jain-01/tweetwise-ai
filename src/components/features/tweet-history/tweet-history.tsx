@@ -25,7 +25,7 @@ interface TweetHistoryProps {
 }
 
 export const TweetHistory = ({ onSelectTweet }: TweetHistoryProps) => {
-  const { tweets, isLoading, isRefreshing, refreshTweets } = useTweetHistory();
+  const { tweets, isLoading, isRefreshing, refreshTweets: _refreshTweets } = useTweetHistory();
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'drafts' | 'scheduled-sent'>('all');
 
