@@ -118,7 +118,8 @@ export async function POST(request: NextRequest) {
     let savedImage = null;
     if (tweetId && typeof tweetId === 'string') {
       try {
-        savedImage = await ImageQueries.saveImage({
+        // Use replaceImageForTweet to enforce one-to-one relationship
+        savedImage = await ImageQueries.replaceImageForTweet({
           tweet_id: tweetId,
           base64_data: result.base64Data,
           prompt: result.prompt,

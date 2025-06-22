@@ -8,7 +8,7 @@ import { AutoSaveStatus, LoadedTweetType } from '@/hooks/use-tweet-composer';
 import { Tweet } from '@/lib/database/schema';
 import { cn } from '@/lib/utils/cn';
 import { AlertCircle, Calendar, Check, CheckCircle, CircleDashed, Clock, Edit, ExternalLink, FilePlus, Send, Trash2, X } from 'lucide-react';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { ImagePanel } from './image-panel';
 
@@ -54,32 +54,13 @@ export const TweetComposer = ({
   // Load image when switching between tweets
   useEffect(() => {
     if (currentTweetId && loadedTweetType !== 'completed' && loadedTweetType !== 'sent') {
-      // Load any existing image for this tweet
+      // Load any existing image for editable tweets (drafts, scheduled)
       imageGeneration.actions.loadImageForTweet(currentTweetId);
-    } else if (!currentTweetId) {
-      // Clear image state when starting a new tweet
+    } else {
+      // Clear image state for sent/completed tweets or when no tweet is loaded
       imageGeneration.actions.clearImageState();
     }
   }, [currentTweetId, loadedTweetType]); // Removed imageGeneration.actions from deps
-
-  // Save image association when tweet is saved/updated
-  const prevTweetIdRef = useRef<string | null>(null);
-  const prevHasImageRef = useRef<boolean>(false);
-  
-  useEffect(() => {
-    // Only save if this is a meaningful change, not just a re-render
-    const tweetIdChanged = prevTweetIdRef.current !== currentTweetId;
-    const hasImageChanged = prevHasImageRef.current !== imageGeneration.hasImage;
-    
-    if (currentTweetId && imageGeneration.hasImage && (tweetIdChanged || hasImageChanged)) {
-      // Automatically save image association with the tweet
-      imageGeneration.actions.saveImageWithTweet(currentTweetId);
-    }
-    
-    // Update refs
-    prevTweetIdRef.current = currentTweetId;
-    prevHasImageRef.current = imageGeneration.hasImage;
-  }, [currentTweetId, imageGeneration.hasImage]); // Removed imageGeneration.actions from deps
 
   const getCharacterCountColor = (count: number) => {
     if (count > maxChars) return 'text-red-500';

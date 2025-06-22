@@ -103,7 +103,6 @@ export interface ImageActions {
   uploadImage: (file: File) => Promise<void>;
   removeImage: () => void;
   loadImageForTweet: (tweetId: string) => Promise<void>;
-  saveImageWithTweet: (tweetId: string) => Promise<void>;
   clearImageState: () => void;
 }
 
