@@ -58,7 +58,7 @@ Add AI image generation capability to TweetWise AI using OpenAI's gpt-image-1 mo
   - [ ] 4.4 Update tweet history to display image thumbnails/indicators
   - [x] 4.5 Implement image loading when switching between tweets in history
   - [x] 4.6 Add image persistence across browser sessions with draft tweets
-  - [ ] 4.7 Handle image deletion when tweets are deleted
+  - [x] 4.7 Handle image deletion when tweets are deleted
   - [ ] 4.8 Add image metadata display (generation time, style used, etc.)
 
 - [ ] 5.0 Twitter Media API Integration

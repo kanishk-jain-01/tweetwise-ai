@@ -12,17 +12,6 @@ import { useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { ImagePanel } from './image-panel';
 
-// Image interface for the composer
-interface GeneratedImage {
-  id?: string;
-  base64Data: string;
-  prompt: string;
-  style: 'ghibli' | 'photo_realistic';
-  generationTimeMs: number;
-  fileSizeBytes: number;
-  savedToDatabase: boolean;
-}
-
 interface TweetComposerProps {
   content: string;
   onContentChange: (content: string) => void;

@@ -54,3 +54,54 @@ export async function GET(
   }
 }
 
+// DELETE /api/images/[tweetId] - Delete image for a specific tweet
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ tweetId: string }> }
+) {
+  try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    const { tweetId } = await params;
+
+    if (!tweetId || typeof tweetId !== 'string') {
+      return NextResponse.json(
+        { error: 'Tweet ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Delete image for the tweet
+    const deleted = await ImageQueries.deleteImageByTweetId(tweetId);
+
+    if (!deleted) {
+      return NextResponse.json(
+        { error: 'No image found for this tweet' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Image deleted successfully',
+    });
+
+  } catch (error) {
+    console.error('Delete image API error:', error);
+    return NextResponse.json(
+      { 
+        error: 'Internal server error',
+        message: 'Failed to delete image'
+      },
+      { status: 500 }
+    );
+  }
+}
+

@@ -59,6 +59,7 @@ interface ImagePanelProps {
     generateImage: (request: any) => Promise<void>;
     uploadImage: (file: File) => Promise<void>;
     removeImage: () => void;
+    deleteImage: (tweetId?: string) => Promise<boolean>;
   };
   // Add hook state
   imageState?: {
@@ -337,10 +338,26 @@ export const ImagePanel = ({
     }
   }, [displayImage]);
 
-  const confirmRemoveImage = useCallback(() => {
+  const confirmRemoveImage = useCallback(async () => {
+    setShowRemoveConfirm(false);
+    
+    // If it's an AI-generated image with a tweet ID, delete from database
+    if (isAIGenerated && currentTweetId && imageActions?.deleteImage) {
+      try {
+        const success = await imageActions.deleteImage(currentTweetId);
+        if (success) {
+          // The deleteImage action handles state clearing and toast notification
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to delete image from database:', error);
+        // Fall back to local removal
+      }
+    }
+    
+    // For uploaded images or fallback, just clear local state
     setUploadedImage(null);
     onImageRemoved?.();
-    setShowRemoveConfirm(false);
     
     // Reset file inputs
     if (fileInputRef.current) {
@@ -348,7 +365,7 @@ export const ImagePanel = ({
     }
     
     toast.success('Image removed');
-  }, [onImageRemoved]);
+  }, [isAIGenerated, currentTweetId, imageActions, onImageRemoved]);
 
   const cancelRemoveImage = useCallback(() => {
     setShowRemoveConfirm(false);

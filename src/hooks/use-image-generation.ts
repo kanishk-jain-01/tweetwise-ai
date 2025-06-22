@@ -378,7 +378,7 @@ export const useImageGeneration = (
     }
   }, [validateImageFile]);
 
-  // Remove image
+  // Remove image (UI only - doesn't delete from database)
   const removeImage = useCallback(() => {
     setState(prev => ({
       ...prev,
@@ -389,6 +389,65 @@ export const useImageGeneration = (
     
     toast.success('Image removed');
   }, []);
+
+  // Delete image from database
+  const deleteImage = useCallback(async (tweetId?: string) => {
+    const targetTweetId = tweetId || currentTweetId;
+    
+    if (!targetTweetId) {
+      const error: ImageError = {
+        type: 'validation',
+        message: 'Tweet ID is required to delete image',
+        retryable: false,
+      };
+      setState(prev => ({ ...prev, error: error.message }));
+      toast.error(error.message);
+      return false;
+    }
+
+    try {
+      const response = await fetch(`/api/images/${targetTweetId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Clear the image from state
+        setState(prev => ({
+          ...prev,
+          currentImage: null,
+          uploadedImage: null,
+          error: null,
+        }));
+        
+        toast.success('Image deleted successfully');
+        return true;
+      } else if (response.status === 404) {
+        // No image found - this is fine, just clear state
+        setState(prev => ({
+          ...prev,
+          currentImage: null,
+          uploadedImage: null,
+          error: null,
+        }));
+        return true;
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete image');
+      }
+    } catch (error) {
+      const imageError: ImageError = {
+        type: 'deletion',
+        message: error instanceof Error ? error.message : 'Failed to delete image',
+        details: error,
+        retryable: true,
+      };
+      
+      setState(prev => ({ ...prev, error: imageError.message }));
+      console.error('Image deletion error:', error);
+      toast.error(imageError.message);
+      return false;
+    }
+  }, [currentTweetId]);
 
   // Load image for tweet with simplified error handling
   const loadImageForTweet = useCallback(async (tweetId: string) => {
@@ -617,12 +676,14 @@ export const useImageGeneration = (
     generateImage,
     uploadImage,
     removeImage,
+    deleteImage,
     loadImageForTweet,
     clearImageState,
   }), [
     generateImage,
     uploadImage,
     removeImage,
+    deleteImage,
     loadImageForTweet,
     clearImageState,
   ]);

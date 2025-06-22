@@ -102,6 +102,7 @@ export interface ImageActions {
   generateImage: (request: ImageGenerationRequest) => Promise<void>;
   uploadImage: (file: File) => Promise<void>;
   removeImage: () => void;
+  deleteImage: (tweetId?: string) => Promise<boolean>;
   loadImageForTweet: (tweetId: string) => Promise<void>;
   clearImageState: () => void;
 }
@@ -201,7 +202,7 @@ export interface ImageProcessor {
 
 // Error handling
 export interface ImageError {
-  type: 'generation' | 'upload' | 'validation' | 'database' | 'twitter';
+  type: 'generation' | 'upload' | 'validation' | 'database' | 'twitter' | 'deletion';
   message: string;
   details?: any;
   retryable: boolean;

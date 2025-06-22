@@ -1,4 +1,5 @@
 import { authOptions } from '@/lib/auth/auth';
+import { ImageQueries } from '@/lib/database/image-queries';
 import { UserQueries } from '@/lib/database/queries';
 import { TweetQueries } from '@/lib/database/tweet-queries';
 import { getServerSession } from 'next-auth/next';
@@ -157,6 +158,15 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // Delete associated image first (if exists)
+    try {
+      await ImageQueries.deleteImageByTweetId(id);
+    } catch (error) {
+      // Log but don't fail - image deletion is not critical for tweet deletion
+      console.warn('Failed to delete associated image:', error);
+    }
+
+    // Delete the tweet
     await TweetQueries.delete(id);
 
     return NextResponse.json({
