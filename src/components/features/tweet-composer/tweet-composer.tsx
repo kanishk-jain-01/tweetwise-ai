@@ -409,24 +409,28 @@ export const TweetComposer = ({
             <Textarea
               value={content}
               onChange={e => onContentChange(e.target.value)}
+              maxLength={280}
               placeholder={
                 isReadOnly
                   ? 'This tweet has already been posted and cannot be edited.'
                   : "What's happening?"
               }
-              className="w-full h-full text-lg resize-none border-2 border-gray-200 rounded-lg focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:border-blue-500 p-4 transition-all duration-200"
+              className="w-full h-full text-2xl font-medium leading-relaxed text-slate-800 resize-none border-2 border-slate-300 rounded-xl bg-gradient-to-br from-white to-slate-50/50 focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:border-purple-500 p-6 transition-all duration-300 placeholder:text-slate-400 placeholder:font-normal shadow-sm hover:shadow-md focus-visible:shadow-lg"
               aria-label="Tweet composer"
               readOnly={isReadOnly}
               disabled={isReadOnly}
+              style={{
+                fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+              }}
             />
             {isReadOnly && (
-              <div className="absolute inset-0 bg-muted/20 pointer-events-none rounded-lg transition-opacity duration-200" />
+              <div className="absolute inset-0 bg-slate-100/40 pointer-events-none rounded-xl transition-opacity duration-200" />
             )}
           </div>
 
           {/* Fixed Height Character Count and Auto-save Status */}
-          <div className="flex items-center justify-between p-2 border border-gray-200 rounded-lg bg-gray-50 h-12 flex-shrink-0">
-            <div className="flex items-center space-x-2 text-xs text-muted-foreground min-w-0">
+          <div className="flex items-center justify-between p-3 border-2 border-slate-300 rounded-xl bg-gradient-to-r from-slate-50 to-white shadow-sm h-12 flex-shrink-0">
+            <div className="flex items-center space-x-2 text-xs text-slate-600 min-w-0 font-medium">
               {!isReadOnly ? (
                 getAutoSaveIndicator()
               ) : (
@@ -438,7 +442,7 @@ export const TweetComposer = ({
             <div className="flex items-center space-x-3 flex-shrink-0">
               <div
                 className={cn(
-                  'font-medium text-sm transition-colors duration-200',
+                  'font-semibold text-sm transition-colors duration-200',
                   getCharacterCountColor(characterCount)
                 )}
               >
@@ -451,7 +455,7 @@ export const TweetComposer = ({
                       a 15.9155 15.9155 0 0 1 0 31.831
                       a 15.9155 15.9155 0 0 1 0 -31.831"
                     fill="none"
-                    stroke="#e6e6e6"
+                    stroke="#e2e8f0"
                     strokeWidth="2"
                   />
                   <path
@@ -463,8 +467,8 @@ export const TweetComposer = ({
                       charPercentage > 100
                         ? '#ef4444'
                         : charPercentage > 90
-                          ? '#eab308'
-                          : '#22c55e'
+                          ? '#f59e0b'
+                          : '#10b981'
                     }
                     strokeWidth="2"
                     strokeDasharray={`${Math.min(charPercentage, 100)}, 100`}
