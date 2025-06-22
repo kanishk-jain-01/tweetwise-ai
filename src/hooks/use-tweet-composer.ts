@@ -99,13 +99,10 @@ export const useTweetComposer = (
             setCurrentTweetId(result.tweet.id);
             setLoadedTweetType('draft');
             setLoadedTweetInfo(result.tweet);
-          } else if (loadedTweetInfo) {
-            // Update existing loaded tweet info
-            setLoadedTweetInfo({
-              ...loadedTweetInfo,
-              content: draftContent.trim(),
-              updated_at: new Date()
-            });
+          } else {
+            // Update existing loaded tweet info - use the tweet from server response
+            // to avoid creating new Date objects that cause infinite loops
+            setLoadedTweetInfo(result.tweet);
           }
           setAutoSaveStatus('saved');
           window.dispatchEvent(new CustomEvent('tweetSaved'));
@@ -133,7 +130,7 @@ export const useTweetComposer = (
         }
       }
     },
-    [currentTweetId, loadedTweetInfo]
+    [currentTweetId]
   );
 
   useEffect(() => {
