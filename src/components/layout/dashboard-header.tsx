@@ -1,6 +1,7 @@
 'use client';
 
 import { TwitterConnectionStatus } from '@/components/features/tweet-composer/twitter-connect';
+import { Brain, Sparkles } from 'lucide-react';
 import { MobileNavButtons } from './mobile-nav-buttons';
 import { UserProfileDropdown } from './user-profile-dropdown';
 
@@ -35,10 +36,27 @@ export const DashboardHeader = ({
   onCritique,
 }: DashboardHeaderProps) => {
   return (
-    <header className="h-14 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between px-6">
-      {/* Logo */}
-      <div className="flex items-center space-x-2">
-        <h1 className="text-lg font-semibold">TweetWiseAI</h1>
+    <header className="h-14 border-b border-slate-200/50 bg-white/80 backdrop-blur-md supports-[backdrop-filter]:bg-white/60 flex items-center justify-between px-6">
+      {/* Logo with gradient branding */}
+      <div className="flex items-center space-x-2 group transition-all duration-300">
+        {/* AI Icon with gradient background */}
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 rounded-lg blur-sm opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
+          <div className="relative bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 p-1.5 rounded-lg">
+            <Brain className="h-4 w-4 text-white" />
+          </div>
+        </div>
+        
+        {/* Brand name with gradient text */}
+        <div className="flex items-center space-x-1">
+          <span className="font-bold text-lg bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+            TweetWise
+          </span>
+          <span className="font-bold text-lg bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent">
+            AI
+          </span>
+          <Sparkles className="h-3 w-3 text-purple-500 ml-1" />
+        </div>
       </div>
 
       {/* Center - Twitter Connection Status */}

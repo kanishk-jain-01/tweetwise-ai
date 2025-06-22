@@ -9,13 +9,13 @@ import { useTweetHistory } from '@/hooks/use-tweet-history';
 import { Tweet } from '@/lib/database/schema';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  Calendar,
-  CheckCircle,
-  Clock,
-  FileText,
-  Loader2,
-  Search,
-  Send,
+    Calendar,
+    CheckCircle,
+    Clock,
+    FileText,
+    Loader2,
+    Search,
+    Send,
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -158,8 +158,7 @@ export const TweetHistory = ({ onSelectTweet }: TweetHistoryProps) => {
     <div className="h-full flex flex-col">
       {/* Search and Filter */}
       <div className="flex-shrink-0 p-4 space-y-3 border-b">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">History</h2>
+        <div className="flex items-center justify-end">
           {isRefreshing && <Loader2 className="w-5 h-5 animate-spin" />}
         </div>
         <div className="relative">
@@ -177,6 +176,10 @@ export const TweetHistory = ({ onSelectTweet }: TweetHistoryProps) => {
             variant={filter === 'all' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilter('all')}
+            className={filter === 'all' 
+              ? 'bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 hover:from-blue-600 hover:via-purple-600 hover:to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 border-0'
+              : 'border-2 border-slate-300 hover:border-purple-300 hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50 text-slate-700 hover:text-purple-700 transition-all duration-300'
+            }
           >
             All
           </Button>
@@ -184,6 +187,10 @@ export const TweetHistory = ({ onSelectTweet }: TweetHistoryProps) => {
             variant={filter === 'drafts' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilter('drafts')}
+            className={filter === 'drafts' 
+              ? 'bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 hover:from-blue-600 hover:via-purple-600 hover:to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 border-0'
+              : 'border-2 border-slate-300 hover:border-purple-300 hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50 text-slate-700 hover:text-purple-700 transition-all duration-300'
+            }
           >
             Drafts
           </Button>
@@ -191,6 +198,10 @@ export const TweetHistory = ({ onSelectTweet }: TweetHistoryProps) => {
             variant={filter === 'scheduled-sent' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilter('scheduled-sent')}
+            className={filter === 'scheduled-sent' 
+              ? 'bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 hover:from-blue-600 hover:via-purple-600 hover:to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 border-0'
+              : 'border-2 border-slate-300 hover:border-purple-300 hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50 text-slate-700 hover:text-purple-700 transition-all duration-300'
+            }
           >
             Scheduled/Sent
           </Button>
