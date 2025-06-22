@@ -15,9 +15,10 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "check-all": "npm run type-check && npm run lint && npm run format:check && npm run test",
-    "migrate": "tsx scripts/migrate.ts",
-    "migrate:status": "tsx scripts/migrate.ts status",
-    "migrate:rollback": "tsx scripts/migrate.ts rollback"
+    "migrate": "npx tsx scripts/migrate.ts",
+    "migrate:status": "npx tsx scripts/migrate.ts status",
+    "migrate:rollback": "npx tsx scripts/migrate.ts rollback",
+    "vercel-build": "npm run migrate && next build"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
