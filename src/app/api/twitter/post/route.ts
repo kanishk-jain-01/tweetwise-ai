@@ -1,4 +1,5 @@
 import { authOptions } from '@/lib/auth/auth';
+import { ImageQueries } from '@/lib/database/image-queries';
 import { TwitterQueries } from '@/lib/database/twitter-queries';
 import { createAuthenticatedTwitterClient } from '@/lib/twitter/client';
 import { TwitterTokenManager } from '@/lib/twitter/token-manager';
@@ -73,10 +74,34 @@ export async function POST(req: NextRequest) {
       tokens.refresh_token || ''
     );
 
-    // Post tweet to Twitter
+    // Check if tweet has an associated image
+    let associatedImage = null;
+    if (tweetId) {
+      try {
+        associatedImage = await ImageQueries.getImageByTweetId(tweetId);
+      } catch (error) {
+        console.warn('Failed to check for associated image:', error);
+        // Continue without image if database check fails
+      }
+    }
+
+    // Post tweet to Twitter (with or without media)
     let twitterResponse;
     try {
-      twitterResponse = await twitterClient.postTweet(content);
+      if (associatedImage) {
+        // Upload media first, then post tweet with media
+        console.log('Uploading image to Twitter for tweet...');
+        const mediaUpload = await twitterClient.uploadMedia(
+          associatedImage.base64_data,
+          `AI-generated image: ${associatedImage.prompt.substring(0, 100)}...`
+        );
+        
+        console.log('Image uploaded successfully, posting tweet with media...');
+        twitterResponse = await twitterClient.postTweetWithMedia(content, [mediaUpload.media_id_string]);
+      } else {
+        // Post text-only tweet
+        twitterResponse = await twitterClient.postTweet(content);
+      }
     } catch (error) {
       console.error('Failed to post tweet to Twitter:', error);
 
@@ -101,6 +126,52 @@ export async function POST(req: NextRequest) {
               code: 'RATE_LIMITED',
             },
             { status: 429 }
+          );
+        }
+
+        if (error.message.includes('Image is too large') || error.message.includes('5MB')) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: 'Image is too large. Twitter supports images up to 5MB.',
+              code: 'IMAGE_TOO_LARGE',
+            },
+            { status: 413 }
+          );
+        }
+
+        if (error.message.includes('Unsupported image format') || error.message.includes('format')) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: 'Unsupported image format. Please use JPEG, PNG, GIF, or WebP.',
+              code: 'UNSUPPORTED_IMAGE_FORMAT',
+            },
+            { status: 400 }
+          );
+        }
+
+        if (error.message.includes('media upload') || error.message.includes('Failed to upload')) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: 'Failed to upload image to Twitter. Please try again.',
+              code: 'MEDIA_UPLOAD_FAILED',
+            },
+            { status: 500 }
+          );
+        }
+
+        if (error.message.includes('media.write') || error.message.includes('scope') || 
+            error.message.includes('disconnect and reconnect')) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: 'Missing media upload permission. Please disconnect and reconnect your Twitter account to get the required permissions.',
+              code: 'MISSING_MEDIA_SCOPE',
+              action: 'reconnect_twitter',
+            },
+            { status: 403 }
           );
         }
       }
@@ -158,8 +229,16 @@ export async function POST(req: NextRequest) {
         text: twitterResponse.text,
         dbTweetId: dbTweet.id,
         sentAt: dbTweet.sent_at,
+        hasMedia: !!associatedImage,
+        mediaInfo: associatedImage ? {
+          style: associatedImage.style,
+          prompt: associatedImage.prompt,
+          size: associatedImage.size,
+        } : null,
       },
-      message: 'Tweet posted successfully to Twitter',
+      message: associatedImage 
+        ? 'Tweet with image posted successfully to Twitter'
+        : 'Tweet posted successfully to Twitter',
     });
   } catch (error) {
     console.error('Tweet posting API error:', error);

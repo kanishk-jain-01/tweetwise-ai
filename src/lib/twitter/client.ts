@@ -51,7 +51,7 @@ export class TwitterClient {
         codeVerifier,
         state: oauthState,
       } = client.generateOAuth2AuthLink(CALLBACK_URL, {
-        scope: ['tweet.read', 'tweet.write', 'users.read', 'offline.access'],
+        scope: ['tweet.read', 'tweet.write', 'users.read', 'offline.access', 'media.write'],
         state: state || 'default',
       });
 
@@ -150,6 +150,77 @@ export class TwitterClient {
       }
 
       throw new Error('Failed to post tweet to Twitter');
+    }
+  }
+
+  // Post a tweet with media attachments
+  async postTweetWithMedia(content: string, mediaIds: string[]) {
+    try {
+      // Validate tweet content
+      if (!content.trim()) {
+        throw new Error('Tweet content cannot be empty');
+      }
+
+      if (content.length > 280) {
+        throw new Error('Tweet content exceeds 280 character limit');
+      }
+
+      // Validate media IDs
+      if (!mediaIds || mediaIds.length === 0) {
+        throw new Error('Media IDs are required for media tweets');
+      }
+
+      if (mediaIds.length > 4) {
+        throw new Error('Twitter supports a maximum of 4 media attachments per tweet');
+      }
+
+      const client = await this.initClient();
+      const { data: createdTweet } = await client.v2.tweet({
+        text: content,
+        media: {
+          media_ids: mediaIds,
+        },
+      });
+
+      return {
+        id: createdTweet.id,
+        text: createdTweet.text,
+      };
+    } catch (error) {
+      console.error('Error posting tweet with media:', error);
+
+      // Handle specific Twitter API errors
+      if (error instanceof Error) {
+        if (error.message.includes('duplicate')) {
+          throw new Error('This tweet appears to be a duplicate');
+        }
+        if (error.message.includes('rate limit')) {
+          throw new Error(
+            'Twitter rate limit exceeded. Please try again later.'
+          );
+        }
+        if (error.message.includes('media')) {
+          throw new Error('Invalid media attachment. Please try uploading the image again.');
+        }
+      }
+
+      throw new Error('Failed to post tweet with media to Twitter');
+    }
+  }
+
+  // Upload media to Twitter (using direct v2 API calls)
+  async uploadMedia(base64Data: string, altText?: string) {
+    try {
+      // Use our manual media uploader for direct v2 API calls
+      const { TwitterMediaUploader } = await import('./media-upload');
+      const mediaUploader = new TwitterMediaUploader(this.accessToken!);
+      
+      return await mediaUploader.uploadImage(base64Data, altText);
+    } catch (error) {
+      console.error('Error uploading media to Twitter v2:', error);
+      
+      // Re-throw the error as-is since our media uploader already handles error formatting
+      throw error;
     }
   }
 

@@ -61,7 +61,7 @@ Add AI image generation capability to TweetWise AI using OpenAI's gpt-image-1 mo
   - [x] 4.7 Handle image deletion when tweets are deleted
   - [ ] 4.8 Add image metadata display (generation time, style used, etc.)
 
-- [ ] 5.0 Twitter Media API Integration
+- [x] 5.0 Twitter Media API Integration
   - [ ] 5.1 Create `src/lib/twitter/media-upload.ts` utility for Twitter media API
   - [ ] 5.2 Implement base64 to binary conversion for Twitter upload format
   - [ ] 5.3 Update `src/app/api/twitter/post/route.ts` to handle image uploads
