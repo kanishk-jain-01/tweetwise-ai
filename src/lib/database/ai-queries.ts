@@ -14,7 +14,7 @@ export class AIResponseQueries {
   /**
    * Save or update analysis for a tweet
    * Creates new analysis if none exists, updates existing one if it does
-   * 
+   *
    * @param tweetId - The UUID of the tweet being analyzed
    * @param type - Type of analysis ('spelling' | 'grammar' | 'critique' | 'curation')
    * @param responseData - The analysis result data from AI service
@@ -57,13 +57,15 @@ export class AIResponseQueries {
       return insertResult[0] as AIResponse;
     } catch (error) {
       console.error('Error saving analysis:', error);
-      throw new Error(`Failed to save ${type} analysis: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to save ${type} analysis: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
   /**
    * Get analysis for a tweet
-   * 
+   *
    * @param tweetId - The UUID of the tweet
    * @param type - Type of analysis to retrieve
    * @returns Promise<AIResponse | null> - Analysis or null if none exists
@@ -87,13 +89,15 @@ export class AIResponseQueries {
       return results[0] as AIResponse;
     } catch (error) {
       console.error('Error retrieving analysis:', error);
-      throw new Error(`Failed to retrieve ${type} analysis: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to retrieve ${type} analysis: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
   /**
    * Get a specific analysis by its ID
-   * 
+   *
    * @param analysisId - The UUID of the analysis
    * @returns Promise<AIResponse | null> - The analysis or null if not found
    */
@@ -113,13 +117,15 @@ export class AIResponseQueries {
       return results[0] as AIResponse;
     } catch (error) {
       console.error('Error retrieving analysis by ID:', error);
-      throw new Error(`Failed to retrieve analysis: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to retrieve analysis: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
   /**
    * Delete all analysis data for a tweet (cleanup when tweet is deleted)
-   * 
+   *
    * @param tweetId - The UUID of the tweet
    * @returns Promise<number> - Number of analysis records deleted
    */
@@ -134,13 +140,15 @@ export class AIResponseQueries {
       return result.length;
     } catch (error) {
       console.error('Error deleting analysis for tweet:', error);
-      throw new Error(`Failed to delete analysis for tweet: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to delete analysis for tweet: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
   /**
    * Get all analysis types available for a tweet
-   * 
+   *
    * @param tweetId - The UUID of the tweet
    * @returns Promise<string[]> - Array of analysis types that exist for this tweet
    */
@@ -159,4 +167,4 @@ export class AIResponseQueries {
       return [];
     }
   }
-} 
+}

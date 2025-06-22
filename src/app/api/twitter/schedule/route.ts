@@ -242,7 +242,7 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-        const { tweetId, action, content, scheduledFor } = validation.data;
+    const { tweetId, action, content, scheduledFor } = validation.data;
     const userId = session.user.id;
 
     // Update scheduled tweet

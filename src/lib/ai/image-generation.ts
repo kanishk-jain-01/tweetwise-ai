@@ -10,14 +10,18 @@ const openai = new OpenAI({
 const STYLE_TEMPLATES = {
   ghibli: {
     name: 'Studio Ghibli Style',
-    promptSuffix: ', in the style of Studio Ghibli animation, soft watercolor aesthetic, whimsical and dreamy, hand-drawn animation style, vibrant natural colors, magical realism',
-    description: 'Whimsical, hand-drawn animation style with soft colors and magical elements'
+    promptSuffix:
+      ', in the style of Studio Ghibli animation, soft watercolor aesthetic, whimsical and dreamy, hand-drawn animation style, vibrant natural colors, magical realism',
+    description:
+      'Whimsical, hand-drawn animation style with soft colors and magical elements',
   },
   photo_realistic: {
     name: 'Photo Realistic',
-    promptSuffix: ', photorealistic, high quality photography, professional lighting, sharp details, realistic textures, cinematic composition',
-    description: 'High-quality photorealistic images with professional photography aesthetics'
-  }
+    promptSuffix:
+      ', photorealistic, high quality photography, professional lighting, sharp details, realistic textures, cinematic composition',
+    description:
+      'High-quality photorealistic images with professional photography aesthetics',
+  },
 } as const;
 
 // Image generation parameters
@@ -32,7 +36,10 @@ const IMAGE_CONFIG = {
  * Generate an image prompt from tweet content
  * Analyzes the tweet text and creates a descriptive visual prompt
  */
-export function generateImagePromptFromTweet(tweetContent: string, style: ImageStyle): string {
+export function generateImagePromptFromTweet(
+  tweetContent: string,
+  style: ImageStyle
+): string {
   // Clean and prepare the tweet content
   const cleanContent = tweetContent
     .replace(/https?:\/\/[^\s]+/g, '') // Remove URLs
@@ -42,7 +49,8 @@ export function generateImagePromptFromTweet(tweetContent: string, style: ImageS
 
   // Extract hashtags for context
   const hashtags = tweetContent.match(/#\w+/g) || [];
-  const hashtagContext = hashtags.length > 0 ? ` (context: ${hashtags.join(' ')})` : '';
+  const hashtagContext =
+    hashtags.length > 0 ? ` (context: ${hashtags.join(' ')})` : '';
 
   // Base prompt from tweet content
   let basePrompt = cleanContent;
@@ -53,13 +61,25 @@ export function generateImagePromptFromTweet(tweetContent: string, style: ImageS
   }
 
   // Add contextual enhancement based on content
-  if (cleanContent.toLowerCase().includes('code') || cleanContent.toLowerCase().includes('programming')) {
+  if (
+    cleanContent.toLowerCase().includes('code') ||
+    cleanContent.toLowerCase().includes('programming')
+  ) {
     basePrompt += ', programming and technology theme';
-  } else if (cleanContent.toLowerCase().includes('nature') || cleanContent.toLowerCase().includes('environment')) {
+  } else if (
+    cleanContent.toLowerCase().includes('nature') ||
+    cleanContent.toLowerCase().includes('environment')
+  ) {
     basePrompt += ', natural environment and landscapes';
-  } else if (cleanContent.toLowerCase().includes('business') || cleanContent.toLowerCase().includes('entrepreneur')) {
+  } else if (
+    cleanContent.toLowerCase().includes('business') ||
+    cleanContent.toLowerCase().includes('entrepreneur')
+  ) {
     basePrompt += ', professional business setting';
-  } else if (cleanContent.toLowerCase().includes('art') || cleanContent.toLowerCase().includes('creative')) {
+  } else if (
+    cleanContent.toLowerCase().includes('art') ||
+    cleanContent.toLowerCase().includes('creative')
+  ) {
     basePrompt += ', artistic and creative elements';
   }
 
@@ -83,7 +103,10 @@ export async function generateImage(request: ImageGenerationRequest): Promise<{
 
   try {
     // Generate the enhanced prompt
-    const enhancedPrompt = generateImagePromptFromTweet(request.prompt, request.style);
+    const enhancedPrompt = generateImagePromptFromTweet(
+      request.prompt,
+      request.style
+    );
 
     console.log('Generating image with prompt:', enhancedPrompt);
 
@@ -91,7 +114,10 @@ export async function generateImage(request: ImageGenerationRequest): Promise<{
     const response = await openai.images.generate({
       model: IMAGE_CONFIG.model,
       prompt: enhancedPrompt,
-      size: (request.size || IMAGE_CONFIG.size) as '1024x1024' | '1792x1024' | '1024x1792',
+      size: (request.size || IMAGE_CONFIG.size) as
+        | '1024x1024'
+        | '1792x1024'
+        | '1024x1792',
       quality: request.quality === 'high' ? 'hd' : IMAGE_CONFIG.quality,
       response_format: IMAGE_CONFIG.response_format,
       n: 1, // Generate only one image
@@ -110,11 +136,13 @@ export async function generateImage(request: ImageGenerationRequest): Promise<{
     }
 
     const base64Data = imageData.b64_json;
-    
+
     // Calculate approximate file size (base64 is ~1.37x larger than binary)
     const fileSizeBytes = Math.round((base64Data.length * 3) / 4);
 
-    console.log(`Image generated successfully in ${generationTimeMs}ms, size: ${fileSizeBytes} bytes`);
+    console.log(
+      `Image generated successfully in ${generationTimeMs}ms, size: ${fileSizeBytes} bytes`
+    );
 
     return {
       base64Data,
@@ -122,23 +150,30 @@ export async function generateImage(request: ImageGenerationRequest): Promise<{
       generationTimeMs,
       fileSizeBytes,
     };
-
   } catch (error) {
     const generationTimeMs = Date.now() - startTime;
     console.error('Error generating image:', error);
-    
+
     // Provide specific error messages for common issues
     if (error instanceof Error) {
       if (error.message.includes('content_policy_violation')) {
-        throw new Error('Image generation failed: Content violates OpenAI policy. Please try a different prompt.');
+        throw new Error(
+          'Image generation failed: Content violates OpenAI policy. Please try a different prompt.'
+        );
       } else if (error.message.includes('rate_limit_exceeded')) {
-        throw new Error('Image generation failed: Rate limit exceeded. Please try again later.');
+        throw new Error(
+          'Image generation failed: Rate limit exceeded. Please try again later.'
+        );
       } else if (error.message.includes('insufficient_quota')) {
-        throw new Error('Image generation failed: API quota exceeded. Please check your OpenAI account.');
+        throw new Error(
+          'Image generation failed: API quota exceeded. Please check your OpenAI account.'
+        );
       }
     }
 
-    throw new Error(`Image generation failed after ${generationTimeMs}ms: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Image generation failed after ${generationTimeMs}ms: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
@@ -164,7 +199,10 @@ export function validateImageRequest(request: ImageGenerationRequest): {
   }
 
   // Validate size if provided
-  if (request.size && !['1024x1024', '1792x1024', '1024x1792'].includes(request.size)) {
+  if (
+    request.size &&
+    !['1024x1024', '1792x1024', '1024x1792'].includes(request.size)
+  ) {
     errors.push('Size must be 1024x1024, 1792x1024, or 1024x1792');
   }
 
@@ -204,14 +242,16 @@ export function base64ToBuffer(base64Data: string): Buffer {
 /**
  * Get image format from base64 data header
  */
-export function getImageFormatFromBase64(base64Data: string): 'png' | 'jpeg' | 'webp' {
+export function getImageFormatFromBase64(
+  base64Data: string
+): 'png' | 'jpeg' | 'webp' {
   // DALL-E 3 typically returns PNG format
   // We can detect format from data URL header if present
   if (base64Data.startsWith('data:image/')) {
     if (base64Data.includes('image/jpeg')) return 'jpeg';
     if (base64Data.includes('image/webp')) return 'webp';
   }
-  
+
   // Default to PNG for DALL-E 3
   return 'png';
-} 
+}

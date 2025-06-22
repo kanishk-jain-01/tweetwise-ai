@@ -39,7 +39,11 @@ interface UseAISuggestionsReturn {
   analysisMetadata: AnalysisMetadata | null;
   fetchWritingSuggestions: (text: string) => Promise<void>;
   rejectSuggestion: (suggestion: Suggestion) => void;
-  requestCritique: (text: string, tweetId?: string, forceRefresh?: boolean) => Promise<void>;
+  requestCritique: (
+    text: string,
+    tweetId?: string,
+    forceRefresh?: boolean
+  ) => Promise<void>;
   loadExistingAnalysis: (tweetId: string) => Promise<void>;
   clearSuggestions: () => void;
 }
@@ -55,7 +59,8 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
   const [isLoading, setIsLoading] = useState(false);
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [analysisMetadata, setAnalysisMetadata] = useState<AnalysisMetadata | null>(null);
+  const [analysisMetadata, setAnalysisMetadata] =
+    useState<AnalysisMetadata | null>(null);
 
   // Add ref to track and cancel ongoing requests
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -157,12 +162,15 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
     setError(null);
 
     try {
-      const response = await fetch(`/api/ai/analysis/${tweetId}?type=critique`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `/api/ai/analysis/${tweetId}?type=critique`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!response.ok) {
         // If 404, it just means no analysis exists yet - not an error
@@ -171,7 +179,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
           setCritique(null);
           return;
         }
-        
+
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to load existing analysis');
       }
@@ -181,7 +189,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
       if (data.success && data.data.analysis) {
         const analysis = data.data.analysis;
         const critiqueData = analysis.response_data as Critique;
-        
+
         setCritique(critiqueData);
         setAnalysisMetadata({
           id: analysis.id,
@@ -203,105 +211,112 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
     }
   }, []);
 
-  const requestCritique = useCallback(async (text: string, tweetId?: string, forceRefresh?: boolean) => {
-    if (!text.trim()) {
-      setCritique(null);
-      setAnalysisMetadata(null);
-      return;
-    }
-
-    // Cancel any ongoing request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    // Create new AbortController for this request
-    const abortController = new AbortController();
-    abortControllerRef.current = abortController;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const requestBody: { content: string; tweetId?: string; forceRefresh?: boolean } = {
-        content: text,
-      };
-
-      // Include tweetId if provided for database storage
-      // Handle null/undefined cases explicitly
-      if (tweetId && tweetId.trim()) {
-        requestBody.tweetId = tweetId;
-      }
-
-      // Include forceRefresh flag if provided
-      if (forceRefresh) {
-        requestBody.forceRefresh = forceRefresh;
-      }
-
-      const response = await fetch('/api/ai/critique', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-        signal: abortController.signal,
-      });
-
-      // Check if request was aborted
-      if (abortController.signal.aborted) {
+  const requestCritique = useCallback(
+    async (text: string, tweetId?: string, forceRefresh?: boolean) => {
+      if (!text.trim()) {
+        setCritique(null);
+        setAnalysisMetadata(null);
         return;
       }
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to get critique');
+      // Cancel any ongoing request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
 
-      const data = await response.json();
+      // Create new AbortController for this request
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
 
-      // Double-check abort status before updating state
-      if (abortController.signal.aborted) {
-        return;
-      }
+      setIsLoading(true);
+      setError(null);
 
-      setCritique(data.critique);
+      try {
+        const requestBody: {
+          content: string;
+          tweetId?: string;
+          forceRefresh?: boolean;
+        } = {
+          content: text,
+        };
 
-      // Update analysis metadata based on response and request context
-      if (data.critique.id && data.critique.created_at) {
-        // Analysis was stored/retrieved from database
-        setAnalysisMetadata({
-          id: data.critique.id,
-          created_at: new Date(data.critique.created_at),
-          isFromDatabase: !data.cached || data.source === 'database',
+        // Include tweetId if provided for database storage
+        // Handle null/undefined cases explicitly
+        if (tweetId && tweetId.trim()) {
+          requestBody.tweetId = tweetId;
+        }
+
+        // Include forceRefresh flag if provided
+        if (forceRefresh) {
+          requestBody.forceRefresh = forceRefresh;
+        }
+
+        const response = await fetch('/api/ai/critique', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+          signal: abortController.signal,
         });
-      } else if (tweetId && tweetId.trim()) {
-        // New analysis with valid tweetId - should be stored in database
-        setAnalysisMetadata({
-          isFromDatabase: true,
-        });
-      } else {
-        // No tweetId or empty tweetId means temporary analysis (new unsaved tweet)
-        setAnalysisMetadata({
-          isFromDatabase: false,
-        });
-      }
-    } catch (err) {
-      // Ignore AbortError - it's expected when cancelling requests
-      if (err instanceof Error && err.name === 'AbortError') {
-        return;
-      }
 
-      const errorMessage =
-        err instanceof Error ? err.message : 'An error occurred';
-      setError(errorMessage);
-      console.error('Error requesting critique:', err);
-    } finally {
-      // Only set loading to false if this request wasn't aborted
-      if (!abortController.signal.aborted) {
-        setIsLoading(false);
+        // Check if request was aborted
+        if (abortController.signal.aborted) {
+          return;
+        }
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to get critique');
+        }
+
+        const data = await response.json();
+
+        // Double-check abort status before updating state
+        if (abortController.signal.aborted) {
+          return;
+        }
+
+        setCritique(data.critique);
+
+        // Update analysis metadata based on response and request context
+        if (data.critique.id && data.critique.created_at) {
+          // Analysis was stored/retrieved from database
+          setAnalysisMetadata({
+            id: data.critique.id,
+            created_at: new Date(data.critique.created_at),
+            isFromDatabase: !data.cached || data.source === 'database',
+          });
+        } else if (tweetId && tweetId.trim()) {
+          // New analysis with valid tweetId - should be stored in database
+          setAnalysisMetadata({
+            isFromDatabase: true,
+          });
+        } else {
+          // No tweetId or empty tweetId means temporary analysis (new unsaved tweet)
+          setAnalysisMetadata({
+            isFromDatabase: false,
+          });
+        }
+      } catch (err) {
+        // Ignore AbortError - it's expected when cancelling requests
+        if (err instanceof Error && err.name === 'AbortError') {
+          return;
+        }
+
+        const errorMessage =
+          err instanceof Error ? err.message : 'An error occurred';
+        setError(errorMessage);
+        console.error('Error requesting critique:', err);
+      } finally {
+        // Only set loading to false if this request wasn't aborted
+        if (!abortController.signal.aborted) {
+          setIsLoading(false);
+        }
       }
-    }
-  }, []);
+    },
+    []
+  );
 
   const clearSuggestions = useCallback(() => {
     // Cancel any ongoing requests when clearing
@@ -332,11 +347,17 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
     };
 
     // Add event listener
-    window.addEventListener('contentLoading', handleContentLoading as EventListener);
+    window.addEventListener(
+      'contentLoading',
+      handleContentLoading as EventListener
+    );
 
     // Cleanup
     return () => {
-      window.removeEventListener('contentLoading', handleContentLoading as EventListener);
+      window.removeEventListener(
+        'contentLoading',
+        handleContentLoading as EventListener
+      );
     };
   }, [loadExistingAnalysis]);
 

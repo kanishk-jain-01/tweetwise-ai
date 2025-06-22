@@ -52,8 +52,9 @@ export const MIGRATION_005_ROLLBACK = `
 export const MIGRATION_005_METADATA = {
   id: '005',
   name: 'add-images-table',
-  description: 'Create images table for AI-generated tweet images with metadata',
+  description:
+    'Create images table for AI-generated tweet images with metadata',
   date: '2025-01-03',
   up: MIGRATION_005_ADD_IMAGES_TABLE,
   down: MIGRATION_005_ROLLBACK,
-}; 
+};

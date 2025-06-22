@@ -129,7 +129,7 @@ export class TwitterOAuth {
         refreshTokenLength: tokenData.refreshToken?.length,
         twitterUserId: tokenData.twitterUserId,
         twitterUsername: tokenData.twitterUsername,
-        twitterName: tokenData.twitterName
+        twitterName: tokenData.twitterName,
       });
 
       // Insert new tokens (refresh_token can be null)
@@ -158,15 +158,17 @@ export class TwitterOAuth {
 
       console.log('Database result:', {
         resultLength: result.length,
-        firstRow: result[0] ? {
-          user_id: result[0].user_id,
-          access_token: result[0].access_token ? 'EXISTS' : 'NULL',
-          access_token_length: result[0].access_token?.length,
-          refresh_token: result[0].refresh_token ? 'EXISTS' : 'NULL',
-          twitter_user_id: result[0].twitter_user_id,
-          twitter_username: result[0].twitter_username,
-          twitter_name: result[0].twitter_name
-        } : 'NO_ROW'
+        firstRow: result[0]
+          ? {
+              user_id: result[0].user_id,
+              access_token: result[0].access_token ? 'EXISTS' : 'NULL',
+              access_token_length: result[0].access_token?.length,
+              refresh_token: result[0].refresh_token ? 'EXISTS' : 'NULL',
+              twitter_user_id: result[0].twitter_user_id,
+              twitter_username: result[0].twitter_username,
+              twitter_name: result[0].twitter_name,
+            }
+          : 'NO_ROW',
       });
 
       if (result.length === 0) {
@@ -194,16 +196,18 @@ export class TwitterOAuth {
       console.log('Query result:', {
         userId,
         resultLength: result.length,
-        firstRow: result[0] ? {
-          user_id: result[0].user_id,
-          access_token: result[0].access_token ? 'EXISTS' : 'NULL',
-          access_token_length: result[0].access_token?.length,
-          refresh_token: result[0].refresh_token ? 'EXISTS' : 'NULL',
-          twitter_user_id: result[0].twitter_user_id,
-          twitter_username: result[0].twitter_username,
-          twitter_name: result[0].twitter_name,
-          allKeys: Object.keys(result[0])
-        } : 'NO_ROW'
+        firstRow: result[0]
+          ? {
+              user_id: result[0].user_id,
+              access_token: result[0].access_token ? 'EXISTS' : 'NULL',
+              access_token_length: result[0].access_token?.length,
+              refresh_token: result[0].refresh_token ? 'EXISTS' : 'NULL',
+              twitter_user_id: result[0].twitter_user_id,
+              twitter_username: result[0].twitter_username,
+              twitter_name: result[0].twitter_name,
+              allKeys: Object.keys(result[0]),
+            }
+          : 'NO_ROW',
       });
 
       return result.length > 0 ? (result[0] as TwitterTokens) : null;

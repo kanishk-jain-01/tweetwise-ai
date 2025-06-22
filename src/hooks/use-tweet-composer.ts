@@ -4,7 +4,12 @@ import { Tweet } from '@/lib/database/schema';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 export type AutoSaveStatus = 'idle' | 'saving' | 'saved' | 'error';
-export type LoadedTweetType = 'draft' | 'scheduled' | 'sent' | 'completed' | null;
+export type LoadedTweetType =
+  | 'draft'
+  | 'scheduled'
+  | 'sent'
+  | 'completed'
+  | null;
 
 // Use the Tweet interface from schema for consistency
 type LoadedTweetInfo = Tweet;
@@ -27,7 +32,8 @@ export const useTweetComposer = (
   const [content, setContent] = useState('');
   const [currentTweetId, setCurrentTweetId] = useState<string | null>(null);
   const [loadedTweetType, setLoadedTweetType] = useState<LoadedTweetType>(null);
-  const [loadedTweetInfo, setLoadedTweetInfo] = useState<LoadedTweetInfo | null>(null);
+  const [loadedTweetInfo, setLoadedTweetInfo] =
+    useState<LoadedTweetInfo | null>(null);
   const [isLoading] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>('idle');
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
@@ -175,12 +181,14 @@ export const useTweetComposer = (
   const clearContent = useCallback(() => {
     // Track the cleared content
     lastLoadedContentRef.current = '';
-    
+
     // Dispatch event to signal that content is being cleared (not typed)
-    window.dispatchEvent(new CustomEvent('contentLoading', { 
-      detail: { content: '' } 
-    }));
-    
+    window.dispatchEvent(
+      new CustomEvent('contentLoading', {
+        detail: { content: '' },
+      })
+    );
+
     setContent('');
     setCurrentTweetId(null);
     setLoadedTweetType(null);
@@ -191,16 +199,18 @@ export const useTweetComposer = (
   const loadDraft = useCallback((tweet: LoadedTweetInfo) => {
     // Track the loaded content to distinguish from user typing
     lastLoadedContentRef.current = tweet.content;
-    
+
     // Dispatch event to signal that content is being loaded (not typed)
     // Include tweet ID to trigger analysis loading
-    window.dispatchEvent(new CustomEvent('contentLoading', { 
-      detail: { 
-        content: tweet.content,
-        tweetId: tweet.id 
-      } 
-    }));
-    
+    window.dispatchEvent(
+      new CustomEvent('contentLoading', {
+        detail: {
+          content: tweet.content,
+          tweetId: tweet.id,
+        },
+      })
+    );
+
     setContent(tweet.content);
     setCurrentTweetId(tweet.id);
     setLoadedTweetType(tweet.status);

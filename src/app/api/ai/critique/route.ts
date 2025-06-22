@@ -32,10 +32,7 @@ export async function POST(req: NextRequest) {
     // Check authentication
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     let body;
@@ -63,10 +60,7 @@ export async function POST(req: NextRequest) {
     if (tweetId) {
       const user = await UserQueries.findByEmail(session.user.email);
       if (!user) {
-        return NextResponse.json(
-          { error: 'User not found' },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }
 
       const hasOwnership = await TweetQueries.verifyOwnership(tweetId, user.id);
@@ -81,7 +75,10 @@ export async function POST(req: NextRequest) {
     // If tweetId is provided and not forcing refresh, check database first for existing analysis
     if (tweetId && !forceRefresh) {
       try {
-        const existingAnalysis = await AIResponseQueries.getAnalysis(tweetId, 'critique');
+        const existingAnalysis = await AIResponseQueries.getAnalysis(
+          tweetId,
+          'critique'
+        );
         if (existingAnalysis) {
           const critique = existingAnalysis.response_data as TweetCritique;
           const critiqueWithMetadata: TweetCritiqueWithMetadata = {
@@ -101,13 +98,18 @@ export async function POST(req: NextRequest) {
           });
         }
       } catch (error) {
-        console.error('Error retrieving existing analysis from database:', error);
+        console.error(
+          'Error retrieving existing analysis from database:',
+          error
+        );
         // Continue with new analysis generation
       }
     }
 
     // Check in-memory cache as fallback (skip if forcing refresh)
-    const cacheKey = tweetId ? `critique:${tweetId}:${content}` : `critique:${content}`;
+    const cacheKey = tweetId
+      ? `critique:${tweetId}:${content}`
+      : `critique:${content}`;
     if (!forceRefresh && cache.has(cacheKey)) {
       return NextResponse.json({
         critique: cache.get(cacheKey),
@@ -229,10 +231,14 @@ Tweet to analyze:
 
     // Save to database if tweetId is provided
     let critiqueWithMetadata: TweetCritiqueWithMetadata = critique;
-    
+
     if (tweetId) {
       try {
-        const savedAnalysis = await AIResponseQueries.saveAnalysis(tweetId, 'critique', critique);
+        const savedAnalysis = await AIResponseQueries.saveAnalysis(
+          tweetId,
+          'critique',
+          critique
+        );
         critiqueWithMetadata = {
           ...critique,
           id: savedAnalysis.id,

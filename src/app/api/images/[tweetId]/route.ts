@@ -41,13 +41,12 @@ export async function GET(
       success: true,
       image,
     });
-
   } catch (error) {
     console.error('Get image API error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Internal server error',
-        message: 'Failed to retrieve image'
+        message: 'Failed to retrieve image',
       },
       { status: 500 }
     );
@@ -92,16 +91,14 @@ export async function DELETE(
       success: true,
       message: 'Image deleted successfully',
     });
-
   } catch (error) {
     console.error('Delete image API error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Internal server error',
-        message: 'Failed to delete image'
+        message: 'Failed to delete image',
       },
       { status: 500 }
     );
   }
 }
-

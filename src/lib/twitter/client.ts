@@ -7,8 +7,6 @@ const CALLBACK_URL =
   process.env.TWITTER_CALLBACK_URL ||
   `${process.env.NEXTAUTH_URL}/api/twitter/callback`;
 
-
-
 // Twitter API Client Class
 export class TwitterClient {
   private client: any;
@@ -51,7 +49,13 @@ export class TwitterClient {
         codeVerifier,
         state: oauthState,
       } = client.generateOAuth2AuthLink(CALLBACK_URL, {
-        scope: ['tweet.read', 'tweet.write', 'users.read', 'offline.access', 'media.write'],
+        scope: [
+          'tweet.read',
+          'tweet.write',
+          'users.read',
+          'offline.access',
+          'media.write',
+        ],
         state: state || 'default',
       });
 
@@ -171,7 +175,9 @@ export class TwitterClient {
       }
 
       if (mediaIds.length > 4) {
-        throw new Error('Twitter supports a maximum of 4 media attachments per tweet');
+        throw new Error(
+          'Twitter supports a maximum of 4 media attachments per tweet'
+        );
       }
 
       const client = await this.initClient();
@@ -200,7 +206,9 @@ export class TwitterClient {
           );
         }
         if (error.message.includes('media')) {
-          throw new Error('Invalid media attachment. Please try uploading the image again.');
+          throw new Error(
+            'Invalid media attachment. Please try uploading the image again.'
+          );
         }
       }
 
@@ -214,11 +222,11 @@ export class TwitterClient {
       // Use our manual media uploader for direct v2 API calls
       const { TwitterMediaUploader } = await import('./media-upload');
       const mediaUploader = new TwitterMediaUploader(this.accessToken!);
-      
+
       return await mediaUploader.uploadImage(base64Data, altText);
     } catch (error) {
       console.error('Error uploading media to Twitter v2:', error);
-      
+
       // Re-throw the error as-is since our media uploader already handles error formatting
       throw error;
     }
@@ -258,7 +266,10 @@ export class TwitterClient {
         tweetCount: user.public_metrics?.tweet_count || 0,
       };
     } catch (error: any) {
-      console.error('Error verifying Twitter credentials:', error.data?.detail || error.message);
+      console.error(
+        'Error verifying Twitter credentials:',
+        error.data?.detail || error.message
+      );
       throw error;
     }
   }

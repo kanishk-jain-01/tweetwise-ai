@@ -86,18 +86,21 @@ export async function GET(req: NextRequest) {
     // Test the tokens immediately after receiving them from Twitter
     console.log('=== TESTING TOKENS IMMEDIATELY AFTER OAUTH ===');
     try {
-      const testClient = new TwitterClient(tokenData.accessToken, tokenData.refreshToken || undefined);
+      const testClient = new TwitterClient(
+        tokenData.accessToken,
+        tokenData.refreshToken || undefined
+      );
       const testUser = await testClient.verifyCredentials();
       console.log('✅ Tokens work immediately after OAuth:', {
         id: testUser.id,
         username: testUser.username,
-        name: testUser.name
+        name: testUser.name,
       });
     } catch (testError: any) {
       console.error('❌ Tokens fail immediately after OAuth:', {
         error: testError.message,
         data: testError.data,
-        status: testError.status
+        status: testError.status,
       });
     }
 
@@ -110,12 +113,12 @@ export async function GET(req: NextRequest) {
       twitterUsername: tokenData.user.username,
       twitterName: tokenData.user.name,
     });
-    
+
     console.log('✅ Tokens stored in database:', {
       hasTokens: !!storedTokens,
       accessTokenLength: storedTokens?.access_token?.length,
       twitterUserId: storedTokens?.twitter_user_id,
-      twitterUsername: storedTokens?.twitter_username
+      twitterUsername: storedTokens?.twitter_username,
     });
 
     // Store user information

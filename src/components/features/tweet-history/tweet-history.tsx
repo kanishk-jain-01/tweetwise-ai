@@ -9,13 +9,13 @@ import { useTweetHistory } from '@/hooks/use-tweet-history';
 import { Tweet } from '@/lib/database/schema';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-    Calendar,
-    CheckCircle,
-    Clock,
-    FileText,
-    Loader2,
-    Search,
-    Send
+  Calendar,
+  CheckCircle,
+  Clock,
+  FileText,
+  Loader2,
+  Search,
+  Send,
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -25,9 +25,16 @@ interface TweetHistoryProps {
 }
 
 export const TweetHistory = ({ onSelectTweet }: TweetHistoryProps) => {
-  const { tweets, isLoading, isRefreshing, refreshTweets: _refreshTweets } = useTweetHistory();
+  const {
+    tweets,
+    isLoading,
+    isRefreshing,
+    refreshTweets: _refreshTweets,
+  } = useTweetHistory();
   const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState<'all' | 'drafts' | 'scheduled-sent'>('all');
+  const [filter, setFilter] = useState<'all' | 'drafts' | 'scheduled-sent'>(
+    'all'
+  );
 
   const filteredTweets = tweets.filter(tweet => {
     const matchesSearch = tweet.content
@@ -36,7 +43,10 @@ export const TweetHistory = ({ onSelectTweet }: TweetHistoryProps) => {
     const matchesFilter =
       filter === 'all' ||
       (filter === 'drafts' && tweet.status === 'draft') ||
-      (filter === 'scheduled-sent' && (tweet.status === 'scheduled' || tweet.status === 'sent' || tweet.status === 'completed'));
+      (filter === 'scheduled-sent' &&
+        (tweet.status === 'scheduled' ||
+          tweet.status === 'sent' ||
+          tweet.status === 'completed'));
     return matchesSearch && matchesFilter;
   });
 
@@ -67,9 +77,13 @@ export const TweetHistory = ({ onSelectTweet }: TweetHistoryProps) => {
   const getDisplayTime = (tweet: Tweet) => {
     switch (tweet.status) {
       case 'scheduled':
-        return tweet.scheduled_for ? new Date(tweet.scheduled_for) : new Date(tweet.created_at);
+        return tweet.scheduled_for
+          ? new Date(tweet.scheduled_for)
+          : new Date(tweet.created_at);
       case 'sent':
-        return tweet.sent_at ? new Date(tweet.sent_at) : new Date(tweet.updated_at);
+        return tweet.sent_at
+          ? new Date(tweet.sent_at)
+          : new Date(tweet.updated_at);
       case 'completed':
       case 'draft':
       default:
@@ -262,10 +276,14 @@ export const TweetHistory = ({ onSelectTweet }: TweetHistoryProps) => {
                             <span>{tweet.content.length}/280 chars</span>
                             <div className="flex flex-col items-end">
                               <span className="font-medium">
-                                {getTimeLabel(tweet)}: {formatDateTime(getDisplayTime(tweet))}
+                                {getTimeLabel(tweet)}:{' '}
+                                {formatDateTime(getDisplayTime(tweet))}
                               </span>
                               <span>
-                                Created {new Date(tweet.created_at).toLocaleDateString()}
+                                Created{' '}
+                                {new Date(
+                                  tweet.created_at
+                                ).toLocaleDateString()}
                               </span>
                             </div>
                           </div>

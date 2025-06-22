@@ -25,10 +25,7 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
     // Check authentication
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { tweetId } = await params;
@@ -44,10 +41,7 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
     // Verify user owns the tweet
     const user = await UserQueries.findByEmail(session.user.email);
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     const hasOwnership = await TweetQueries.verifyOwnership(tweetId, user.id);
@@ -68,7 +62,10 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
     const validation = analysisQuerySchema.safeParse(queryParams);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid query parameters', details: validation.error.flatten() },
+        {
+          error: 'Invalid query parameters',
+          details: validation.error.flatten(),
+        },
         { status: 400 }
       );
     }
@@ -90,11 +87,15 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
         });
       } else {
         // Get all available analysis types and their data
-        const availableTypes = await AIResponseQueries.getAvailableAnalysisTypes(tweetId);
-        
+        const availableTypes =
+          await AIResponseQueries.getAvailableAnalysisTypes(tweetId);
+
         // Get analysis for each available type
-        const analysisPromises = availableTypes.map(async (analysisType) => {
-          const analysis = await AIResponseQueries.getAnalysis(tweetId, analysisType as any);
+        const analysisPromises = availableTypes.map(async analysisType => {
+          const analysis = await AIResponseQueries.getAnalysis(
+            tweetId,
+            analysisType as any
+          );
           return { type: analysisType, analysis };
         });
 
@@ -145,10 +146,7 @@ export async function DELETE(req: NextRequest, { params }: RouteContext) {
     // Check authentication
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { tweetId } = await params;
@@ -164,10 +162,7 @@ export async function DELETE(req: NextRequest, { params }: RouteContext) {
     // Verify user owns the tweet
     const user = await UserQueries.findByEmail(session.user.email);
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     const hasOwnership = await TweetQueries.verifyOwnership(tweetId, user.id);
@@ -179,7 +174,8 @@ export async function DELETE(req: NextRequest, { params }: RouteContext) {
     }
 
     try {
-      const deletedCount = await AIResponseQueries.deleteAnalysisForTweet(tweetId);
+      const deletedCount =
+        await AIResponseQueries.deleteAnalysisForTweet(tweetId);
 
       return NextResponse.json({
         success: true,
@@ -210,4 +206,4 @@ export async function DELETE(req: NextRequest, { params }: RouteContext) {
       { status: 500 }
     );
   }
-} 
+}

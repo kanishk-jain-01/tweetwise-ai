@@ -233,7 +233,7 @@ useEffect(() => {
   if (debouncedContent === lastLoadedContentRef.current) {
     return;
   }
-  
+
   if (debouncedContent.trim()) {
     fetchWritingSuggestions(debouncedContent);
   }
@@ -249,6 +249,7 @@ const enhancedSetContent = useCallback((newContent: string) => {
 ```
 
 **Implementation Benefits**:
+
 - 🚫 **Zero API Calls** on tweet card clicks (previously 1-3 expensive calls per click)
 - ⚡ **Instant Loading** of tweet content without delays
 - 💰 **Significant Cost Savings** on OpenAI API usage
@@ -415,7 +416,7 @@ const DashboardErrorBoundary = ({ children }) => {
 
 - **AI API Efficiency**: Minimize unnecessary requests
 - **Content Tracking**: Prevent duplicate API calls on content loading
-- **Caching Strategy**: Reduce repeated API calls  
+- **Caching Strategy**: Reduce repeated API calls
 - **Resource Monitoring**: Track usage patterns for optimization
 - **Performance Fix**: Eliminated unnecessary API calls saving significant OpenAI costs
 

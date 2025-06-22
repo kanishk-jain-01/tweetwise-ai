@@ -7,7 +7,20 @@ import { useImageGeneration } from '@/hooks/use-image-generation';
 import { AutoSaveStatus, LoadedTweetType } from '@/hooks/use-tweet-composer';
 import { Tweet } from '@/lib/database/schema';
 import { cn } from '@/lib/utils/cn';
-import { AlertCircle, Calendar, Check, CheckCircle, CircleDashed, Clock, Edit, ExternalLink, FilePlus, Send, Trash2, X } from 'lucide-react';
+import {
+  AlertCircle,
+  Calendar,
+  Check,
+  CheckCircle,
+  CircleDashed,
+  Clock,
+  Edit,
+  ExternalLink,
+  FilePlus,
+  Send,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { ImagePanel } from './image-panel';
@@ -35,14 +48,18 @@ export const TweetComposer = ({
 }: TweetComposerProps) => {
   // Use the image generation hook
   const imageGeneration = useImageGeneration(currentTweetId);
-  
+
   const characterCount = content.length;
   const maxChars = 280;
   const charPercentage = (characterCount / maxChars) * 100;
 
   // Load image when switching between tweets
   useEffect(() => {
-    if (currentTweetId && loadedTweetType !== 'completed' && loadedTweetType !== 'sent') {
+    if (
+      currentTweetId &&
+      loadedTweetType !== 'completed' &&
+      loadedTweetType !== 'sent'
+    ) {
       // Load any existing image for editable tweets (drafts, scheduled)
       imageGeneration.actions.loadImageForTweet(currentTweetId);
     } else {
@@ -94,27 +111,39 @@ export const TweetComposer = ({
       draft: {
         icon: <Clock className="w-4 h-4 text-yellow-500" />,
         badge: <Badge variant="secondary">Draft</Badge>,
-        label: 'Editing Draft'
+        label: 'Editing Draft',
       },
       scheduled: {
         icon: <Calendar className="w-4 h-4 text-blue-500" />,
-        badge: <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Scheduled</Badge>,
-        label: 'Viewing Scheduled Tweet'
+        badge: (
+          <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
+            Scheduled
+          </Badge>
+        ),
+        label: 'Viewing Scheduled Tweet',
       },
       sent: {
         icon: <Send className="w-4 h-4 text-green-500" />,
-        badge: <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Sent</Badge>,
-        label: 'Viewing Sent Tweet'
+        badge: (
+          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+            Sent
+          </Badge>
+        ),
+        label: 'Viewing Sent Tweet',
       },
       completed: {
         icon: <CheckCircle className="w-4 h-4 text-green-500" />,
-        badge: <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Completed</Badge>,
-        label: 'Viewing Completed Tweet'
-      }
+        badge: (
+          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+            Completed
+          </Badge>
+        ),
+        label: 'Viewing Completed Tweet',
+      },
     };
 
     const indicator = indicators[loadedTweetType];
-    
+
     return (
       <div className="flex items-center space-x-2">
         {indicator.icon}
@@ -164,8 +193,10 @@ export const TweetComposer = ({
         })
       );
 
-      toast.success(`${loadedTweetType === 'draft' ? 'Draft' : 'Tweet'} deleted successfully`);
-      
+      toast.success(
+        `${loadedTweetType === 'draft' ? 'Draft' : 'Tweet'} deleted successfully`
+      );
+
       // Clear the composer and image state after deletion
       imageGeneration.actions.clearImageState();
       onNewDraft();
@@ -178,7 +209,9 @@ export const TweetComposer = ({
   const handleCancelScheduledTweet = useCallback(async () => {
     if (!loadedTweetInfo) return;
 
-    if (!confirm('Cancel this scheduled tweet and convert it back to a draft?')) {
+    if (
+      !confirm('Cancel this scheduled tweet and convert it back to a draft?')
+    ) {
       return;
     }
 
@@ -199,10 +232,9 @@ export const TweetComposer = ({
       }
 
       toast.success('Tweet cancelled and converted to draft');
-      
+
       // Dispatch custom event to refresh tweet history
       window.dispatchEvent(new CustomEvent('tweetSaved'));
-      
     } catch (error) {
       console.error('Error cancelling scheduled tweet:', error);
       toast.error('Failed to cancel scheduled tweet');
@@ -211,7 +243,7 @@ export const TweetComposer = ({
 
   const handleRescheduleScheduledTweet = useCallback(() => {
     if (!loadedTweetInfo) return;
-    
+
     // This would trigger the schedule modal
     onScheduleTweet?.();
   }, [loadedTweetInfo, onScheduleTweet]);
@@ -231,7 +263,8 @@ export const TweetComposer = ({
     }
   }, [loadedTweetInfo]);
 
-  const isReadOnly = loadedTweetType === 'sent' || loadedTweetType === 'completed';
+  const isReadOnly =
+    loadedTweetType === 'sent' || loadedTweetType === 'completed';
 
   const renderActionButtons = () => {
     switch (loadedTweetType) {
@@ -243,7 +276,11 @@ export const TweetComposer = ({
                 variant="outline"
                 size="sm"
                 onClick={handleNewDraft}
-                disabled={!content.trim() && !imageGeneration.hasImage && autoSaveStatus === 'idle'}
+                disabled={
+                  !content.trim() &&
+                  !imageGeneration.hasImage &&
+                  autoSaveStatus === 'idle'
+                }
               >
                 <FilePlus className="w-4 h-4 mr-2" />
                 New Draft
@@ -273,11 +310,7 @@ export const TweetComposer = ({
       case 'scheduled':
         return (
           <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleNewDraft}
-            >
+            <Button variant="outline" size="sm" onClick={handleNewDraft}>
               <FilePlus className="w-4 h-4 mr-2" />
               New Draft
             </Button>
@@ -308,11 +341,7 @@ export const TweetComposer = ({
       case 'completed':
         return (
           <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleNewDraft}
-            >
+            <Button variant="outline" size="sm" onClick={handleNewDraft}>
               <FilePlus className="w-4 h-4 mr-2" />
               New Draft
             </Button>
@@ -336,7 +365,11 @@ export const TweetComposer = ({
               variant="outline"
               size="sm"
               onClick={handleNewDraft}
-              disabled={!content.trim() && !imageGeneration.hasImage && autoSaveStatus === 'idle'}
+              disabled={
+                !content.trim() &&
+                !imageGeneration.hasImage &&
+                autoSaveStatus === 'idle'
+              }
             >
               <FilePlus className="w-4 h-4 mr-2" />
               New Draft
@@ -367,7 +400,10 @@ export const TweetComposer = ({
       )}
 
       {/* Dual Panel Layout - Better height calculation */}
-      <div className="flex flex-col lg:flex-row gap-4 p-4" style={{ height: 'calc(100% - 140px)' }}>
+      <div
+        className="flex flex-col lg:flex-row gap-4 p-4"
+        style={{ height: 'calc(100% - 140px)' }}
+      >
         {/* Left Panel - Text Composer */}
         <div className="flex-1 flex flex-col min-h-0">
           {/* Text Area with proper height constraints */}
@@ -375,7 +411,11 @@ export const TweetComposer = ({
             <Textarea
               value={content}
               onChange={e => onContentChange(e.target.value)}
-              placeholder={isReadOnly ? "This tweet has already been posted and cannot be edited." : "What's happening?"}
+              placeholder={
+                isReadOnly
+                  ? 'This tweet has already been posted and cannot be edited.'
+                  : "What's happening?"
+              }
               className="w-full h-full text-lg resize-none border-2 border-gray-200 rounded-lg focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:border-blue-500 p-4"
               aria-label="Tweet composer"
               readOnly={isReadOnly}
@@ -385,7 +425,7 @@ export const TweetComposer = ({
               <div className="absolute inset-0 bg-muted/20 pointer-events-none rounded-lg" />
             )}
           </div>
-          
+
           {/* Compact Character Count and Auto-save Status */}
           <div className="flex items-center justify-between p-2 border border-gray-200 rounded-lg bg-gray-50 flex-shrink-0">
             <div className="flex items-center space-x-2 text-xs text-muted-foreground">
@@ -419,8 +459,8 @@ export const TweetComposer = ({
                       charPercentage > 100
                         ? '#ef4444'
                         : charPercentage > 90
-                        ? '#eab308'
-                        : '#22c55e'
+                          ? '#eab308'
+                          : '#22c55e'
                     }
                     strokeWidth="2"
                     strokeDasharray={`${Math.min(charPercentage, 100)}, 100`}
@@ -437,7 +477,7 @@ export const TweetComposer = ({
           <ImagePanel
             tweetContent={content}
             currentTweetId={currentTweetId}
-            onImageGenerated={(image) => {
+            onImageGenerated={image => {
               // The hook handles this automatically, but we can add additional logic here if needed
               console.log('Image generated:', image.id);
             }}
@@ -446,7 +486,11 @@ export const TweetComposer = ({
               console.log('Image removed');
             }}
             currentImage={imageGeneration.state.currentImage}
-            disabled={isReadOnly || imageGeneration.state.isGenerating || imageGeneration.state.isUploading}
+            disabled={
+              isReadOnly ||
+              imageGeneration.state.isGenerating ||
+              imageGeneration.state.isUploading
+            }
             imageActions={imageGeneration.actions}
             imageState={imageGeneration.state}
           />
@@ -459,11 +503,19 @@ export const TweetComposer = ({
           {imageGeneration.hasImage && (
             <span className="flex items-center space-x-1">
               <span>📸</span>
-              <span>Image attached ({imageGeneration.formatFileSize(imageGeneration.imageMetadata?.fileSize || 0)})</span>
+              <span>
+                Image attached (
+                {imageGeneration.formatFileSize(
+                  imageGeneration.imageMetadata?.fileSize || 0
+                )}
+                )
+              </span>
             </span>
           )}
           {imageGeneration.state.error && (
-            <span className="text-red-500">⚠️ {imageGeneration.state.error}</span>
+            <span className="text-red-500">
+              ⚠️ {imageGeneration.state.error}
+            </span>
           )}
         </div>
         <div className="flex items-center space-x-3">

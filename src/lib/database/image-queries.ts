@@ -8,7 +8,7 @@ import type { CreateImageData, Image, ImageStyle } from './schema';
 export class ImageQueries {
   /**
    * Save a new image to the database
-   * 
+   *
    * @param imageData - The image data to save
    * @returns Promise<Image> - The saved image with generated ID
    */
@@ -49,13 +49,15 @@ export class ImageQueries {
       return result[0] as Image;
     } catch (error) {
       console.error('Error saving image:', error);
-      throw new Error(`Failed to save image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to save image: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
   /**
    * Get image by tweet ID
-   * 
+   *
    * @param tweetId - The UUID of the tweet
    * @returns Promise<Image | null> - The image or null if none exists
    */
@@ -76,13 +78,15 @@ export class ImageQueries {
       return results[0] as Image;
     } catch (error) {
       console.error('Error retrieving image by tweet ID:', error);
-      throw new Error(`Failed to retrieve image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to retrieve image: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
   /**
    * Get image by ID
-   * 
+   *
    * @param imageId - The UUID of the image
    * @returns Promise<Image | null> - The image or null if not found
    */
@@ -102,15 +106,15 @@ export class ImageQueries {
       return results[0] as Image;
     } catch (error) {
       console.error('Error retrieving image by ID:', error);
-      throw new Error(`Failed to retrieve image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to retrieve image: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
-
-
   /**
    * Delete image by ID
-   * 
+   *
    * @param imageId - The UUID of the image to delete
    * @returns Promise<boolean> - True if deleted, false if not found
    */
@@ -125,13 +129,15 @@ export class ImageQueries {
       return result.length > 0;
     } catch (error) {
       console.error('Error deleting image:', error);
-      throw new Error(`Failed to delete image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to delete image: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
   /**
    * Delete image by tweet ID (cleanup when tweet is deleted)
-   * 
+   *
    * @param tweetId - The UUID of the tweet
    * @returns Promise<boolean> - True if deleted, false if not found
    */
@@ -146,18 +152,22 @@ export class ImageQueries {
       return result.length > 0;
     } catch (error) {
       console.error('Error deleting image by tweet ID:', error);
-      throw new Error(`Failed to delete image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to delete image: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
   /**
    * Save or replace image for a tweet (enforces one-to-one relationship)
    * Deletes any existing image for the tweet, then creates new one
-   * 
+   *
    * @param imageData - The image data to save
    * @returns Promise<Image> - The saved image
    */
-  static async replaceImageForTweet(imageData: CreateImageData): Promise<Image> {
+  static async replaceImageForTweet(
+    imageData: CreateImageData
+  ): Promise<Image> {
     try {
       // First, delete any existing image for this tweet
       await sql`
@@ -201,18 +211,23 @@ export class ImageQueries {
       return result[0] as Image;
     } catch (error) {
       console.error('Error replacing image for tweet:', error);
-      throw new Error(`Failed to replace image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to replace image: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
   /**
    * Get images by style
-   * 
+   *
    * @param style - The image style to filter by
    * @param limit - Maximum number of images to return (default: 10)
    * @returns Promise<Image[]> - Array of images with the specified style
    */
-  static async getImagesByStyle(style: ImageStyle, limit: number = 10): Promise<Image[]> {
+  static async getImagesByStyle(
+    style: ImageStyle,
+    limit: number = 10
+  ): Promise<Image[]> {
     try {
       const results = await sql`
         SELECT id, tweet_id, base64_data, prompt, style, size, format, quality, generation_time_ms, file_size_bytes, created_at
@@ -225,13 +240,15 @@ export class ImageQueries {
       return results as Image[];
     } catch (error) {
       console.error('Error retrieving images by style:', error);
-      throw new Error(`Failed to retrieve images by style: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to retrieve images by style: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
   /**
    * Get recent images
-   * 
+   *
    * @param limit - Maximum number of images to return (default: 10)
    * @returns Promise<Image[]> - Array of recent images
    */
@@ -247,13 +264,15 @@ export class ImageQueries {
       return results as Image[];
     } catch (error) {
       console.error('Error retrieving recent images:', error);
-      throw new Error(`Failed to retrieve recent images: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to retrieve recent images: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
   /**
    * Get image count by style
-   * 
+   *
    * @returns Promise<Record<ImageStyle, number>> - Count of images by style
    */
   static async getImageCountByStyle(): Promise<Record<string, number>> {
@@ -276,4 +295,4 @@ export class ImageQueries {
       return {};
     }
   }
-} 
+}

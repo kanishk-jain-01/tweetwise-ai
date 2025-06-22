@@ -95,9 +95,11 @@ export async function POST(req: NextRequest) {
           associatedImage.base64_data,
           `AI-generated image: ${associatedImage.prompt.substring(0, 100)}...`
         );
-        
+
         console.log('Image uploaded successfully, posting tweet with media...');
-        twitterResponse = await twitterClient.postTweetWithMedia(content, [mediaUpload.media_id_string]);
+        twitterResponse = await twitterClient.postTweetWithMedia(content, [
+          mediaUpload.media_id_string,
+        ]);
       } else {
         // Post text-only tweet
         twitterResponse = await twitterClient.postTweet(content);
@@ -129,7 +131,10 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        if (error.message.includes('Image is too large') || error.message.includes('5MB')) {
+        if (
+          error.message.includes('Image is too large') ||
+          error.message.includes('5MB')
+        ) {
           return NextResponse.json(
             {
               success: false,
@@ -140,18 +145,25 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        if (error.message.includes('Unsupported image format') || error.message.includes('format')) {
+        if (
+          error.message.includes('Unsupported image format') ||
+          error.message.includes('format')
+        ) {
           return NextResponse.json(
             {
               success: false,
-              error: 'Unsupported image format. Please use JPEG, PNG, GIF, or WebP.',
+              error:
+                'Unsupported image format. Please use JPEG, PNG, GIF, or WebP.',
               code: 'UNSUPPORTED_IMAGE_FORMAT',
             },
             { status: 400 }
           );
         }
 
-        if (error.message.includes('media upload') || error.message.includes('Failed to upload')) {
+        if (
+          error.message.includes('media upload') ||
+          error.message.includes('Failed to upload')
+        ) {
           return NextResponse.json(
             {
               success: false,
@@ -162,12 +174,16 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        if (error.message.includes('media.write') || error.message.includes('scope') || 
-            error.message.includes('disconnect and reconnect')) {
+        if (
+          error.message.includes('media.write') ||
+          error.message.includes('scope') ||
+          error.message.includes('disconnect and reconnect')
+        ) {
           return NextResponse.json(
             {
               success: false,
-              error: 'Missing media upload permission. Please disconnect and reconnect your Twitter account to get the required permissions.',
+              error:
+                'Missing media upload permission. Please disconnect and reconnect your Twitter account to get the required permissions.',
               code: 'MISSING_MEDIA_SCOPE',
               action: 'reconnect_twitter',
             },
@@ -230,13 +246,15 @@ export async function POST(req: NextRequest) {
         dbTweetId: dbTweet.id,
         sentAt: dbTweet.sent_at,
         hasMedia: !!associatedImage,
-        mediaInfo: associatedImage ? {
-          style: associatedImage.style,
-          prompt: associatedImage.prompt,
-          size: associatedImage.size,
-        } : null,
+        mediaInfo: associatedImage
+          ? {
+              style: associatedImage.style,
+              prompt: associatedImage.prompt,
+              size: associatedImage.size,
+            }
+          : null,
       },
-      message: associatedImage 
+      message: associatedImage
         ? 'Tweet with image posted successfully to Twitter'
         : 'Tweet posted successfully to Twitter',
     });

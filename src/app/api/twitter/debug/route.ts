@@ -34,7 +34,7 @@ export async function GET(_req: NextRequest) {
       return NextResponse.json({
         success: false,
         error: 'No tokens found in database',
-        debug: { step: 'token_retrieval', userId }
+        debug: { step: 'token_retrieval', userId },
       });
     }
 
@@ -43,8 +43,8 @@ export async function GET(_req: NextRequest) {
       return NextResponse.json({
         success: false,
         error: 'Access token is null/undefined in database',
-        debug: { 
-          step: 'token_format_check', 
+        debug: {
+          step: 'token_format_check',
           userId,
           tokenData: {
             hasAccessToken: !!tokens.access_token,
@@ -52,18 +52,21 @@ export async function GET(_req: NextRequest) {
             accessToken: tokens.access_token,
             refreshToken: tokens.refresh_token,
             twitterUserId: tokens.twitter_user_id,
-            twitterUsername: tokens.twitter_username
-          }
-        }
+            twitterUsername: tokens.twitter_username,
+          },
+        },
       });
     }
 
-    const isValidFormat = tokens.access_token.startsWith('Bearer ') || 
-                         tokens.access_token.match(/^[A-Za-z0-9\-_]+$/);
+    const isValidFormat =
+      tokens.access_token.startsWith('Bearer ') ||
+      tokens.access_token.match(/^[A-Za-z0-9\-_]+$/);
     console.log('Token format check:', {
       accessTokenFormat: isValidFormat ? 'valid' : 'invalid',
       startsWithBearer: tokens.access_token.startsWith('Bearer '),
-      tokenPattern: tokens.access_token.match(/^[A-Za-z0-9\-_]+$/) ? 'alphanumeric' : 'other'
+      tokenPattern: tokens.access_token.match(/^[A-Za-z0-9\-_]+$/)
+        ? 'alphanumeric'
+        : 'other',
     });
 
     // Step 3: Try to create client and make API call
@@ -76,11 +79,11 @@ export async function GET(_req: NextRequest) {
 
       console.log('Making API call to verify credentials...');
       const userInfo = await client.verifyCredentials();
-      
+
       console.log('API call successful:', {
         id: userInfo.id,
         username: userInfo.username,
-        name: userInfo.name
+        name: userInfo.name,
       });
 
       return NextResponse.json({
@@ -91,17 +94,16 @@ export async function GET(_req: NextRequest) {
           userInfo: {
             id: userInfo.id,
             username: userInfo.username,
-            name: userInfo.name
-          }
-        }
+            name: userInfo.name,
+          },
+        },
       });
-
     } catch (apiError: any) {
       console.error('API call failed:', {
         error: apiError.message,
         data: apiError.data,
         status: apiError.status,
-        code: apiError.code
+        code: apiError.code,
       });
 
       // Check if it's a specific Twitter API error
@@ -110,7 +112,7 @@ export async function GET(_req: NextRequest) {
         status: apiError.status,
         code: apiError.code,
         data: apiError.data,
-        type: 'unknown'
+        type: 'unknown',
       };
 
       if (apiError.data?.detail) {
@@ -124,19 +126,18 @@ export async function GET(_req: NextRequest) {
       return NextResponse.json({
         success: false,
         error: 'Twitter API call failed',
-                  debug: {
-            step: 'api_call_failed',
-            tokenInfo: {
-              hasAccessToken: !!tokens.access_token,
-              hasRefreshToken: !!tokens.refresh_token,
-              accessTokenLength: tokens.access_token.length,
-              accessTokenPrefix: tokens.access_token.substring(0, 20) + '...'
-            },
-            apiError: errorDetails
-          }
+        debug: {
+          step: 'api_call_failed',
+          tokenInfo: {
+            hasAccessToken: !!tokens.access_token,
+            hasRefreshToken: !!tokens.refresh_token,
+            accessTokenLength: tokens.access_token.length,
+            accessTokenPrefix: tokens.access_token.substring(0, 20) + '...',
+          },
+          apiError: errorDetails,
+        },
       });
     }
-
   } catch (error) {
     console.error('Debug endpoint error:', error);
     return NextResponse.json(
@@ -145,10 +146,10 @@ export async function GET(_req: NextRequest) {
         error: 'Debug endpoint failed',
         debug: {
           step: 'debug_endpoint_error',
-          error: error instanceof Error ? error.message : 'Unknown error'
-        }
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
       },
       { status: 500 }
     );
   }
-} 
+}

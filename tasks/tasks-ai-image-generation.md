@@ -1,6 +1,7 @@
 # Tasks: AI Image Generation Feature
 
 ## Feature Overview
+
 Add AI image generation capability to TweetWise AI using OpenAI's gpt-image-1 model. Users can generate images based on tweet content with Ghibli and Photo Realistic style options. Images are stored as base64 in database and uploaded to Twitter during posting.
 
 ## Relevant Files
@@ -27,6 +28,7 @@ Add AI image generation capability to TweetWise AI using OpenAI's gpt-image-1 mo
 ## Tasks
 
 - [x] 1.0 Database Schema & Image Storage
+
   - [x] 1.1 Create images table schema in `src/lib/database/schema.ts` with fields for id, tweet_id, base64_data, metadata (prompt, style, size, format), created_at
   - [x] 1.2 Create database migration file `005-add-images-table.ts` with CREATE TABLE statement and indexes
   - [x] 1.3 Update TypeScript interfaces to include Image type and extend Tweet type with optional image relationship
@@ -34,6 +36,7 @@ Add AI image generation capability to TweetWise AI using OpenAI's gpt-image-1 mo
   - [x] 1.5 Run migration to create images table in database
 
 - [x] 2.0 OpenAI gpt-image-1 Integration & Service Layer
+
   - [x] 2.1 Create `src/lib/ai/image-generation.ts` service with gpt-image-1 API integration
   - [x] 2.2 Implement style prompt templates for "Ghibli" and "Photo Realistic" styles
   - [x] 2.3 Create function to generate image prompts from tweet content automatically
@@ -42,6 +45,7 @@ Add AI image generation capability to TweetWise AI using OpenAI's gpt-image-1 mo
   - [x] 2.6 Add authentication and rate limiting to image generation endpoint
 
 - [ ] 3.0 Composer UI Redesign & Image Panel
+
   - [x] 3.1 Create `src/components/features/tweet-composer/image-panel.tsx` component
   - [x] 3.2 Design image panel UI with "Generate AI Image" and "Upload Image" options
   - [x] 3.3 Add style selector dropdown (Ghibli, Photo Realistic) for AI generation
@@ -52,6 +56,7 @@ Add AI image generation capability to TweetWise AI using OpenAI's gpt-image-1 mo
   - [x] 3.8 Add image removal/replace functionality
 
 - [ ] 4.0 Image Management & Tweet Integration
+
   - [x] 4.1 Create `src/hooks/use-image-generation.ts` custom hook for state management
   - [x] 4.2 Create `src/types/image.ts` with comprehensive TypeScript interfaces
   - [x] 4.3 Implement automatic image-tweet association when images are generated
@@ -69,4 +74,4 @@ Add AI image generation capability to TweetWise AI using OpenAI's gpt-image-1 mo
   - [ ] 5.5 Implement error handling for Twitter media upload failures
   - [ ] 5.6 Add image format validation and optimization for Twitter requirements
   - [ ] 5.7 Test end-to-end tweet posting with generated images
-  - [ ] 5.8 Update tweet status tracking to include media upload success/failure 
+  - [ ] 5.8 Update tweet status tracking to include media upload success/failure

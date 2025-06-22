@@ -530,7 +530,7 @@ export class TwitterQueries {
     try {
       // Use individual queries based on what data is provided
       // This is more reliable than dynamic SQL construction
-      
+
       if (data.tweetId && data.sentAt) {
         // For successful tweet posting
         const result = await sql`
@@ -543,7 +543,7 @@ export class TwitterQueries {
           WHERE id = ${tweetId} AND user_id = ${userId}
           RETURNING id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
         `;
-        
+
         if (result.length === 0) {
           throw new Error('Tweet not found or access denied');
         }
@@ -573,7 +573,7 @@ export class TwitterQueries {
             RETURNING id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
           `;
         }
-        
+
         if (result.length === 0) {
           throw new Error('Tweet not found or access denied');
         }
@@ -588,7 +588,7 @@ export class TwitterQueries {
           WHERE id = ${tweetId} AND user_id = ${userId}
           RETURNING id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
         `;
-        
+
         if (result.length === 0) {
           throw new Error('Tweet not found or access denied');
         }
@@ -602,7 +602,7 @@ export class TwitterQueries {
           WHERE id = ${tweetId} AND user_id = ${userId}
           RETURNING id, user_id, content, status, scheduled_for, tweet_id, sent_at, error_message, created_at, updated_at
         `;
-        
+
         if (result.length === 0) {
           throw new Error('Tweet not found or access denied');
         }

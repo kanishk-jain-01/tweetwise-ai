@@ -1,4 +1,8 @@
-import { generateImage, getImageFormatFromBase64, validateImageRequest } from '@/lib/ai/image-generation';
+import {
+  generateImage,
+  getImageFormatFromBase64,
+  validateImageRequest,
+} from '@/lib/ai/image-generation';
 import { authOptions } from '@/lib/auth/auth';
 import { ImageQueries } from '@/lib/database/image-queries';
 import type { ImageGenerationRequest } from '@/lib/database/schema';
@@ -10,7 +14,10 @@ const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 5; // 5 requests per minute per user
 
-function checkRateLimit(userId: string): { allowed: boolean; resetTime?: number } {
+function checkRateLimit(userId: string): {
+  allowed: boolean;
+  resetTime?: number;
+} {
   const now = Date.now();
   const userLimit = rateLimitStore.get(userId);
 
@@ -47,21 +54,23 @@ export async function POST(request: NextRequest) {
     // Rate limiting
     const rateCheck = checkRateLimit(session.user.email);
     if (!rateCheck.allowed) {
-      const resetTimeSeconds = rateCheck.resetTime ? Math.ceil((rateCheck.resetTime - Date.now()) / 1000) : 60;
+      const resetTimeSeconds = rateCheck.resetTime
+        ? Math.ceil((rateCheck.resetTime - Date.now()) / 1000)
+        : 60;
       return NextResponse.json(
-        { 
+        {
           error: 'Rate limit exceeded',
           message: `Too many image generation requests. Try again in ${resetTimeSeconds} seconds.`,
-          resetTime: rateCheck.resetTime
+          resetTime: rateCheck.resetTime,
         },
-        { 
+        {
           status: 429,
           headers: {
             'Retry-After': resetTimeSeconds.toString(),
             'X-RateLimit-Limit': RATE_LIMIT_MAX_REQUESTS.toString(),
             'X-RateLimit-Remaining': '0',
             'X-RateLimit-Reset': rateCheck.resetTime?.toString() || '',
-          }
+          },
         }
       );
     }
@@ -98,15 +107,20 @@ export async function POST(request: NextRequest) {
     const validation = validateImageRequest(imageRequest);
     if (!validation.isValid) {
       return NextResponse.json(
-        { 
+        {
           error: 'Invalid request',
-          details: validation.errors
+          details: validation.errors,
         },
         { status: 400 }
       );
     }
 
-    console.log('Generating image for user:', session.user.email, 'Style:', style);
+    console.log(
+      'Generating image for user:',
+      session.user.email,
+      'Style:',
+      style
+    );
 
     // Generate the image
     const result = await generateImage(imageRequest);
@@ -157,9 +171,8 @@ export async function POST(request: NextRequest) {
         fileSize: `${Math.round(result.fileSizeBytes / 1024)}KB`,
         dimensions: imageRequest.size || '1024x1024',
         style: style,
-      }
+      },
     });
-
   } catch (error) {
     console.error('Image generation API error:', error);
 
@@ -167,9 +180,10 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error) {
       if (error.message.includes('content_policy_violation')) {
         return NextResponse.json(
-          { 
+          {
             error: 'Content Policy Violation',
-            message: 'The content violates OpenAI\'s usage policies. Please try a different prompt.'
+            message:
+              "The content violates OpenAI's usage policies. Please try a different prompt.",
           },
           { status: 400 }
         );
@@ -177,9 +191,9 @@ export async function POST(request: NextRequest) {
 
       if (error.message.includes('rate_limit_exceeded')) {
         return NextResponse.json(
-          { 
+          {
             error: 'OpenAI Rate Limit',
-            message: 'OpenAI API rate limit exceeded. Please try again later.'
+            message: 'OpenAI API rate limit exceeded. Please try again later.',
           },
           { status: 429 }
         );
@@ -187,9 +201,10 @@ export async function POST(request: NextRequest) {
 
       if (error.message.includes('insufficient_quota')) {
         return NextResponse.json(
-          { 
+          {
             error: 'API Quota Exceeded',
-            message: 'OpenAI API quota has been exceeded. Please check your account.'
+            message:
+              'OpenAI API quota has been exceeded. Please check your account.',
           },
           { status: 503 }
         );
@@ -198,9 +213,12 @@ export async function POST(request: NextRequest) {
 
     // Generic error response
     return NextResponse.json(
-      { 
+      {
         error: 'Image Generation Failed',
-        message: error instanceof Error ? error.message : 'An unexpected error occurred during image generation.'
+        message:
+          error instanceof Error
+            ? error.message
+            : 'An unexpected error occurred during image generation.',
       },
       { status: 500 }
     );
@@ -209,22 +227,13 @@ export async function POST(request: NextRequest) {
 
 // Handle unsupported methods
 export async function GET() {
-  return NextResponse.json(
-    { error: 'Method not allowed' },
-    { status: 405 }
-  );
+  return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
 }
 
 export async function PUT() {
-  return NextResponse.json(
-    { error: 'Method not allowed' },
-    { status: 405 }
-  );
+  return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
 }
 
 export async function DELETE() {
-  return NextResponse.json(
-    { error: 'Method not allowed' },
-    { status: 405 }
-  );
-} 
+  return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
+}

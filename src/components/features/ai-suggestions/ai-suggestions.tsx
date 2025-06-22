@@ -6,19 +6,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AnalysisMetadata, Critique, Suggestion } from '@/hooks/use-ai-suggestions';
 import {
-    AlertCircle,
-    CheckCircle,
-    Clock,
-    Database,
-    Lightbulb,
-    Loader2,
-    RefreshCw,
-    Sparkles,
-    ThumbsDown,
-    ThumbsUp,
-    Wand2,
+  AnalysisMetadata,
+  Critique,
+  Suggestion,
+} from '@/hooks/use-ai-suggestions';
+import {
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Database,
+  Lightbulb,
+  Loader2,
+  RefreshCw,
+  Sparkles,
+  ThumbsDown,
+  ThumbsUp,
+  Wand2,
 } from 'lucide-react';
 
 interface AISuggestionsProps {
@@ -52,8 +56,10 @@ export const AISuggestions = ({
   // Format timestamp for display
   const formatTimestamp = (date: Date) => {
     const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
+    const diffInMinutes = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60)
+    );
+
     if (diffInMinutes < 1) {
       return 'Just now';
     } else if (diffInMinutes < 60) {
@@ -96,7 +102,9 @@ export const AISuggestions = ({
                 <CardTitle className="text-sm flex items-center space-x-2">
                   <Wand2 className="w-4 h-4" />
                   <span>AI Assistant</span>
-                  {(isLoading || analysisLoading) && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {(isLoading || analysisLoading) && (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
@@ -238,13 +246,19 @@ export const AISuggestions = ({
                       <Sparkles className="w-4 h-4 text-purple-500" />
                       <span>Tweet Analysis</span>
                       {analysisLoading && (
-                        <Badge variant="outline" className="text-xs flex items-center space-x-1">
+                        <Badge
+                          variant="outline"
+                          className="text-xs flex items-center space-x-1"
+                        >
                           <Loader2 className="w-3 h-3 animate-spin" />
                           <span>Loading...</span>
                         </Badge>
                       )}
                       {!analysisLoading && analysisMetadata?.isFromDatabase && (
-                        <Badge variant="outline" className="text-xs flex items-center space-x-1">
+                        <Badge
+                          variant="outline"
+                          className="text-xs flex items-center space-x-1"
+                        >
                           <Database className="w-3 h-3" />
                           <span>Saved</span>
                         </Badge>
@@ -253,7 +267,9 @@ export const AISuggestions = ({
                     {!analysisLoading && analysisMetadata?.created_at && (
                       <div className="flex items-center space-x-1 text-xs text-muted-foreground">
                         <Clock className="w-3 h-3" />
-                        <span>{formatTimestamp(analysisMetadata.created_at)}</span>
+                        <span>
+                          {formatTimestamp(analysisMetadata.created_at)}
+                        </span>
                       </div>
                     )}
                   </CardTitle>
@@ -261,7 +277,11 @@ export const AISuggestions = ({
                 <CardContent className="pt-0 space-y-3">
                   {analysisLoading && !critique ? (
                     // Loading skeleton for analysis retrieval
-                    <div className="space-y-3" role="status" aria-label="Loading analysis">
+                    <div
+                      className="space-y-3"
+                      role="status"
+                      aria-label="Loading analysis"
+                    >
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <Skeleton className="h-3 w-24" />
@@ -320,8 +340,15 @@ export const AISuggestions = ({
                         </h4>
                         <ul className="text-sm space-y-1" role="list">
                           {critique.suggestions.map((suggestion, index) => (
-                            <li key={index} className="flex items-start space-x-2" role="listitem">
-                              <CheckCircle className="w-3 h-3 text-green-500 mt-0.5 flex-shrink-0" aria-hidden="true" />
+                            <li
+                              key={index}
+                              className="flex items-start space-x-2"
+                              role="listitem"
+                            >
+                              <CheckCircle
+                                className="w-3 h-3 text-green-500 mt-0.5 flex-shrink-0"
+                                aria-hidden="true"
+                              />
                               <span>{suggestion}</span>
                             </li>
                           ))}
@@ -368,7 +395,11 @@ export const AISuggestions = ({
                 onClick={() => onCritique(critique ? true : false)}
                 disabled={isLoading || analysisLoading}
                 className="w-full"
-                aria-label={critique ? 'Re-analyze tweet for updated suggestions' : 'Analyze tweet for engagement and clarity suggestions'}
+                aria-label={
+                  critique
+                    ? 'Re-analyze tweet for updated suggestions'
+                    : 'Analyze tweet for engagement and clarity suggestions'
+                }
               >
                 {analysisLoading ? (
                   <>
@@ -387,7 +418,7 @@ export const AISuggestions = ({
                   </>
                 )}
               </Button>
-              
+
               {/* Loading State for Database Operations */}
               {analysisLoading && !isLoading && (
                 <div className="text-xs text-muted-foreground text-center flex items-center justify-center space-x-1">
@@ -401,7 +432,10 @@ export const AISuggestions = ({
             {!hasSuggestions && !critique && !isLoading && !analysisLoading && (
               <Card>
                 <CardContent className="p-6 text-center">
-                  <CheckCircle className="w-12 h-12 mx-auto mb-4 text-green-500 opacity-50" aria-hidden="true" />
+                  <CheckCircle
+                    className="w-12 h-12 mx-auto mb-4 text-green-500 opacity-50"
+                    aria-hidden="true"
+                  />
                   <p className="text-sm text-muted-foreground mb-2">
                     No issues found
                   </p>

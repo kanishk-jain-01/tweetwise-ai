@@ -71,15 +71,18 @@ export const useTweetHistory = (): UseTweetHistoryReturn => {
   }, [fetchTweets]);
 
   // Optimistically update a tweet in the local state
-  const optimisticallyUpdateTweet = useCallback((tweetId: string, updates: Partial<Tweet>) => {
-    setTweets(prevTweets => 
-      prevTweets.map(tweet => 
-        tweet.id === tweetId 
-          ? { ...tweet, ...updates, updated_at: new Date() }
-          : tweet
-      )
-    );
-  }, []);
+  const optimisticallyUpdateTweet = useCallback(
+    (tweetId: string, updates: Partial<Tweet>) => {
+      setTweets(prevTweets =>
+        prevTweets.map(tweet =>
+          tweet.id === tweetId
+            ? { ...tweet, ...updates, updated_at: new Date() }
+            : tweet
+        )
+      );
+    },
+    []
+  );
 
   // Optimistically add a new tweet to the local state
   const optimisticallyAddTweet = useCallback((tweet: Tweet) => {
@@ -100,18 +103,20 @@ export const useTweetHistory = (): UseTweetHistoryReturn => {
 
     const handleTweetPosted = (event: CustomEvent) => {
       const { tweetId, status, tweetData } = event.detail;
-      
+
       if (tweetId) {
         // Update existing tweet
         optimisticallyUpdateTweet(tweetId, {
           status,
-          ...(status === 'sent' && tweetData?.tweet_id && { 
-            tweet_id: tweetData.tweet_id,
-            sent_at: new Date()
-          }),
-          ...(status === 'scheduled' && tweetData?.scheduledFor && {
-            scheduled_for: new Date(tweetData.scheduledFor)
-          })
+          ...(status === 'sent' &&
+            tweetData?.tweet_id && {
+              tweet_id: tweetData.tweet_id,
+              sent_at: new Date(),
+            }),
+          ...(status === 'scheduled' &&
+            tweetData?.scheduledFor && {
+              scheduled_for: new Date(tweetData.scheduledFor),
+            }),
         });
       } else if (tweetData) {
         // Add new tweet
@@ -129,12 +134,21 @@ export const useTweetHistory = (): UseTweetHistoryReturn => {
 
     window.addEventListener('tweetSaved', handleTweetSaved);
     window.addEventListener('tweetPosted', handleTweetPosted as EventListener);
-    window.addEventListener('tweetDeleted', handleTweetDeleted as EventListener);
+    window.addEventListener(
+      'tweetDeleted',
+      handleTweetDeleted as EventListener
+    );
 
     return () => {
       window.removeEventListener('tweetSaved', handleTweetSaved);
-      window.removeEventListener('tweetPosted', handleTweetPosted as EventListener);
-      window.removeEventListener('tweetDeleted', handleTweetDeleted as EventListener);
+      window.removeEventListener(
+        'tweetPosted',
+        handleTweetPosted as EventListener
+      );
+      window.removeEventListener(
+        'tweetDeleted',
+        handleTweetDeleted as EventListener
+      );
     };
   }, [refreshTweets, optimisticallyUpdateTweet, optimisticallyAddTweet]);
 

@@ -17,9 +17,9 @@ const eslintConfig = [
       // Custom rules for TweetWiseAI
       '@typescript-eslint/no-unused-vars': [
         'error',
-        { 
+        {
           argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_'
+          varsIgnorePattern: '^_',
         },
       ],
       'prefer-const': 'error',
