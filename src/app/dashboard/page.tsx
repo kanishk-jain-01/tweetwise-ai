@@ -321,7 +321,7 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-purple-50/20">
       {/* Dashboard Header */}
       <DashboardHeader
         onSelectTweet={composer.loadDraft}
@@ -346,11 +346,21 @@ export default function DashboardPage() {
       {/* Three-Panel Layout */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Tweet History */}
-        <aside className="w-80 border-r bg-muted/50 flex-col hidden md:flex">
-          <div className="p-4 border-b">
-            <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-              Tweet History & Drafts
-            </h2>
+        <aside className="w-80 border-r border-slate-200/50 bg-white/60 backdrop-blur-sm flex-col hidden md:flex">
+          <div className="p-4 border-b border-slate-200/50">
+            <div className="flex items-center space-x-2 mb-1">
+              <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h2 className="font-bold text-base bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Tweet History & Drafts
+              </h2>
+            </div>
+            <p className="text-xs text-slate-600">
+              Access your saved drafts and tweet history
+            </p>
           </div>
           <div className="flex-1 overflow-hidden">
             <TweetHistory onSelectTweet={composer.loadDraft} />
@@ -358,16 +368,26 @@ export default function DashboardPage() {
         </aside>
 
         {/* Center Panel - Tweet Composer */}
-        <main className="flex-1 flex flex-col">
-          <div className="p-4 border-b">
-            <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-              Compose Tweet
-            </h2>
-            <p className="text-xs text-muted-foreground mt-1 md:hidden">
+        <main className="flex-1 flex flex-col bg-white/40 backdrop-blur-sm">
+          <div className="px-4 pt-4 pb-2 border-b border-slate-200/50">
+            <div className="flex items-center space-x-2 mb-1">
+              <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </div>
+              <h2 className="font-bold text-base bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                Compose Tweet
+              </h2>
+            </div>
+            <p className="text-xs text-slate-600 md:hidden">
               Use the buttons in the header to access History and AI suggestions
             </p>
+            <p className="text-xs text-slate-600 hidden md:block">
+              Write your perfect tweet with AI-powered assistance
+            </p>
           </div>
-          <div className="flex-1 p-6">
+          <div className="flex-1 p-2">
             <TweetComposer
               content={composer.content}
               onContentChange={composer.setContent}
@@ -382,11 +402,21 @@ export default function DashboardPage() {
         </main>
 
         {/* Right Panel - AI Suggestions */}
-        <aside className="w-80 border-l bg-muted/50 flex-col hidden lg:flex">
-          <div className="p-4 border-b">
-            <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-              AI Suggestions
-            </h2>
+        <aside className="w-80 border-l border-slate-200/50 bg-white/60 backdrop-blur-sm flex-col hidden lg:flex">
+          <div className="p-4 border-b border-slate-200/50">
+            <div className="flex items-center space-x-2 mb-1">
+              <div className="w-6 h-6 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-lg flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <h2 className="font-bold text-base bg-gradient-to-r from-indigo-600 to-cyan-600 bg-clip-text text-transparent">
+                AI Suggestions
+              </h2>
+            </div>
+            <p className="text-xs text-slate-600">
+              Real-time feedback and writing assistance
+            </p>
           </div>
           <div className="flex-1 overflow-hidden">
             <AISuggestions

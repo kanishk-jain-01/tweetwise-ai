@@ -388,7 +388,7 @@ export const TweetComposer = ({
   return (
     <div className="flex flex-col h-full">
       {/* Always-visible Status Bar - Fixed Height */}
-      <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/20 h-12 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-1 border-b bg-muted/20 h-10 flex-shrink-0">
         <div className="flex items-center space-x-2">
           {loadedTweetType ? (
             getLoadedTweetIndicator()
