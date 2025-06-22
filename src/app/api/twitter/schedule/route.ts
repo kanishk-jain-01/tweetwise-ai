@@ -29,6 +29,7 @@ const scheduleTweetSchema = z.object({
 // Update scheduled tweet schema
 const updateScheduledTweetSchema = z.object({
   tweetId: z.string().uuid(),
+  action: z.enum(['update', 'cancel']).optional().default('update'),
   content: z
     .string()
     .min(1, 'Tweet content cannot be empty')
@@ -241,49 +242,86 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    const { tweetId, content, scheduledFor } = validation.data;
+        const { tweetId, action, content, scheduledFor } = validation.data;
     const userId = session.user.id;
 
     // Update scheduled tweet
     const twitterQueries = new TwitterQueries();
-    const updateData: any = {};
+    let dbTweet;
 
-    if (content !== undefined) {
-      updateData.content = content;
-    }
-
-    if (scheduledFor !== undefined) {
-      updateData.scheduledFor = new Date(scheduledFor);
-    }
-
-    const dbTweet = await twitterQueries.updateTweetStatus(
-      tweetId,
-      userId,
-      'scheduled',
-      updateData
-    );
-
-    if (!dbTweet) {
-      return NextResponse.json(
+    if (action === 'cancel') {
+      // Cancel scheduled tweet by converting it to draft
+      dbTweet = await twitterQueries.updateTweetStatus(
+        tweetId,
+        userId,
+        'draft',
         {
-          success: false,
-          error: 'Scheduled tweet not found or access denied',
-          code: 'NOT_FOUND',
-        },
-        { status: 404 }
+          scheduledFor: null,
+          errorMessage: null,
+        }
       );
-    }
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        dbTweetId: dbTweet.id,
-        content: dbTweet.content,
-        scheduledFor: dbTweet.scheduled_for,
-        status: dbTweet.status,
-      },
-      message: 'Scheduled tweet updated successfully',
-    });
+      if (!dbTweet) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Scheduled tweet not found or access denied',
+            code: 'NOT_FOUND',
+          },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          dbTweetId: dbTweet.id,
+          content: dbTweet.content,
+          status: dbTweet.status,
+        },
+        message: 'Scheduled tweet cancelled and converted to draft',
+      });
+    } else {
+      // Update scheduled tweet
+      const updateData: any = {};
+
+      if (content !== undefined) {
+        updateData.content = content;
+      }
+
+      if (scheduledFor !== undefined) {
+        updateData.scheduledFor = new Date(scheduledFor);
+      }
+
+      dbTweet = await twitterQueries.updateTweetStatus(
+        tweetId,
+        userId,
+        'scheduled',
+        updateData
+      );
+
+      if (!dbTweet) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Scheduled tweet not found or access denied',
+            code: 'NOT_FOUND',
+          },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          dbTweetId: dbTweet.id,
+          content: dbTweet.content,
+          scheduledFor: dbTweet.scheduled_for,
+          status: dbTweet.status,
+        },
+        message: 'Scheduled tweet updated successfully',
+      });
+    }
   } catch (error) {
     console.error('Update scheduled tweet API error:', error);
 

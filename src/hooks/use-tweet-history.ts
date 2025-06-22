@@ -11,6 +11,8 @@ interface UseTweetHistoryReturn {
   searchTweets: (query: string) => void;
   loadTweet: (tweet: Tweet) => void;
   refreshTweets: () => Promise<void>;
+  optimisticallyUpdateTweet: (tweetId: string, updates: Partial<Tweet>) => void;
+  optimisticallyAddTweet: (tweet: Tweet) => void;
 }
 
 export const useTweetHistory = (): UseTweetHistoryReturn => {
@@ -68,6 +70,22 @@ export const useTweetHistory = (): UseTweetHistoryReturn => {
     await fetchTweets(true);
   }, [fetchTweets]);
 
+  // Optimistically update a tweet in the local state
+  const optimisticallyUpdateTweet = useCallback((tweetId: string, updates: Partial<Tweet>) => {
+    setTweets(prevTweets => 
+      prevTweets.map(tweet => 
+        tweet.id === tweetId 
+          ? { ...tweet, ...updates, updated_at: new Date() }
+          : tweet
+      )
+    );
+  }, []);
+
+  // Optimistically add a new tweet to the local state
+  const optimisticallyAddTweet = useCallback((tweet: Tweet) => {
+    setTweets(prevTweets => [tweet, ...prevTweets]);
+  }, []);
+
   // Initial load
   useEffect(() => {
     fetchTweets();
@@ -80,12 +98,45 @@ export const useTweetHistory = (): UseTweetHistoryReturn => {
       refreshTweets();
     };
 
+    const handleTweetPosted = (event: CustomEvent) => {
+      const { tweetId, status, tweetData } = event.detail;
+      
+      if (tweetId) {
+        // Update existing tweet
+        optimisticallyUpdateTweet(tweetId, {
+          status,
+          ...(status === 'sent' && tweetData?.tweet_id && { 
+            tweet_id: tweetData.tweet_id,
+            sent_at: new Date()
+          }),
+          ...(status === 'scheduled' && tweetData?.scheduledFor && {
+            scheduled_for: new Date(tweetData.scheduledFor)
+          })
+        });
+      } else if (tweetData) {
+        // Add new tweet
+        optimisticallyAddTweet(tweetData);
+      }
+
+      // Still refresh in the background for data consistency
+      setTimeout(() => refreshTweets(), 500);
+    };
+
+    const handleTweetDeleted = (event: CustomEvent) => {
+      const { tweetId } = event.detail;
+      setTweets(prevTweets => prevTweets.filter(tweet => tweet.id !== tweetId));
+    };
+
     window.addEventListener('tweetSaved', handleTweetSaved);
+    window.addEventListener('tweetPosted', handleTweetPosted as EventListener);
+    window.addEventListener('tweetDeleted', handleTweetDeleted as EventListener);
 
     return () => {
       window.removeEventListener('tweetSaved', handleTweetSaved);
+      window.removeEventListener('tweetPosted', handleTweetPosted as EventListener);
+      window.removeEventListener('tweetDeleted', handleTweetDeleted as EventListener);
     };
-  }, [refreshTweets]);
+  }, [refreshTweets, optimisticallyUpdateTweet, optimisticallyAddTweet]);
 
   return {
     tweets,
@@ -95,5 +146,7 @@ export const useTweetHistory = (): UseTweetHistoryReturn => {
     searchTweets,
     loadTweet,
     refreshTweets,
+    optimisticallyUpdateTweet,
+    optimisticallyAddTweet,
   };
 };

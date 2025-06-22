@@ -164,6 +164,19 @@ export default function DashboardPage() {
     setIsScheduleModalOpen(true);
   }, []);
 
+  // Listen for openScheduleModal events from tweet history
+  useEffect(() => {
+    const handleOpenScheduleModal = () => {
+      setIsScheduleModalOpen(true);
+    };
+
+    window.addEventListener('openScheduleModal', handleOpenScheduleModal);
+
+    return () => {
+      window.removeEventListener('openScheduleModal', handleOpenScheduleModal);
+    };
+  }, []);
+
   // Handle tweet posting/scheduling
   const handleTweetPost = useCallback(async (scheduledFor?: Date) => {
     if (!composer.content.trim()) {
@@ -198,6 +211,20 @@ export default function DashboardPage() {
         }
 
         toast.success(`Tweet scheduled for ${scheduledFor.toLocaleString()}`);
+        
+        // Dispatch event for optimistic update
+        window.dispatchEvent(
+          new CustomEvent('tweetPosted', {
+            detail: {
+              tweetId: composer.currentTweetId,
+              status: 'scheduled',
+              tweetData: {
+                scheduledFor: scheduledFor.toISOString(),
+                ...data.data
+              }
+            },
+          })
+        );
         
         // Clear the composer after successful scheduling
         composer.clearContent();
@@ -234,6 +261,17 @@ export default function DashboardPage() {
         }
 
         toast.success('Tweet posted successfully!');
+        
+        // Dispatch event for optimistic update
+        window.dispatchEvent(
+          new CustomEvent('tweetPosted', {
+            detail: {
+              tweetId: composer.currentTweetId,
+              status: 'sent',
+              tweetData: data.data
+            },
+          })
+        );
         
         // Clear the composer after successful posting
         composer.clearContent();

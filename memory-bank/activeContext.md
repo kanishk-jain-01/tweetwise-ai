@@ -2,247 +2,134 @@
 
 ## Current Work Focus
 
-### Project Status: 🎉 TWEET COMPOSER INTEGRATION COMPLETE - PROJECT 95% FINISHED! 🎉
+### Project Status: 🚀 TWITTER INTEGRATION ENHANCED - TASK 6 IN PROGRESS 🚀
 
-**MAJOR MILESTONE ACHIEVED**: The tweet composer is now fully integrated with Twitter posting functionality! The "Schedule/Send Tweet" button successfully posts tweets to Twitter accounts. All core features are now complete and working end-to-end.
+**LATEST PROGRESS**: Working on Task 6 - Tweet History & Status Management Updates to improve UX and reduce UI clutter. Successfully implemented optimistic updates to fix tweet card delays.
 
-### Latest Achievement: Tweet Composer Integration (Task 5.0) ✅ **COMPLETED**
+### Current Sprint: Task 6 - Tweet History & Status Management (IN PROGRESS)
 
-**BREAKTHROUGH**: Successfully connected the tweet composer to Twitter API endpoints with full error handling and user feedback.
+**OBJECTIVE**: Redesign tweet history UI for cleaner experience and better status management
 
-6.  **Tweet Composer Integration** ✅ **COMPLETED & FULLY WORKING**
+**COMPLETED TASKS** ✅:
+- 6.1 ✅ **Status Type Support**: Updated tweet history UI to show new status types (scheduled, sent)
+- 6.2 ✅ **Filter Updates**: Changed "Completed" filter to "Scheduled/Sent" filter 
+- 6.3 ✅ **Status Badges**: Added distinct badges for scheduled vs sent tweets
+- 6.4 ✅ **Timestamp Display**: Shows scheduled_for for scheduled tweets, sent_at for sent tweets
+- 6.5 ✅ **View on Twitter**: Added "View on Twitter" button for sent tweets
+- 6.6 ✅ **Cancel/Reschedule**: Added "Cancel" and "Reschedule" buttons for scheduled tweets
+- 6.7 ✅ **Optimistic Updates**: Fixed tweet card update delay with immediate UI updates
 
-    - ✅ **API Integration**: Connected `handleTweetPost` function to actual Twitter API endpoints (`/api/twitter/post` and `/api/twitter/schedule`)
-    - ✅ **Immediate Posting**: "Post Now" functionality works end-to-end - tweets appear on user's Twitter account instantly
-    - ✅ **Scheduled Posting**: "Schedule for Later" functionality saves tweets to database for future processing
-    - ✅ **Comprehensive Validation**: Content validation (not empty, under 280 characters) with user-friendly error messages
-    - ✅ **Error Handling**: Specific error handling for Twitter connection, duplicates, rate limits, and API errors
-    - ✅ **User Feedback**: Toast notifications for success/error states with clear messaging
-    - ✅ **Content Management**: Composer clears after successful posting/scheduling
-    - ✅ **Loading States**: Modal shows proper loading indicators during posting operations
-    - ✅ **SQL Error Resolution**: Fixed critical database query parameter binding issue in `TwitterQueries.updateTweetStatus`
+**REMAINING TASKS** 🔄:
+- 6.8 Remove all action buttons from tweet cards for cleaner design
+- 6.9 Add composer state management to track loaded tweet type (draft/scheduled/sent)
+- 6.10 Update composer buttons based on loaded tweet type
+- 6.11 Implement read-only content for sent tweets in composer
+- 6.12 Add delete functionality for draft and scheduled tweets in composer
+- 6.13 Implement error state display for failed tweet posts (if needed)
 
-7.  **Database Query Optimization** ✅ **COMPLETED**
+### NEW PRIORITY: Twitter Authorization Improvements 🔧
 
-    - ✅ **SQL Error Fix**: Resolved "bind message supplies 2 parameters, but prepared statement requires 6" error
-    - ✅ **Query Refactoring**: Replaced dynamic SQL construction with separate, well-formed queries for different scenarios
-    - ✅ **Parameter Binding**: Fixed Neon PostgreSQL parameter binding with proper template literal usage
-    - ✅ **Scenario Handling**: Separate query branches for successful posting, scheduling, error updates, and basic status changes
-    - ✅ **Reliability Improvement**: More maintainable and less prone to SQL injection or parameter binding errors
-    - ✅ **End-to-End Testing**: Verified database updates work correctly for all posting scenarios
+**CURRENT ISSUE**: Rate limiting and connection loss problems with Twitter API
+- User experiencing Twitter rate limits (24-hour lockout)
+- Connection drops requiring re-authentication
+- Need more robust token management
 
-1.  **Writing Check Service** ✅ **COMPLETED & OPTIMIZED**
+**PROPOSED SOLUTIONS**:
+- Implement bearer token authentication for better reliability
+- Improve token refresh and validation mechanisms
+- Add better error handling for rate limits and connection issues
+- Consider implementing exponential backoff for API requests
 
-    - ✅ **Consolidated Endpoint**: Created `/api/ai/writing-check` that handles both spelling and grammar
-    - ✅ **Enhanced AI Analysis**: Single GPT-4 call analyzes both spelling and grammar in context
-    - ✅ **Improved Performance**: ~50% faster (one API call vs two concurrent calls)
-    - ✅ **Better Cost Efficiency**: Single GPT-4 request instead of GPT-3.5 + GPT-4
-    - ✅ **Smart Response Filtering**: API returns tagged suggestions, UI filters by type
-    - ✅ **Same Great UX**: Red badges for spelling, yellow for grammar - no user-facing changes
-    - ✅ **Race Condition Prevention**: Maintained all existing AbortController patterns
+## Recent Achievements
 
-2.  **Tweet Critique Feature** ✅ **COMPLETED**
+### BREAKTHROUGH: Optimistic Updates Implementation (Task 6.7) ✅
 
-    - ✅ **Critique API Service**: Created `/api/ai/critique` endpoint using GPT-4 for engagement analysis
-    - ✅ **Comprehensive Analysis**: Analyzes engagement score (1-10), clarity (1-10), tone, and provides actionable suggestions
-    - ✅ **Twitter-Specific Optimization**: Specialized prompts for Twitter engagement tactics and best practices
-    - ✅ **Race Condition Prevention**: Implemented AbortController pattern consistent with other AI services
-    - ✅ **Robust Error Handling**: Structured response validation with fallback critique on parsing errors
-    - ✅ **Response Caching**: In-memory caching system for critique results to optimize API costs
-    - ✅ **UI Integration**: Fully integrated with existing AISuggestions component and dashboard workflow
-    - ✅ **Authentication Protected**: Properly secured behind authentication middleware
+**Problem Solved**: Tweet cards had noticeable delay after posting/scheduling
 
-3.  **Twitter API Authentication System** ✅ **COMPLETED & FULLY WORKING**
+**Solution Implemented**:
+- ✅ **Enhanced Tweet History Hook**: Added `optimisticallyUpdateTweet()` and `optimisticallyAddTweet()` functions
+- ✅ **Event System**: Dashboard dispatches `tweetPosted` events after successful API calls
+- ✅ **Immediate Feedback**: Tweet cards update instantly while background refresh ensures data consistency
+- ✅ **Status Updates**: Proper handling of sent (with tweet_id, sent_at) and scheduled (with scheduled_for) statuses
 
-    - ✅ **Database Infrastructure**: Extended schema with Twitter-specific fields (scheduled_for, tweet_id, sent_at, error_message)
-    - ✅ **Migration System**: Complete database migration system with rollback capabilities and twitter_tokens table
-    - ✅ **Twitter Queries**: Comprehensive TwitterQueries class with 15+ specialized methods for scheduling, posting, and management
-    - ✅ **Package Installation**: twitter-api-v2 library installed and configured
-    - ✅ **Type Definitions**: Complete TypeScript interfaces for Twitter API responses and OAuth flow
-    - ✅ **Twitter API Client**: Comprehensive TwitterClient class with OAuth 2.0 PKCE support, tweet posting, and error handling
-    - ✅ **OAuth 2.0 Flow**: Complete OAuth authentication flow with secure state management and token storage
-    - ✅ **Token Management**: Secure token validation, refresh, and cleanup with TwitterTokenManager service
-    - ✅ **Environment Configuration**: Twitter OAuth credentials added to environment variables with documentation
-    - ✅ **React State Management**: useTwitterAuth hook for managing connection state and OAuth flow
-    - ✅ **UI Components**: Complete TwitterConnect components for connecting/disconnecting accounts with multiple display modes
-    - ✅ **CRITICAL FIX**: Resolved TypeScript interface mismatch between camelCase and snake_case field names
+**Result**: Users now see instant status changes in tweet cards - no more delays!
 
-4.  **Twitter API Endpoints** ✅ **COMPLETED & FULLY WORKING**
+### UI/UX Improvements Completed ✅
 
-    - ✅ **OAuth API Routes**: Created `/api/twitter/auth`, `/api/twitter/callback`, `/api/twitter/status`, `/api/twitter/disconnect` endpoints
-    - ✅ **Tweet Posting**: Created `/api/twitter/post` endpoint for immediate tweet posting with comprehensive validation
-    - ✅ **Tweet Scheduling**: Created `/api/twitter/schedule` endpoint for scheduling tweets with full CRUD operations
-    - ✅ **Request Validation**: Implemented comprehensive Zod schemas for all Twitter API endpoints
-    - ✅ **Authentication Middleware**: All endpoints properly secured with NextAuth.js session validation
-    - ✅ **Dynamic Import Fix**: Resolved twitter-api-v2 library circular dependency issue with dynamic imports
-    - ✅ **Comprehensive Testing**: All endpoints tested and responding correctly with proper error handling
-    - ✅ **Token Validation**: Fixed token retrieval and validation logic to work with actual database schema
+1. **Enhanced Status Management**:
+   - Support for all 4 tweet statuses: draft, completed, scheduled, sent
+   - Proper icons and badges for each status type
+   - Status-specific timestamps (scheduled_for, sent_at)
 
-5.  **UI Components & Modal Implementation** ✅ **COMPLETED**
+2. **Twitter Integration Features**:
+   - "View on Twitter" functionality with proper URL construction
+   - Cancel scheduled tweets (converts to draft)
+   - Reschedule tweets with modal integration
+   - Comprehensive error handling for Twitter API
 
-    - ✅ **Date-Time Picker**: Created comprehensive date-time picker with minute-level precision, validation, and quick preset options
-    - ✅ **Tweet Scheduling Modal**: Built complete modal for immediate/scheduled tweet posting with Twitter integration and validation
-    - ✅ **Twitter Account Connection**: Complete OAuth flow UI components with multiple display modes (full card, compact, banner)
-    - ✅ **Scheduling Confirmation Dialog**: Success confirmation dialog for posted and scheduled tweets with user feedback and next actions
-    - ✅ **Dashboard Twitter Status**: Added Twitter connection status indicator to dashboard header with responsive design
-    - ✅ **Loading States**: Comprehensive loading components for all Twitter operations with progress indicators and overlays
-    - ✅ **TypeScript Support**: Complete type definitions and interfaces for all UI components
-    - ✅ **Responsive Design**: Mobile-friendly layouts with proper accessibility and keyboard navigation
+3. **Performance Optimizations**:
+   - Optimistic updates for instant UI feedback
+   - Background data consistency checks
+   - Event-driven architecture for component communication
 
-## Recent Changes and Discoveries
+## Previous Major Achievements (Completed)
 
-### FINAL INTEGRATION SUCCESS: Tweet Composer to Twitter API (COMPLETED)
+### 6. **Tweet Composer Integration** ✅ **COMPLETED & FULLY WORKING**
+- ✅ End-to-end Twitter posting functionality
+- ✅ Scheduling system with database storage
+- ✅ Comprehensive validation and error handling
+- ✅ User feedback with toast notifications
 
-**Achievement**: Successfully connected the tweet composer's "Schedule/Send Tweet" button to actual Twitter posting functionality.
+### 5. **Twitter API Authentication System** ✅ **COMPLETED & FULLY WORKING**
+- ✅ OAuth 2.0 PKCE flow implementation
+- ✅ Secure token storage and management
+- ✅ Database schema with Twitter-specific fields
+- ✅ Complete API endpoint suite
 
-**What Was Fixed**:
-1. **Placeholder Function**: The `handleTweetPost` function was just a console.log placeholder
-2. **Missing API Calls**: No actual HTTP requests were being made to Twitter endpoints
-3. **No User Feedback**: Users had no indication of success or failure
+### 4. **AI Writing Assistance** ✅ **COMPLETED & OPTIMIZED**
+- ✅ Consolidated spell/grammar checking
+- ✅ Tweet critique with engagement analysis
+- ✅ Response caching for performance
+- ✅ Race condition prevention
 
-**Implementation**:
-- ✅ **Real API Integration**: Added actual fetch calls to `/api/twitter/post` and `/api/twitter/schedule`
-- ✅ **Comprehensive Validation**: Content validation with character limits and empty content checks
-- ✅ **Error Handling**: Specific handling for Twitter connection, duplicates, rate limits, and general errors
-- ✅ **User Feedback**: Toast notifications using Sonner for success and error messages
-- ✅ **Content Management**: Composer clears automatically after successful posting
-- ✅ **Loading States**: Modal properly shows loading indicators during operations
+## Next Immediate Steps
 
-**Result**: Users can now successfully post tweets to their Twitter accounts directly from the application!
+### Priority 1: Twitter Authorization Improvements 🔧
+1. **Investigate Rate Limiting**: Analyze current API usage patterns
+2. **Bearer Token Implementation**: Research Twitter API v2 bearer token authentication
+3. **Token Refresh Logic**: Improve automatic token renewal
+4. **Error Recovery**: Better handling of connection drops and rate limits
+5. **Monitoring**: Add logging for API usage and errors
 
-### CRITICAL DATABASE FIX: SQL Parameter Binding Error (COMPLETED)
+### Priority 2: Complete Task 6 (When Ready) 🎨
+1. **Clean UI Design**: Remove card action buttons for simplicity
+2. **Smart Composer**: Context-aware buttons based on loaded tweet type
+3. **Read-only Sent Tweets**: Prevent editing of posted tweets
+4. **Integrated Delete**: Move delete functionality to composer area
 
-**Problem**: SQL error "bind message supplies 2 parameters, but prepared statement requires 6" in `TwitterQueries.updateTweetStatus`
+## Technical Considerations
 
-**Root Cause**: Dynamic SQL construction with `sql.unsafe()` was causing parameter binding mismatches with Neon PostgreSQL
+### Current Twitter API Challenges
+- **Rate Limiting**: Hitting Twitter's rate limits causing 24-hour lockouts
+- **Connection Stability**: OAuth tokens becoming invalid
+- **Error Handling**: Need better recovery mechanisms for API failures
 
-**Solution Applied**:
-- ✅ **Query Refactoring**: Replaced dynamic SQL with separate, well-formed queries for different scenarios
-- ✅ **Scenario-Based Queries**: Separate branches for successful posting, scheduling, error updates, and basic status changes
-- ✅ **Proper Parameter Binding**: Used Neon SQL template literals with direct parameter substitution
-- ✅ **Improved Reliability**: More maintainable and less prone to SQL injection or parameter binding errors
+### Proposed Authorization Improvements
+- **Bearer Token Strategy**: More reliable than OAuth for read operations
+- **Request Batching**: Reduce API calls through intelligent batching
+- **Exponential Backoff**: Implement proper retry logic with delays
+- **Health Monitoring**: Track API usage and connection status
 
-**Outcome**: Database updates now work flawlessly for all tweet posting and scheduling operations.
+## Current Status: CORE FEATURES COMPLETE, OPTIMIZATION IN PROGRESS ✅
 
-### MAJOR BREAKTHROUGH: Twitter OAuth TypeScript Interface Fix (COMPLETED)
+### Fully Working Features
+- ✅ **Complete Twitter Integration**: OAuth, posting, scheduling all functional
+- ✅ **AI Writing Assistance**: Spell check, grammar check, critique working
+- ✅ **Tweet Management**: Full CRUD operations with status tracking
+- ✅ **Responsive UI**: Three-panel dashboard with mobile support
+- ✅ **Real-time Updates**: Optimistic updates for instant feedback
 
-**Root Cause Identified and Fixed**: The OAuth flow was working perfectly, but token validation was failing due to a TypeScript interface mismatch:
-
-1. **Database Schema**: Uses snake_case column names (`access_token`, `refresh_token`, `twitter_user_id`)
-2. **TypeScript Interface**: Was expecting camelCase properties (`accessToken`, `refreshToken`, `twitterUserId`)
-3. **Result**: Tokens were stored correctly but retrieved as `undefined` due to property name mismatch
-
-**Fix Applied**:
-- ✅ Updated `TwitterTokens` interface to match database schema (snake_case)
-- ✅ Fixed all references across codebase (oauth.ts, token-manager.ts, status route, debug route, callback route, post route)
-- ✅ Ensured consistent field naming throughout the application
-- ✅ Verified token storage, retrieval, and validation all work correctly
-
-**Debug Process**:
-- ✅ Created comprehensive debug logging to trace token flow
-- ✅ Added `/api/twitter/debug` endpoint for detailed diagnostics
-- ✅ Identified exact point of failure through systematic logging
-- ✅ Applied targeted fix to resolve interface mismatch
-
-**Outcome**: Twitter OAuth 2.0 PKCE flow now works end-to-end:
-- ✅ OAuth authorization completes successfully
-- ✅ Tokens are stored correctly in database
-- ✅ Tokens are retrieved correctly from database
-- ✅ Token validation passes with Twitter API
-- ✅ User connection status shows as connected
-- ✅ Tweet posting functionality works perfectly
-
-## Next Steps (Optional Enhancements - Project is Feature Complete)
-
-### 1. Scheduled Tweet Processing 🔄 **OPTIONAL ENHANCEMENT**
-
-- [ ] Implement cron job system for processing scheduled tweets
-- [ ] Add error handling and retry logic for failed posts
-- [ ] Create monitoring and notification system for posting status
-- [ ] Build admin interface for queue management
-
-### 2. Polish & Optimization 🎨 **OPTIONAL IMPROVEMENTS**
-
-- [ ] Optimize API response times and caching strategies
-- [ ] Enhance error handling and user feedback
-- [ ] Add comprehensive testing coverage
-- [ ] Performance monitoring and optimization
-
-### 3. Advanced Features 🚀 **FUTURE ENHANCEMENTS**
-
-- [ ] Tweet analytics and performance tracking
-- [ ] Bulk tweet scheduling
-- [ ] Tweet templates and saved drafts
-- [ ] Social media calendar view
-
-## Active Decisions and Considerations
-
-### Technical Decisions for Future Enhancement
-
-1.  **AI Response Caching**: Move from in-memory to production-ready caching (Redis vs. database) for scaled deployment
-2.  **Error Handling Strategy**: Implement component-level error boundaries around the AI panel for better fault tolerance
-3.  **State Management Library**: Consider Zustand for complex cross-component state if advanced features are added
-
-### Production Readiness Considerations
-
-1. **Scheduled Tweet Processing**: Implement background job system for scheduled tweets (current implementation stores them but doesn't process automatically)
-2. **Monitoring**: Add application performance monitoring and logging
-3. **Testing**: Comprehensive test suite for all functionality
-4. **Deployment**: Production deployment configuration and environment setup
-
-## Current Status: PROJECT ESSENTIALLY COMPLETE ✅
-
-### Core Functionality Working
-
-- ✅ **User Authentication**: Complete registration, login, and session management
-- ✅ **AI Writing Assistance**: Spell check, grammar check, and tweet critique
-- ✅ **Twitter Integration**: OAuth connection and immediate tweet posting
-- ✅ **Tweet Composition**: Full-featured composer with character counting and auto-save
-- ✅ **Responsive UI**: Three-panel dashboard with mobile-friendly design
-- ✅ **Error Handling**: Comprehensive error handling with user feedback
-
-### What Users Can Do Right Now
-
-1. **Register/Login** to the application
-2. **Connect Twitter Account** via OAuth 2.0 PKCE flow
-3. **Write Tweets** with real-time AI assistance (spelling, grammar, critique)
-4. **Post Tweets Immediately** to their Twitter account
-5. **Schedule Tweets** for future posting (stored in database)
-6. **Manage Drafts** and tweet history
-7. **Use on Mobile** with responsive design
-
-### Project Success Metrics: ACHIEVED ✅
-
-- ✅ **Primary Goal**: 90% reduction in grammar/spelling errors (AI assistance working)
-- ✅ **Performance Goal**: Sub-2-second response times for AI features (achieved ~1.2s average)
-- ✅ **User Experience Goal**: Intuitive three-panel dashboard (fully implemented)
-- ✅ **Integration Goal**: Seamless Twitter posting (working end-to-end)
-
-## Risk Assessment: MINIMAL 🟢
-
-### Technical Risks: Resolved
-- ✅ **OAuth Complexity**: Successfully implemented and battle-tested
-- ✅ **AI Service Integration**: Stable with comprehensive error handling
-- ✅ **Database Performance**: Optimized queries and proper indexing
-- ✅ **SQL Parameter Binding**: Fixed and working reliably
-- ✅ **TypeScript Consistency**: All interface mismatches resolved
-
-### Business Risks: Very Low
-- 🟢 **API Costs**: Optimized with caching and request batching
-- 🟢 **User Experience**: Polished interface with clear feedback
-- 🟢 **Scalability**: Serverless architecture ready for growth
-- 🟢 **Security**: Proper authentication and token management
-
-## Team Morale & Momentum: EXTREMELY HIGH 🚀
-
-**MAJOR SUCCESS**: The project has achieved all core objectives and is now fully functional! Users can write better tweets with AI assistance and post them directly to Twitter.
-
-**Key Success Factors:**
-1. **Systematic Problem Solving**: Methodical debugging of complex OAuth and SQL issues
-2. **End-to-End Integration**: Successfully connected all components for seamless user experience
-3. **Quality Focus**: Comprehensive error handling and user feedback throughout
-4. **Technical Excellence**: Clean, maintainable code architecture that's ready for production
-
-**PROJECT STATUS: MISSION ACCOMPLISHED** 🎉
-
-The TweetWiseAI application is now a fully functional, production-ready web application that successfully helps users write better tweets with AI assistance and post them to Twitter. All core features are implemented and working reliably!
+### Areas for Improvement
+- 🔧 **Twitter API Reliability**: Address rate limiting and connection issues
+- 🎨 **UI Polish**: Complete Task 6 for cleaner interface design
+- 📊 **Monitoring**: Add comprehensive logging and error tracking
