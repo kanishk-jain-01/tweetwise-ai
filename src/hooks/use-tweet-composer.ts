@@ -193,8 +193,12 @@ export const useTweetComposer = (
     lastLoadedContentRef.current = tweet.content;
     
     // Dispatch event to signal that content is being loaded (not typed)
+    // Include tweet ID to trigger analysis loading
     window.dispatchEvent(new CustomEvent('contentLoading', { 
-      detail: { content: tweet.content } 
+      detail: { 
+        content: tweet.content,
+        tweetId: tweet.id 
+      } 
     }));
     
     setContent(tweet.content);

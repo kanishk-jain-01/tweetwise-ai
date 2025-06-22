@@ -316,10 +316,12 @@ export default function DashboardPage() {
         grammarSuggestions={suggestions.grammarSuggestions}
         critique={suggestions.critique}
         isLoading={suggestions.isLoading}
+        analysisLoading={suggestions.analysisLoading}
         error={suggestions.error}
+        analysisMetadata={suggestions.analysisMetadata}
         onAccept={handleAcceptSuggestion}
         onReject={handleRejectSuggestion}
-        onCritique={() => suggestions.requestCritique(composer.content)}
+        onCritique={(forceRefresh) => suggestions.requestCritique(composer.content, composer.currentTweetId || undefined, forceRefresh)}
       />
 
       {/* Three-Panel Layout */}
@@ -373,10 +375,12 @@ export default function DashboardPage() {
               grammarSuggestions={suggestions.grammarSuggestions}
               critique={suggestions.critique}
               isLoading={suggestions.isLoading}
+              analysisLoading={suggestions.analysisLoading}
               error={suggestions.error}
+              analysisMetadata={suggestions.analysisMetadata}
               onAccept={handleAcceptSuggestion}
               onReject={handleRejectSuggestion}
-              onCritique={() => suggestions.requestCritique(composer.content)}
+              onCritique={(forceRefresh) => suggestions.requestCritique(composer.content, composer.currentTweetId || undefined, forceRefresh)}
             />
           </div>
         </aside>

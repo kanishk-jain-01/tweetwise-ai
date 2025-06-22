@@ -1,12 +1,18 @@
 import openai, { AI_MODELS } from '@/lib/ai/openai';
+import { authOptions } from '@/lib/auth/auth';
+import { AIResponseQueries } from '@/lib/database/ai-queries';
+import { TweetQueries, UserQueries } from '@/lib/database/queries';
+import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-// In-memory cache for critique results
-const cache = new Map<string, TweetCritique>();
+// In-memory cache for critique results (secondary performance layer)
+const cache = new Map<string, TweetCritiqueWithMetadata>();
 
 const critiqueSchema = z.object({
   content: z.string().min(1).max(560),
+  tweetId: z.string().uuid().optional(), // Optional for backward compatibility
+  forceRefresh: z.boolean().optional(), // Optional flag to bypass cache and generate fresh analysis
 });
 
 interface TweetCritique {
@@ -16,8 +22,22 @@ interface TweetCritique {
   suggestions: string[];
 }
 
+interface TweetCritiqueWithMetadata extends TweetCritique {
+  id?: string;
+  created_at?: Date;
+}
+
 export async function POST(req: NextRequest) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     let body;
     try {
       body = await req.json();
@@ -37,13 +57,62 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { content } = validation.data;
+    const { content, tweetId, forceRefresh } = validation.data;
 
-    const cacheKey = `critique:${content}`;
-    if (cache.has(cacheKey)) {
+    // If tweetId is provided, verify user owns the tweet
+    if (tweetId) {
+      const user = await UserQueries.findByEmail(session.user.email);
+      if (!user) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        );
+      }
+
+      const hasOwnership = await TweetQueries.verifyOwnership(tweetId, user.id);
+      if (!hasOwnership) {
+        return NextResponse.json(
+          { error: 'Tweet not found or access denied' },
+          { status: 403 }
+        );
+      }
+    }
+
+    // If tweetId is provided and not forcing refresh, check database first for existing analysis
+    if (tweetId && !forceRefresh) {
+      try {
+        const existingAnalysis = await AIResponseQueries.getAnalysis(tweetId, 'critique');
+        if (existingAnalysis) {
+          const critique = existingAnalysis.response_data as TweetCritique;
+          const critiqueWithMetadata: TweetCritiqueWithMetadata = {
+            ...critique,
+            id: existingAnalysis.id,
+            created_at: existingAnalysis.created_at,
+          };
+
+          // Also cache in memory for performance
+          const cacheKey = `critique:${tweetId}:${content}`;
+          cache.set(cacheKey, critiqueWithMetadata);
+
+          return NextResponse.json({
+            critique: critiqueWithMetadata,
+            cached: true,
+            source: 'database',
+          });
+        }
+      } catch (error) {
+        console.error('Error retrieving existing analysis from database:', error);
+        // Continue with new analysis generation
+      }
+    }
+
+    // Check in-memory cache as fallback (skip if forcing refresh)
+    const cacheKey = tweetId ? `critique:${tweetId}:${content}` : `critique:${content}`;
+    if (!forceRefresh && cache.has(cacheKey)) {
       return NextResponse.json({
         critique: cache.get(cacheKey),
         cached: true,
+        source: 'memory',
       });
     }
 
@@ -158,12 +227,30 @@ Tweet to analyze:
       };
     }
 
-    // Cache the result
-    cache.set(cacheKey, critique);
+    // Save to database if tweetId is provided
+    let critiqueWithMetadata: TweetCritiqueWithMetadata = critique;
+    
+    if (tweetId) {
+      try {
+        const savedAnalysis = await AIResponseQueries.saveAnalysis(tweetId, 'critique', critique);
+        critiqueWithMetadata = {
+          ...critique,
+          id: savedAnalysis.id,
+          created_at: savedAnalysis.created_at,
+        };
+      } catch (error) {
+        console.error('Error saving analysis to database:', error);
+        // Continue with in-memory cache only
+      }
+    }
+
+    // Cache the result in memory for performance
+    cache.set(cacheKey, critiqueWithMetadata);
 
     return NextResponse.json({
-      critique,
+      critique: critiqueWithMetadata,
       cached: false,
+      source: 'generated',
     });
   } catch (error) {
     console.error('Tweet critique API error:', error);
