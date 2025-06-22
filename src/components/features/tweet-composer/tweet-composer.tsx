@@ -7,8 +7,20 @@ import { AutoSaveStatus, LoadedTweetType } from '@/hooks/use-tweet-composer';
 import { Tweet } from '@/lib/database/schema';
 import { cn } from '@/lib/utils/cn';
 import { AlertCircle, Calendar, Check, CheckCircle, CircleDashed, Clock, Edit, ExternalLink, FilePlus, Send, Trash2, X } from 'lucide-react';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
+import { ImagePanel } from './image-panel';
+
+// Image interface for the composer
+interface GeneratedImage {
+  id?: string;
+  base64Data: string;
+  prompt: string;
+  style: 'ghibli' | 'photo_realistic';
+  generationTimeMs: number;
+  fileSizeBytes: number;
+  savedToDatabase: boolean;
+}
 
 interface TweetComposerProps {
   content: string;
@@ -25,11 +37,15 @@ export const TweetComposer = ({
   content,
   onContentChange,
   autoSaveStatus,
+  currentTweetId,
   loadedTweetType,
   loadedTweetInfo,
   onNewDraft,
   onScheduleTweet,
 }: TweetComposerProps) => {
+  // Image state management
+  const [currentImage, setCurrentImage] = useState<GeneratedImage | null>(null);
+  
   const characterCount = content.length;
   const maxChars = 280;
   const charPercentage = (characterCount / maxChars) * 100;
@@ -236,6 +252,17 @@ export const TweetComposer = ({
     }
   }, [loadedTweetInfo]);
 
+  // Image handling callbacks
+  const handleImageGenerated = useCallback((image: GeneratedImage) => {
+    setCurrentImage(image);
+    console.log('Image generated and set:', image.id);
+  }, []);
+
+  const handleImageRemoved = useCallback(() => {
+    setCurrentImage(null);
+    console.log('Image removed');
+  }, []);
+
   const isReadOnly = loadedTweetType === 'sent' || loadedTweetType === 'completed';
 
   const renderActionButtons = () => {
@@ -362,70 +389,94 @@ export const TweetComposer = ({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Loaded Tweet Indicator */}
+      {/* Compact Status Bar */}
       {loadedTweetType && (
-        <div className="px-4 py-2 border-b bg-muted/30">
-          {getLoadedTweetIndicator()}
+        <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/20">
+          <div className="flex items-center space-x-2">
+            {getLoadedTweetIndicator()}
+          </div>
         </div>
       )}
 
-      <div className="relative flex-1">
-        <Textarea
-          value={content}
-          onChange={e => onContentChange(e.target.value)}
-          placeholder={isReadOnly ? "This tweet has already been posted and cannot be edited." : "What's happening?"}
-          className="w-full h-full text-lg resize-none border-none focus-visible:ring-0 p-4"
-          aria-label="Tweet composer"
-          readOnly={isReadOnly}
-          disabled={isReadOnly}
-        />
-        {isReadOnly && (
-          <div className="absolute inset-0 bg-muted/20 pointer-events-none" />
-        )}
-      </div>
-      
-      <div className="flex items-center justify-between p-4 border-t">
-        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-          {!isReadOnly && getAutoSaveIndicator()}
-        </div>
-        <div className="flex items-center space-x-4">
-          <div
-            className={cn(
-              'font-medium text-sm',
-              getCharacterCountColor(characterCount)
+      {/* Dual Panel Layout - Fixed height calculation */}
+      <div className="flex flex-col lg:flex-row gap-4 p-4" style={{ height: 'calc(100% - 120px)' }}>
+        {/* Left Panel - Text Composer */}
+        <div className="flex-1 flex flex-col min-h-0">
+          {/* Text Area with proper height constraints */}
+          <div className="relative flex-1 mb-3" style={{ minHeight: '200px' }}>
+            <Textarea
+              value={content}
+              onChange={e => onContentChange(e.target.value)}
+              placeholder={isReadOnly ? "This tweet has already been posted and cannot be edited." : "What's happening?"}
+              className="w-full h-full text-lg resize-none border-2 border-gray-200 rounded-lg focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:border-blue-500 p-4"
+              aria-label="Tweet composer"
+              readOnly={isReadOnly}
+              disabled={isReadOnly}
+            />
+            {isReadOnly && (
+              <div className="absolute inset-0 bg-muted/20 pointer-events-none rounded-lg" />
             )}
-          >
-            {characterCount}/{maxChars}
           </div>
-          <div className="relative w-8 h-8">
-            <svg className="w-full h-full" viewBox="0 0 36 36">
-              <path
-                d="M18 2.0845
-                  a 15.9155 15.9155 0 0 1 0 31.831
-                  a 15.9155 15.9155 0 0 1 0 -31.831"
-                fill="none"
-                stroke="#e6e6e6"
-                strokeWidth="2"
-              />
-              <path
-                d="M18 2.0845
-                  a 15.9155 15.9155 0 0 1 0 31.831
-                  a 15.9155 15.9155 0 0 1 0 -31.831"
-                fill="none"
-                stroke={getCharacterCountColor(characterCount).replace(
-                  'text-',
-                  ''
+          
+          {/* Compact Character Count and Auto-save Status */}
+          <div className="flex items-center justify-between p-2 border border-gray-200 rounded-lg bg-gray-50 flex-shrink-0">
+            <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+              {!isReadOnly && getAutoSaveIndicator()}
+            </div>
+            <div className="flex items-center space-x-3">
+              <div
+                className={cn(
+                  'font-medium text-sm',
+                  getCharacterCountColor(characterCount)
                 )}
-                strokeWidth="2"
-                strokeDasharray={`${charPercentage}, 100`}
-              />
-            </svg>
+              >
+                {characterCount}/{maxChars}
+              </div>
+              <div className="relative w-6 h-6">
+                <svg className="w-full h-full" viewBox="0 0 36 36">
+                  <path
+                    d="M18 2.0845
+                      a 15.9155 15.9155 0 0 1 0 31.831
+                      a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    stroke="#e6e6e6"
+                    strokeWidth="2"
+                  />
+                  <path
+                    d="M18 2.0845
+                      a 15.9155 15.9155 0 0 1 0 31.831
+                      a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    stroke={getCharacterCountColor(characterCount).replace(
+                      'text-',
+                      ''
+                    )}
+                    strokeWidth="2"
+                    strokeDasharray={`${charPercentage}, 100`}
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Panel - Image Panel with height constraints */}
+        <div className="w-full lg:w-80 flex-shrink-0" style={{ maxHeight: '600px' }}>
+          <div className="h-full overflow-hidden">
+            <ImagePanel
+              tweetContent={content}
+              currentTweetId={currentTweetId}
+              onImageGenerated={handleImageGenerated}
+              onImageRemoved={handleImageRemoved}
+              currentImage={currentImage}
+              disabled={isReadOnly}
+            />
           </div>
         </div>
       </div>
       
-      {/* Action Buttons */}
-      <div className="flex items-center justify-between p-4 border-t bg-background">
+      {/* Action Buttons - Always visible at bottom */}
+      <div className="flex items-center justify-between p-4 border-t bg-background flex-shrink-0">
         {renderActionButtons()}
       </div>
     </div>

@@ -33,20 +33,20 @@ Add AI image generation capability to TweetWise AI using OpenAI's gpt-image-1 mo
   - [x] 1.4 Create `src/lib/database/image-queries.ts` with CRUD operations (save, get, delete, update)
   - [x] 1.5 Run migration to create images table in database
 
-- [ ] 2.0 OpenAI gpt-image-1 Integration & Service Layer
-  - [ ] 2.1 Create `src/lib/ai/image-generation.ts` service with gpt-image-1 API integration
-  - [ ] 2.2 Implement style prompt templates for "Ghibli" and "Photo Realistic" styles
-  - [ ] 2.3 Create function to generate image prompts from tweet content automatically
-  - [ ] 2.4 Add error handling and response validation for OpenAI API calls
-  - [ ] 2.5 Create API endpoint `src/app/api/ai/generate-image/route.ts` with POST handler
-  - [ ] 2.6 Add authentication and rate limiting to image generation endpoint
+- [x] 2.0 OpenAI gpt-image-1 Integration & Service Layer
+  - [x] 2.1 Create `src/lib/ai/image-generation.ts` service with gpt-image-1 API integration
+  - [x] 2.2 Implement style prompt templates for "Ghibli" and "Photo Realistic" styles
+  - [x] 2.3 Create function to generate image prompts from tweet content automatically
+  - [x] 2.4 Add error handling and response validation for OpenAI API calls
+  - [x] 2.5 Create API endpoint `src/app/api/ai/generate-image/route.ts` with POST handler
+  - [x] 2.6 Add authentication and rate limiting to image generation endpoint
 
 - [ ] 3.0 Composer UI Redesign & Image Panel
-  - [ ] 3.1 Create `src/components/features/tweet-composer/image-panel.tsx` component
-  - [ ] 3.2 Design image panel UI with "Generate AI Image" and "Upload Image" options
-  - [ ] 3.3 Add style selector dropdown (Ghibli, Photo Realistic) for AI generation
-  - [ ] 3.4 Implement image preview display with base64 rendering
-  - [ ] 3.5 Update `tweet-composer.tsx` to use dual-panel layout (text left, image right)
+  - [x] 3.1 Create `src/components/features/tweet-composer/image-panel.tsx` component
+  - [x] 3.2 Design image panel UI with "Generate AI Image" and "Upload Image" options
+  - [x] 3.3 Add style selector dropdown (Ghibli, Photo Realistic) for AI generation
+  - [x] 3.4 Implement image preview display with base64 rendering
+  - [x] 3.5 Update `tweet-composer.tsx` to use dual-panel layout (text left, image right)
   - [ ] 3.6 Add responsive design for mobile devices (stack panels vertically)
   - [ ] 3.7 Create loading states and progress indicators for image generation
   - [ ] 3.8 Add image removal/replace functionality
