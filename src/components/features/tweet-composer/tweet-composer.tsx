@@ -3,11 +3,12 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { useImageGeneration } from '@/hooks/use-image-generation';
 import { AutoSaveStatus, LoadedTweetType } from '@/hooks/use-tweet-composer';
 import { Tweet } from '@/lib/database/schema';
 import { cn } from '@/lib/utils/cn';
 import { AlertCircle, Calendar, Check, CheckCircle, CircleDashed, Clock, Edit, ExternalLink, FilePlus, Send, Trash2, X } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { ImagePanel } from './image-panel';
 
@@ -43,12 +44,42 @@ export const TweetComposer = ({
   onNewDraft,
   onScheduleTweet,
 }: TweetComposerProps) => {
-  // Image state management
-  const [currentImage, setCurrentImage] = useState<GeneratedImage | null>(null);
+  // Use the image generation hook
+  const imageGeneration = useImageGeneration(currentTweetId);
   
   const characterCount = content.length;
   const maxChars = 280;
   const charPercentage = (characterCount / maxChars) * 100;
+
+  // Load image when switching between tweets
+  useEffect(() => {
+    if (currentTweetId && loadedTweetType !== 'completed' && loadedTweetType !== 'sent') {
+      // Load any existing image for this tweet
+      imageGeneration.actions.loadImageForTweet(currentTweetId);
+    } else if (!currentTweetId) {
+      // Clear image state when starting a new tweet
+      imageGeneration.actions.clearImageState();
+    }
+  }, [currentTweetId, loadedTweetType]); // Removed imageGeneration.actions from deps
+
+  // Save image association when tweet is saved/updated
+  const prevTweetIdRef = useRef<string | null>(null);
+  const prevHasImageRef = useRef<boolean>(false);
+  
+  useEffect(() => {
+    // Only save if this is a meaningful change, not just a re-render
+    const tweetIdChanged = prevTweetIdRef.current !== currentTweetId;
+    const hasImageChanged = prevHasImageRef.current !== imageGeneration.hasImage;
+    
+    if (currentTweetId && imageGeneration.hasImage && (tweetIdChanged || hasImageChanged)) {
+      // Automatically save image association with the tweet
+      imageGeneration.actions.saveImageWithTweet(currentTweetId);
+    }
+    
+    // Update refs
+    prevTweetIdRef.current = currentTweetId;
+    prevHasImageRef.current = imageGeneration.hasImage;
+  }, [currentTweetId, imageGeneration.hasImage]); // Removed imageGeneration.actions from deps
 
   const getCharacterCountColor = (count: number) => {
     if (count > maxChars) return 'text-red-500';
@@ -119,20 +150,26 @@ export const TweetComposer = ({
         {indicator.icon}
         {indicator.badge}
         <span className="text-sm text-muted-foreground">{indicator.label}</span>
+        {imageGeneration.hasImage && (
+          <Badge variant="outline" className="text-xs">
+            📸 Image Attached
+          </Badge>
+        )}
       </div>
     );
   };
 
   const handleNewDraft = useCallback(() => {
     if (
-      content.trim() &&
+      (content.trim() || imageGeneration.hasImage) &&
       !confirm('You have unsaved changes. Start a new draft anyway?')
     ) {
       return;
     }
     onNewDraft();
+    imageGeneration.actions.clearImageState();
     toast.success('New draft started');
-  }, [content, onNewDraft]);
+  }, [content, imageGeneration.hasImage, imageGeneration.actions, onNewDraft]);
 
   const handleDeleteTweet = useCallback(async () => {
     if (!loadedTweetInfo) return;
@@ -159,13 +196,14 @@ export const TweetComposer = ({
 
       toast.success(`${loadedTweetType === 'draft' ? 'Draft' : 'Tweet'} deleted successfully`);
       
-      // Clear the composer after deletion
+      // Clear the composer and image state after deletion
+      imageGeneration.actions.clearImageState();
       onNewDraft();
     } catch (error) {
       console.error('Error deleting tweet:', error);
       toast.error('Failed to delete tweet');
     }
-  }, [loadedTweetInfo, loadedTweetType, onNewDraft]);
+  }, [loadedTweetInfo, loadedTweetType, imageGeneration.actions, onNewDraft]);
 
   const handleCancelScheduledTweet = useCallback(async () => {
     if (!loadedTweetInfo) return;
@@ -195,20 +233,6 @@ export const TweetComposer = ({
       // Dispatch custom event to refresh tweet history
       window.dispatchEvent(new CustomEvent('tweetSaved'));
       
-      // Update the local state to reflect the change
-      if (loadedTweetInfo) {
-        const updatedTweet = {
-          ...loadedTweetInfo,
-          status: 'draft' as const,
-          scheduled_for: null
-        };
-        // Reload the tweet as a draft
-        window.dispatchEvent(
-          new CustomEvent('loadTweet', {
-            detail: { tweet: updatedTweet },
-          })
-        );
-      }
     } catch (error) {
       console.error('Error cancelling scheduled tweet:', error);
       toast.error('Failed to cancel scheduled tweet');
@@ -217,51 +241,25 @@ export const TweetComposer = ({
 
   const handleRescheduleScheduledTweet = useCallback(() => {
     if (!loadedTweetInfo) return;
+    
+    // This would trigger the schedule modal
+    onScheduleTweet?.();
+  }, [loadedTweetInfo, onScheduleTweet]);
 
-    // Dispatch custom event to open the scheduling modal
-    window.dispatchEvent(
-      new CustomEvent('openScheduleModal', {
-        detail: { tweet: loadedTweetInfo },
-      })
-    );
-
-    toast.success('Update the schedule time in the modal');
-  }, [loadedTweetInfo]);
-
-  const handleViewOnTwitter = useCallback(async () => {
+  const handleViewOnTwitter = useCallback(() => {
     if (!loadedTweetInfo?.tweet_id) {
-      toast.error('Twitter link not available for this tweet');
+      toast.error('No Twitter link available');
       return;
     }
 
     try {
-      // Get user's Twitter username from the API
-      const response = await fetch('/api/twitter/status');
-      const data = await response.json();
-      
-      if (!response.ok || !data.isConnected || !data.user?.username) {
-        toast.error('Unable to get Twitter username');
-        return;
-      }
-
-      const twitterUrl = `https://twitter.com/${data.user.username}/status/${loadedTweetInfo.tweet_id}`;
+      const twitterUrl = `https://twitter.com/i/web/status/${loadedTweetInfo.tweet_id}`;
       window.open(twitterUrl, '_blank', 'noopener,noreferrer');
     } catch (error) {
       console.error('Error opening Twitter link:', error);
       toast.error('Failed to open Twitter link');
     }
   }, [loadedTweetInfo]);
-
-  // Image handling callbacks
-  const handleImageGenerated = useCallback((image: GeneratedImage) => {
-    setCurrentImage(image);
-    console.log('Image generated and set:', image.id);
-  }, []);
-
-  const handleImageRemoved = useCallback(() => {
-    setCurrentImage(null);
-    console.log('Image removed');
-  }, []);
 
   const isReadOnly = loadedTweetType === 'sent' || loadedTweetType === 'completed';
 
@@ -275,7 +273,7 @@ export const TweetComposer = ({
                 variant="outline"
                 size="sm"
                 onClick={handleNewDraft}
-                disabled={!content.trim() && autoSaveStatus === 'idle'}
+                disabled={!content.trim() && !imageGeneration.hasImage && autoSaveStatus === 'idle'}
               >
                 <FilePlus className="w-4 h-4 mr-2" />
                 New Draft
@@ -368,7 +366,7 @@ export const TweetComposer = ({
               variant="outline"
               size="sm"
               onClick={handleNewDraft}
-              disabled={!content.trim() && autoSaveStatus === 'idle'}
+              disabled={!content.trim() && !imageGeneration.hasImage && autoSaveStatus === 'idle'}
             >
               <FilePlus className="w-4 h-4 mr-2" />
               New Draft
@@ -447,12 +445,16 @@ export const TweetComposer = ({
                       a 15.9155 15.9155 0 0 1 0 31.831
                       a 15.9155 15.9155 0 0 1 0 -31.831"
                     fill="none"
-                    stroke={getCharacterCountColor(characterCount).replace(
-                      'text-',
-                      ''
-                    )}
+                    stroke={
+                      charPercentage > 100
+                        ? '#ef4444'
+                        : charPercentage > 90
+                        ? '#eab308'
+                        : '#22c55e'
+                    }
                     strokeWidth="2"
-                    strokeDasharray={`${charPercentage}, 100`}
+                    strokeDasharray={`${Math.min(charPercentage, 100)}, 100`}
+                    strokeLinecap="round"
                   />
                 </svg>
               </div>
@@ -460,24 +462,41 @@ export const TweetComposer = ({
           </div>
         </div>
 
-        {/* Right Panel - Image Panel with height constraints */}
-        <div className="w-full lg:w-80 flex-shrink-0" style={{ maxHeight: '600px' }}>
-          <div className="h-full overflow-hidden">
-            <ImagePanel
-              tweetContent={content}
-              currentTweetId={currentTweetId}
-              onImageGenerated={handleImageGenerated}
-              onImageRemoved={handleImageRemoved}
-              currentImage={currentImage}
-              disabled={isReadOnly}
-            />
-          </div>
+        {/* Right Panel - Image Generation */}
+        <div className="lg:w-80 flex flex-col min-h-0">
+          <ImagePanel
+            tweetContent={content}
+            currentTweetId={currentTweetId}
+            onImageGenerated={(image) => {
+              // The hook handles this automatically, but we can add additional logic here if needed
+              console.log('Image generated:', image.id);
+            }}
+            onImageRemoved={() => {
+              // The hook handles this automatically, but we can add additional logic here if needed
+              console.log('Image removed');
+            }}
+            currentImage={imageGeneration.state.currentImage}
+            disabled={isReadOnly || imageGeneration.state.isGenerating || imageGeneration.state.isUploading}
+          />
         </div>
       </div>
-      
-      {/* Action Buttons - Always visible at bottom */}
-      <div className="flex items-center justify-between p-4 border-t bg-background flex-shrink-0">
-        {renderActionButtons()}
+
+      {/* Action Buttons */}
+      <div className="flex items-center justify-between p-4 border-t bg-muted/20 flex-shrink-0">
+        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+          {imageGeneration.hasImage && (
+            <span className="flex items-center space-x-1">
+              <span>📸</span>
+              <span>Image attached ({imageGeneration.formatFileSize(imageGeneration.imageMetadata?.fileSize || 0)})</span>
+            </span>
+          )}
+          {imageGeneration.state.error && (
+            <span className="text-red-500">⚠️ {imageGeneration.state.error}</span>
+          )}
+        </div>
+        <div className="flex items-center space-x-3">
+          {renderActionButtons()}
+        </div>
       </div>
     </div>
   );

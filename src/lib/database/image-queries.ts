@@ -122,6 +122,7 @@ export class ImageQueries {
 
       // Merge current data with updates
       const updatedData = {
+        tweet_id: updateData.tweet_id !== undefined ? updateData.tweet_id : currentImage.tweet_id,
         base64_data: updateData.base64_data ?? currentImage.base64_data,
         prompt: updateData.prompt ?? currentImage.prompt,
         style: updateData.style ?? currentImage.style,
@@ -134,7 +135,8 @@ export class ImageQueries {
 
       const result = await sql`
         UPDATE images 
-        SET base64_data = ${updatedData.base64_data},
+        SET tweet_id = ${updatedData.tweet_id},
+            base64_data = ${updatedData.base64_data},
             prompt = ${updatedData.prompt},
             style = ${updatedData.style},
             size = ${updatedData.size},

@@ -83,6 +83,7 @@ export interface CreateImageData {
 
 // Image update interface (for partial updates)
 export interface UpdateImageData {
+  tweet_id?: string | null;
   base64_data?: string;
   prompt?: string;
   style?: ImageStyle;

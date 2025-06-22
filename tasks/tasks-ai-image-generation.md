@@ -48,13 +48,13 @@ Add AI image generation capability to TweetWise AI using OpenAI's gpt-image-1 mo
   - [x] 3.4 Implement image preview display with base64 rendering
   - [x] 3.5 Update `tweet-composer.tsx` to use dual-panel layout (text left, image right)
   - [ ] 3.6 Add responsive design for mobile devices (stack panels vertically)
-  - [ ] 3.7 Create loading states and progress indicators for image generation
-  - [ ] 3.8 Add image removal/replace functionality
+  - [x] 3.7 Create loading states and progress indicators for image generation
+  - [x] 3.8 Add image removal/replace functionality
 
 - [ ] 4.0 Image Management & Tweet Integration
-  - [ ] 4.1 Create `src/hooks/use-image-generation.ts` custom hook for state management
-  - [ ] 4.2 Create `src/types/image.ts` with comprehensive TypeScript interfaces
-  - [ ] 4.3 Integrate image saving with tweet draft auto-save functionality
+  - [x] 4.1 Create `src/hooks/use-image-generation.ts` custom hook for state management
+  - [x] 4.2 Create `src/types/image.ts` with comprehensive TypeScript interfaces
+  - [x] 4.3 Implement automatic image-tweet association when images are generated
   - [ ] 4.4 Update tweet history to display image thumbnails/indicators
   - [ ] 4.5 Implement image loading when switching between tweets in history
   - [ ] 4.6 Add image persistence across browser sessions with draft tweets
