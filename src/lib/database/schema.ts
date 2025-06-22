@@ -26,6 +26,11 @@ export interface Tweet {
   updated_at: Date;
 }
 
+// Extended Tweet interface with image relationship
+export interface TweetWithImage extends Tweet {
+  image?: Image | null;
+}
+
 export interface AIResponse {
   id: string;
   tweet_id: string;
@@ -33,6 +38,59 @@ export interface AIResponse {
   request_hash: string;
   response_data: Record<string, any>;
   created_at: Date;
+}
+
+export interface Image {
+  id: string;
+  tweet_id: string;
+  base64_data: string;
+  prompt: string;
+  style: 'ghibli' | 'photo_realistic';
+  size: string;
+  format: 'png' | 'jpeg' | 'webp';
+  quality: 'high' | 'medium' | 'low';
+  generation_time_ms?: number | null;
+  file_size_bytes?: number | null;
+  created_at: Date;
+}
+
+// Image-related enums and utility types
+export type ImageStyle = 'ghibli' | 'photo_realistic';
+export type ImageFormat = 'png' | 'jpeg' | 'webp';
+export type ImageQuality = 'high' | 'medium' | 'low';
+
+// Image generation request interface
+export interface ImageGenerationRequest {
+  prompt: string;
+  style: ImageStyle;
+  size?: string;
+  format?: ImageFormat;
+  quality?: ImageQuality;
+}
+
+// Image creation interface (for database operations)
+export interface CreateImageData {
+  tweet_id: string;
+  base64_data: string;
+  prompt: string;
+  style: ImageStyle;
+  size: string;
+  format: ImageFormat;
+  quality: ImageQuality;
+  generation_time_ms?: number;
+  file_size_bytes?: number;
+}
+
+// Image update interface (for partial updates)
+export interface UpdateImageData {
+  base64_data?: string;
+  prompt?: string;
+  style?: ImageStyle;
+  size?: string;
+  format?: ImageFormat;
+  quality?: ImageQuality;
+  generation_time_ms?: number;
+  file_size_bytes?: number;
 }
 
 // SQL schema for creating tables
@@ -74,6 +132,22 @@ export const CREATE_AI_RESPONSES_TABLE = `
   );
 `;
 
+export const CREATE_IMAGES_TABLE = `
+  CREATE TABLE IF NOT EXISTS images (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tweet_id UUID NOT NULL REFERENCES tweets(id) ON DELETE CASCADE,
+    base64_data TEXT NOT NULL,
+    prompt TEXT NOT NULL,
+    style VARCHAR(20) NOT NULL CHECK (style IN ('ghibli', 'photo_realistic')),
+    size VARCHAR(20) NOT NULL,
+    format VARCHAR(10) NOT NULL CHECK (format IN ('png', 'jpeg', 'webp')),
+    quality VARCHAR(10) NOT NULL CHECK (quality IN ('high', 'medium', 'low')),
+    generation_time_ms INTEGER NULL,
+    file_size_bytes INTEGER NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  );
+`;
+
 // Indexes for performance
 export const CREATE_INDEXES = `
   -- User email index (already unique, but explicit for queries)
@@ -96,6 +170,11 @@ export const CREATE_INDEXES = `
   CREATE INDEX IF NOT EXISTS idx_ai_responses_hash ON ai_responses(request_hash);
   CREATE INDEX IF NOT EXISTS idx_ai_responses_tweet_id ON ai_responses(tweet_id);
   CREATE INDEX IF NOT EXISTS idx_ai_responses_type ON ai_responses(type);
+  
+  -- Image queries
+  CREATE INDEX IF NOT EXISTS idx_images_tweet_id ON images(tweet_id);
+  CREATE INDEX IF NOT EXISTS idx_images_style ON images(style);
+  CREATE INDEX IF NOT EXISTS idx_images_created_at ON images(created_at DESC);
 `;
 
 // Trigger for updating updated_at timestamp
@@ -129,6 +208,7 @@ export const SCHEMA_CREATION_ORDER = [
   CREATE_USERS_TABLE,
   CREATE_TWEETS_TABLE,
   CREATE_AI_RESPONSES_TABLE,
+  CREATE_IMAGES_TABLE,
   CREATE_INDEXES,
   CREATE_UPDATED_AT_TRIGGER,
 ];

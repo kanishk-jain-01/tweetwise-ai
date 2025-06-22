@@ -55,7 +55,11 @@ Next.js 15.3.4 App Router Architecture
 src/components/
 ├── features/           # Feature-specific components
 │   ├── auth/          # Authentication components
-│   ├── tweet-composer/ # Main composition interface
+│   ├── tweet-composer/ # Main composition interface (ENHANCED WITH IMAGE SUPPORT)
+│   │   ├── tweet-composer.tsx      # Dual-panel layout (text + image)
+│   │   ├── image-panel.tsx         # AI image generation panel
+│   │   ├── schedule-modal.tsx      # Tweet scheduling
+│   │   └── twitter-connect.tsx     # Twitter OAuth integration
 │   ├── tweet-history/ # History and draft management
 │   └── ai-suggestions/ # AI feedback and suggestions
 ├── ui/                # Reusable UI components (shadcn/ui)
@@ -143,6 +147,21 @@ ai_responses (
   response_data JSONB,
   created_at TIMESTAMP
 )
+
+-- Images table (NEW - AI GENERATED IMAGES)
+images (
+  id UUID PRIMARY KEY,
+  tweet_id UUID REFERENCES tweets(id),
+  base64_data TEXT NOT NULL, -- Base64 encoded image from gpt-image-1
+  prompt TEXT NOT NULL, -- Generation prompt
+  style VARCHAR CHECK (style IN ('ghibli', 'photo_realistic')),
+  size VARCHAR NOT NULL, -- Image dimensions
+  format VARCHAR CHECK (format IN ('png', 'jpeg', 'webp')),
+  quality VARCHAR CHECK (quality IN ('high', 'medium', 'low')),
+  generation_time_ms INTEGER, -- Performance tracking
+  file_size_bytes INTEGER, -- Storage tracking
+  created_at TIMESTAMP
+)
 ```
 
 ### Indexing Strategy
@@ -162,6 +181,7 @@ ai_responses (
 ├── spell-check    # Spell checking service
 ├── grammar-check  # Grammar checking service
 ├── critique       # Tweet analysis service
+├── generate-image # AI image generation (NEW - gpt-image-1)
 └── curate         # Content curation service
 ```
 
